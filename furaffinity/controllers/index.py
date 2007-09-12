@@ -1,0 +1,35 @@
+import logging
+
+from furaffinity.lib.base import *
+
+from pylons.decorators.secure import *
+
+log = logging.getLogger(__name__)
+
+class IndexController(BaseController):
+
+    def index(self):
+        return render('/index.mako')
+
+    def register(self):
+        return render('/register.mako')
+    
+    def login(self):
+        return render('/login.mako')
+
+    #@https()
+    def login_check(self):
+        username = request.params.get('username')
+        user_q = model.Session.query(model.User)
+        user = user_q.filter_by(username = username).one()
+        if user and user.check_password(request.params.get('password')):
+            session["username"] = username
+            session.save()
+            h.redirect_to('/')
+        else:
+            self.login()
+
+    def logout(self):
+       session["username"] = None
+       session.save()
+       h.redirect_to('/')

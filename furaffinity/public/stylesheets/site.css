@@ -1,0 +1,168 @@
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+body {
+    width: 95%;
+    margin: 0 auto;
+    background: #739cbe;
+}
+
+/* Header CSS */
+
+#user_header {
+    background: #d4dce8;
+    margin: .5% 0;
+    height: 1.2em;
+    border: 5px solid #d4dce8;
+    -moz-border-radius: 5px;
+}
+
+#welcome {
+    width: 40%;
+    float: left;
+    text-align: left;
+}
+
+#login_header {
+    width: 60%;
+    float: right;
+    text-align: right;
+}
+
+#message_header {
+    width: 60%;
+    float: right;
+    text-align: right;
+}
+
+#nav_header {
+    clear: both;
+    background: #d4dce8;
+    height: 58px;
+    border: 5px solid #d4dce8;
+    -moz-border-radius: 5px;
+}
+
+#logo {
+    width: 20%;
+    float: left;
+}
+
+#nav_bar {
+    width: 80%;
+    float: left;
+}
+
+#nav {
+    width: 80%;
+    float: left;
+    margin: 0 auto;
+}
+
+#nav ul {
+    width: 80%;
+    list-style-type: none;
+    margin: 0 auto;
+}
+
+#nav ul li {
+    display: inline;
+    padding: 0;
+}
+
+#search {
+    width: 80%;
+    margin: 0 auto;
+}
+
+#search input {
+    display: inline;
+}
+
+#control_panels {
+    width: 13%;
+    float: right;
+    list-style-type: none;
+}
+
+#control_panels li {
+    font-size: 80%;
+    display: block;
+}
+
+#banner_ad {
+    width: 50%;
+    margin: .5% auto 0 auto;
+    background: #d4dce8;
+    text-align: center;
+    border: 5px solid #d4dce8;
+    -moz-border-radius: 5px;
+}
+
+#banner_ad img {
+    width: 728px;
+    margin: 0 auto;
+    display: inline;
+}
+
+#content {
+    clear:both;
+}
+
+/* End Header CSS */
+
+/* Main Page CSS */
+
+#main_page {
+    width: 95%;
+    background: #d4dce8;
+    margin: .5% auto 0;
+}
+
+#recent {
+    background: #d4dce8;
+    width: 60%;
+    float: left;
+}
+
+#recent_work {
+    height: 140px;
+}
+
+.work {
+    margin: 10px;
+    display: inline;
+}
+
+.work img {
+    border: 5px solid #739cbe;
+}
+    
+
+/* End Main Page CSS */
+
+/* Start User Page CSS */
+#user_tabbar {
+    margin: 10px 0;
+}
+
+.user_tab {
+    display: inline;
+    background-color: white;
+    padding: 5px;
+    border: 5px solid #d4dce8;
+    -moz-border-radius: 5px;
+}
+
+.user_tab#selected_tab {
+    display: inline;
+    background-color: #c0c0c0;
+    border-top: 1px solid #919BAD;
+    border-left: 1px solid #919BAD;
+    border-right: 1px solid #919BAD;
+    padding: 4px;
+}
+

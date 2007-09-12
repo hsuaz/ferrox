@@ -1,0 +1,2 @@
+recursive-include furaffinity/public *
+recursive-include furaffinity/templates *

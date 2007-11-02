@@ -11,7 +11,7 @@
                 <div id="welcome">Welcome To FurAffinity! Please log in or
                 ${h.link_to('register', h.url('register'))}</div>
                 <div id="login_header">
-                    ${h.form(h.url('/do_login'), method='post')}
+                    ${h.form(h.url('/login_check'), method='post')}
                     <span>
                         <label for="username">Username:</label>
                         <span>${h.text_field('username')}</span>

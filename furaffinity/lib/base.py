@@ -16,10 +16,12 @@ import furaffinity.model as model
 class BaseController(WSGIController):
 
     def __before__(self, action, **params):
+        c.prefill = {}
+
         user_q = model.Session.query(model.User)
-        username = session.get('username', None)
-        if username:
-            c.auth_user = user_q.filter_by(username = username).one()
+        user_id = session.get('user_id', None)
+        if user_id:
+            c.auth_user = user_q.filter_by(id = user_id).first()
             if c.auth_user.user_type.name.startswith('Admin'):
                 session['admin_ip'] = request.environ['REMOTE_ADDR']
         else:

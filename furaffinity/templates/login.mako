@@ -1,8 +1,12 @@
 <%inherit file="base.mako" />
 
-${h.form(h.url(controller='auth', action='login_check'), method='post')}
-<div><label for="username">Username:</label><span>${h.text_field('username')}</span></div>
-<div><label for="password">Password:</label><span>${h.password_field('password')}</span></div>
+${h.form(h.url('login_check'), method='post')}
+<dl class="standard-form">
+    <dt><label for="username">Username</label></dt>
+    <dd>${h.text_field('username', value=c.prefill.get('username'))}</dd>
+    <dt><label for="password">Password</label></dt>
+    <dd>${h.password_field('password')}</dd>
+</dl>
 ${h.submit('Login')}
 ${h.end_form()}
 

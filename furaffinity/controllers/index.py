@@ -15,21 +15,26 @@ class IndexController(BaseController):
         return render('/register.mako')
     
     def login(self):
+        if c.auth_user:
+            # This shouldn't really happen, so no need to be nice about it
+            h.redirect_to('/')
         return render('/login.mako')
 
     #@https()
     def login_check(self):
-        username = request.params.get('username')
+        username = request.params.get('username') or ''
         user_q = model.Session.query(model.User)
-        user = user_q.filter_by(username = username).one()
+        user = user_q.filter_by(username = username).first()
         if user and user.check_password(request.params.get('password')):
-            session["username"] = username
+            session['user_id'] = user.id
             session.save()
-            h.redirect_to('/')
+            h.redirect_to(request.headers.get('referer', '/'))
         else:
-            self.login()
+            c.error_msg = "Either there is no such account '%s', or the provided password was incorrect." % h.sanitize(username)
+            c.prefill['username'] = username
+            return self.login()
 
     def logout(self):
-       session["username"] = None
-       session.save()
-       h.redirect_to('/')
+        session['user_id'] = None
+        session.save()
+        h.redirect_to(request.headers.get('referer', '/'))

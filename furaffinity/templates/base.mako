@@ -11,7 +11,7 @@
                 <div id="welcome">Welcome To FurAffinity! Please log in or
                 ${h.link_to('register', h.url('register'))}</div>
                 <div id="login_header">
-                    ${h.form(h.url('/login_check'), method='post')}
+                    ${h.form(h.url('/do_login'), method='post')}
                     <span>
                         <label for="username">Username:</label>
                         <span>${h.text_field('username')}</span>
@@ -26,7 +26,9 @@
                 % else: 
                 <div id="welcome">Welcome back ${c.auth_user.user_type.sigil}${h.link_to(c.auth_user.display_name, h.url('user', username = c.auth_user.username))}</div>
                 <div id="message_header">
-                    ${h.link_to("Logout", h.url('logout'))}
+                    ${h.form(h.url('/logout'), method='post')}
+                    ${h.submit('Logout')}
+                    ${h.end_form()}
                 </div>
                 % endif
             </div>
@@ -70,6 +72,10 @@
                 ${h.image_tag('bannerad.jpg', 'Ad')}
             </div>
         </div>
+
+        % if c.error_msg:
+        <div style="background-color: darkred;">${c.error_msg}</div>
+        % endif
 
         <div id="body">
             ${next.body()}

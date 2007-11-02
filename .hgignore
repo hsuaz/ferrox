@@ -3,3 +3,8 @@ syntax: glob
 *~
 *.egg-info
 data
+furaffinity.db
+
+syntax: regexp
+^build/
+^dist/

@@ -16,34 +16,28 @@ def setup_config(command, filename, section, vars):
     print "Creating tables"
     model.metadata.create_all(bind=config['pylons.g'].sa_engine)
     print "Successfully setup"
-    
-    print "Creating base data"
-    normal_user_type = model.UserType()
-    normal_user_type.sigil = '~'
-    normal_user_type.name = 'Member'
-    model.Session.save(normal_user_type)
 
-    admin_user_type = model.UserType()
-    admin_user_type.sigil = '@'
-    admin_user_type.name = 'Adminstrator'
-    model.Session.save(admin_user_type)
+    print "Creating base data"
+    normal_role = model.Role('Member', 'Regular user')
+    normal_role.sigil = '~'
+    model.Session.save(normal_role)
+
+    admin_role = model.Role('Administrator', 'Administrator')
+    admin_role.sigil = '@'
+    admin_perm = model.Permission('administrate',
+                                  'General access to administration tools.')
+    admin_role.permissions.append(admin_perm)
+    model.Session.save(admin_role)
 
     print "Creating test data"
-    j = model.Journal()
-    j.header = 'foo'
-    j.footer = 'bar'
-
-    je = model.JournalEntry('title', 'content')
-    model.Session.save(je)
-
-
-    j.entries.append(je)
-    model.Session.save(j)
-
     u = model.User('fender', 'asdf')
     u.display_name = 'Fender'
-    u.user_type = admin_user_type
-    u.journals.append(j)
+    u.role = admin_role
+    model.Session.save(u)
+
+    u = model.User('eevee', 'pretzel')
+    u.display_name = 'Eevee'
+    u.role = admin_role
     model.Session.save(u)
 
     model.Session.commit()

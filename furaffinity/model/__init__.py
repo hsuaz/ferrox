@@ -19,6 +19,37 @@ Session = scoped_session(sessionmaker(autoflush=True, transactional=True,
 
 metadata = MetaData()
 
+# Users
+
+user_table = Table('user', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('username', types.String(32), nullable=False),
+    Column('password', types.String(64), nullable=False),
+    Column('display_name', types.Unicode, nullable=False),
+    Column('role_id', types.Integer, ForeignKey('role.id'), default=1)
+)
+
+role_table = Table('role', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('name', types.String(32), nullable=False),
+    Column('sigil', types.String(1), nullable=False),
+    Column('description', types.String(256), nullable=False),
+)
+
+role_permission_table = Table('role_permission', metadata,
+    Column('role_id', types.Integer, ForeignKey('role.id'), primary_key=True),
+    Column('permission_id', types.Integer, ForeignKey('permission.id'),
+           primary_key=True),
+)
+
+permission_table = Table('permission', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('name', types.String(32), nullable=False),
+    Column('description', types.String(256), nullable=False),
+)
+
+# Journals
+
 journal_entry_table = Table('journal_entry', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('title', types.Unicode, nullable=False),
@@ -36,20 +67,6 @@ journal_table = Table('journal', metadata,
 journal_entries_table = Table('journal_entries', metadata,
     Column('journal_id', types.Integer, ForeignKey("journal.id")),
     Column('journal_entry_id', types.Integer, ForeignKey("journal_entry.id"))
-)
-
-user_type_table = Table('user_type', metadata,
-    Column('id', types.Integer, primary_key=True),
-    Column('sigil', types.String(1), nullable=False),
-    Column('name', types.String(64), nullable=False)
-)
-
-user_table = Table('user', metadata,
-    Column('id', types.Integer, primary_key=True),
-    Column('username', types.String(32), nullable=False),
-    Column('password', types.String(64), nullable=False),
-    Column('display_name', types.Unicode, nullable=False),
-    Column('user_type_id', types.Integer, ForeignKey("user_type.id"), default=1)
 )
 
 user_journals_table = Table('user_journal', metadata,
@@ -71,9 +88,19 @@ journal_mapper = mapper(Journal, journal_table, properties = dict(
     ),
 )
 
-class UserType(object):
-    pass
-user_type_mapper = mapper(UserType, user_type_table)
+class Permission(object):
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+permission_mapper = mapper(Permission, permission_table)
+
+class Role(object):
+    def __init__(self, name, description=''):
+        self.name = name
+        self.description = description
+role_mapper = mapper(Role, role_table, properties={
+    'permissions':relation(Permission, secondary=role_permission_table)
+})
 
 class User(object):
     def __init__(self, username, password):
@@ -114,11 +141,14 @@ class User(object):
             algo.update(password)
             return algo.hexdigest() == hashed_password
 
-    def is_admin(self):
-        return self.user_type.sigil == '@'
+    def can(self, permission):
+        perm_q = Session.query(Role).with_parent(self).filter(
+            Role.permissions.any(name=permission)
+        )
+        return perm_q.count() > 0
 user_mapper = mapper(User, user_table, properties = dict(
     journals = relation(Journal, secondary=user_journals_table),
-    user_type = relation(UserType)
+    role = relation(Role)
     ),
 )
 

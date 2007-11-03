@@ -22,7 +22,14 @@ class BaseController(WSGIController):
         user_id = session.get('user_id', None)
         if user_id:
             c.auth_user = user_q.filter_by(id = user_id).first()
-            if c.auth_user.user_type.name.startswith('Admin'):
+
+            # User may have been deleted in the interim
+            if not c.auth_user:
+                session['user_id'] = None
+                session.save()
+                return
+
+            if c.auth_user.role.can('administrate'):
                 session['admin_ip'] = request.environ['REMOTE_ADDR']
         else:
             c.auth_user = None

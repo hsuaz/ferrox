@@ -23,8 +23,8 @@
                     ${h.submit('Login')}
                     ${h.end_form()}
                 </div>
-                % else: 
-                <div id="welcome">Welcome back ${c.auth_user.user_type.sigil}${h.link_to(c.auth_user.display_name, h.url('user', username = c.auth_user.username))}</div>
+                % else:
+                <div id="welcome">Welcome back ${c.auth_user.role.sigil}${h.link_to(c.auth_user.display_name, h.url('user', username = c.auth_user.username))}</div>
                 <div id="message_header">
                     ${h.form(h.url('/logout'), method='post')}
                     ${h.submit('Logout')}
@@ -58,7 +58,7 @@
                     <ul id="control_panels">
                         % if c.auth_user:
                         <li>${h.link_to("Control Panel", h.url('control_panel'))}</li>
-                        % if c.auth_user.is_admin():
+                        % if c.auth_user.can('administrate'):
                         <li>${h.link_to("Admin Control Panel", h.url('administration'))}</li>
                         % endif
                         % endif

@@ -29,7 +29,7 @@ class BaseController(WSGIController):
                 session.save()
                 return
 
-            if c.auth_user.role.can('administrate'):
+            if c.auth_user.can('administrate'):
                 session['admin_ip'] = request.environ['REMOTE_ADDR']
         else:
             c.auth_user = None

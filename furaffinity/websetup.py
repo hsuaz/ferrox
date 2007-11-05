@@ -46,4 +46,8 @@ def setup_config(command, filename, section, vars):
     u.journals.append(j)
     model.Session.save(u)
 
+    n = model.News('headline', 'news content')
+    n.author = u
+    model.Session.save(n)
+
     model.Session.commit()

@@ -57,6 +57,14 @@ user_journals_table = Table('user_journal', metadata,
     Column('journal_id', types.Integer, ForeignKey("journal.id"))
 )
 
+news_table = Table('news', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('author_user_id', types.Integer, ForeignKey("user.id")),
+    Column('title', types.Unicode, nullable=False),
+    Column('content', types.Unicode, nullable=False),
+    Column('time', types.DateTime, nullable=False, default=datetime.now),
+    Column('is_deleted', types.Boolean, nullable=False, default=False)
+)    
 
 class JournalEntry(object):
     def __init__(self, title, content):
@@ -121,4 +129,12 @@ user_mapper = mapper(User, user_table, properties = dict(
     user_type = relation(UserType)
     ),
 )
+
+class News(object):
+    def __init__(self, title, content):
+        self.title = title
+        self.content = content
+      
+news_mapper = mapper(News, news_table, properties = dict(author = relation(User)),)
+
 

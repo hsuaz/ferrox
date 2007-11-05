@@ -31,17 +31,18 @@
                 % endif
             </div>
             <div id="nav_header">
-                <h1 id="logo">${h.image_tag('header.jpg', 'FurAffinity')}</h1>
+                <h1 id="logo">${h.link_to(h.image_tag('header.jpg', 'FurAffinity'), h.url('/'))} </h1>
                 <div id="nav_bar">
                     <div id="nav">
                         <ul>
-                            <li>${h.link_to("Submit Art", h.url('submit_art'))}</li>
-                            <li>${h.link_to("Browse", h.url('browse'))}</li>
+                            <li>${h.link_to("Submit Art", h.url('/submit_art'))}</li>
+                            <li>${h.link_to("Browse", h.url('/browse'))}</li>
                             <li>${h.link_to("Forums", 'http://www.furaffinityforums.net')}</li>
                             <li>${h.link_to("Chat", 'http://www.wikiffinity.net/index.php?title=IRC_Chat')}</li>
-                            <li>${h.link_to("Journal", h.url('journal'))}</li>
+                            <li>${h.link_to("Journal", h.url('/journal'))}</li>
                             <li>${h.link_to("Support", 'http://www.wikiffinity.net/')}</li>
-                            <li>${h.link_to("Staff", h.url('staff'))}</li>
+                            <li>${h.link_to("Staff", h.url('/staff'))}</li>
+                            <li>${h.link_to("News", h.url('/news'))}</li>
                         </ul>
                         <div id="search">
                             ${h.form(h.url(controller='search', action='search'), method='post')}

@@ -9,6 +9,8 @@ log = logging.getLogger(__name__)
 class IndexController(BaseController):
 
     def index(self):
+        news_q = model.Session.query(model.News)
+        c.news = news_q.order_by(model.News.time.desc()).limit(5)
         return render('/index.mako')
 
     def register(self):
@@ -19,7 +21,7 @@ class IndexController(BaseController):
             # This shouldn't really happen, so no need to be nice about it
             h.redirect_to('/')
         return render('/login.mako')
-
+        
     #@https()
     def login_check(self):
         username = request.params.get('username') or ''

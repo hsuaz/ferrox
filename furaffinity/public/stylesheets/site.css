@@ -140,9 +140,50 @@ body {
 .work img {
     border: 5px solid #739cbe;
 }
-    
-
 /* End Main Page CSS */
+
+/* Start News */
+#news_page {
+    width: 95%;
+    background: #d4dce8;
+    margin: .5% auto 0;
+}
+
+#news {
+    background: #b2bac6;
+    width: 40%;
+    float: right;
+}
+
+.news_story
+{
+    background: #d4dce8;
+    margin: 10px;
+    padding: 10px;
+}
+
+.news_header
+{
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid black;
+}
+
+.news_headline
+{
+    font-weight: bold;
+}
+
+.news_author
+{
+    font-size: small;
+}
+
+.news_date
+{
+    font-size: small;
+}
+/* End News */
 
 /* Start User Page CSS */
 #user_tabbar {

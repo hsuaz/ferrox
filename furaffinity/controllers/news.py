@@ -19,10 +19,9 @@ class NewsController(BaseController):
     def do_post(self):
         title = request.params.get('title')
         content = request.params.get('content')
-        user_q = model.Session.query(model.User)
-        user = user_q.filter_by(username = session["username"]).one()
         news = model.News(title, content)
-        news.author = user
+        news.author = c.auth_user
         model.Session.save(news)
         model.Session.commit()
         h.redirect_to('/news')
+

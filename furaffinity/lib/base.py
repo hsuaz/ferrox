@@ -13,6 +13,19 @@ from pylons.templating import render
 import furaffinity.lib.helpers as h
 import furaffinity.model as model
 
+from decorator import decorator
+
+def check_perm(permission):
+    '''Decorator for checking permission on user before running a controller method'''
+    @decorator
+    def check(func, *args, **kwargs):
+        if not (c.auth_user and c.auth_user.can(permission)):
+            return render('/denied.mako')
+        else:
+            return func(*args, **kwargs)
+    return check
+
+
 class BaseController(WSGIController):
 
     def __before__(self, action, **params):

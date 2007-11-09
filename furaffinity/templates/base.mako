@@ -37,7 +37,7 @@
                 <div id="nav_bar">
                     <div id="nav">
                         <ul>
-                            <li>${h.link_to("Submit Art", h.url('submit_art'))}</li>
+                            <li>${h.link_to("Submit Art", h.url_for(controller='gallery', action='submit'))}</li>
                             <li>${h.link_to("Browse", h.url('browse'))}</li>
                             <li>${h.link_to("Forums", 'http://www.furaffinityforums.net')}</li>
                             <li>${h.link_to("Chat", 'http://www.wikiffinity.net/index.php?title=IRC_Chat')}</li>

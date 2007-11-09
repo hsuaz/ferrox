@@ -20,6 +20,13 @@ def make_map():
     map.connect('/login', controller='index', action='login')
     map.connect('/login_check', controller='index', action='login_check')
     map.connect('/logout', controller='index', action='logout')
+    map.connect('/register', controller='index', action='register')
+	
+    map.connect('/gallery/submit_upload', controller='gallery', action='submit_upload' )
+    map.connect('/gallery/submit', controller='gallery', action='submit' )
+    map.connect('/gallery', controller='gallery', action='index' )
+    map.connect('/gallery/view/:id', controller='gallery', action='view' )
+    map.connect('/gallery/image/:filename', controller='gallery', action='file' )
 
     # CUSTOM ROUTES HERE
 

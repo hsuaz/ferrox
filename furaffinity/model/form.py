@@ -1,5 +1,11 @@
 import formencode
 
+class FileUploadValidator(formencode.validators.FancyValidator):
+    def _to_python(self, value, state):
+        filename = value.filename
+        content = value.value
+        return dict(filename=filename,content=content)
+
 class RegisterForm(formencode.Schema):
     allow_extra_fields = True
     filter_extra_fields = True
@@ -16,3 +22,12 @@ class LoginForm(formencode.Schema):
     username = formencode.validators.PlainText(not_empty=True)
     password = formencode.validators.PlainText(not_empty=True)
     commit = formencode.validators.PlainText(not_empty=True)
+
+class SubmitForm(formencode.Schema):
+    fullfile = FileUploadValidator(not_empty=True)
+    thumbfile = FileUploadValidator()
+    type = formencode.validators.PlainText(not_empty=False)
+    title = formencode.validators.String(not_empty=True)
+    description = formencode.validators.NotEmpty(not_empty=True)
+    commit = formencode.validators.PlainText(not_empty=False)
+

@@ -18,8 +18,15 @@ def setup_config(command, filename, section, vars):
     print "Successfully setup"
 
     print "Creating base data"
+    nli_role = model.Role('Not logged in', 'The role assigned to users who are not logged in.')
+    nli_role.sigil = ' '
+    model.Session.save(nli_role)
+
     normal_role = model.Role('Member', 'Regular user')
     normal_role.sigil = '~'
+    submit_perm = model.Permission('submit_art',
+                                  'Can submit content to site.')
+    normal_role.permissions.append(submit_perm)
     model.Session.save(normal_role)
 
     admin_role = model.Role('Administrator', 'Administrator')
@@ -27,6 +34,7 @@ def setup_config(command, filename, section, vars):
     admin_perm = model.Permission('administrate',
                                   'General access to administration tools.')
     admin_role.permissions.append(admin_perm)
+    admin_role.permissions.append(submit_perm)
     model.Session.save(admin_role)
 
     print "Creating test data"

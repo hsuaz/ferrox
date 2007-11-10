@@ -1,8 +1,10 @@
 <!DOCTYPE HTML>
+
 <html>
     <head>
         <title>${self.title()} -- Fur Affinity [dot] net</title>
-        ${h.stylesheet_link_tag('site.css')}
+        ${self.css_links()}
+        ${self.javascript_includes()}
     </head>
     <body>
         <div id="header">
@@ -86,3 +88,12 @@
         </div>
     </body>
 </html>
+
+<%def name="css_links()">
+    ${h.stylesheet_link_tag('site.css')}
+</%def>
+
+<%def name="javascript_includes()">
+    ${h.javascript_include_tag("jquery-1.2.1.pack.js")}
+</%def>
+

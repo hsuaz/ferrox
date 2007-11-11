@@ -44,23 +44,15 @@ class GalleryController(BaseController):
         c.error_title = 'WUT'
         return render('/error.mako')
         
+    @check_perm('submit_art')
     def submit(self):
-        if (not c.auth_user.can('submit_art')):
-            c.error_text = 'You must be logged in to submit art.'
-            c.error_title = 'Forbidden'
-            abort ( 403 )
         c.submitoptions = self.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), 'image')
         c.prefill['title'] = ''
         c.prefill['description'] = ''
-        return render('/gallery.submit.mako')
+        return render('/gallery/submit.mako')
 
+    @check_perm('submit_art')
     def submit_upload(self):
-        # -- check permissions --
-        if (not c.auth_user.can('submit_art')):
-            c.error_text = 'You must be logged in to submit art.'
-            c.error_title = 'Forbidden'
-            abort ( 403 )
-            
         # -- validate form input --
         validator = model.form.SubmitForm();
         submission_data = None
@@ -71,7 +63,7 @@ class GalleryController(BaseController):
             c.prefill = request.params
             c.submitoptions = self.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), request.params['type'])
             c.input_errors = "There were input errors: %s %s" % (error, pp.pformat(c.prefill))
-            return render('/gallery.submit.mako')
+            return render('/gallery/submit.mako')
             #return self.submit()
         
         # -- generate image data --
@@ -215,7 +207,7 @@ class GalleryController(BaseController):
         
         pp = pprint.PrettyPrinter (indent=4)
         c.misc = submission.derived_submission[0].mimetype
-        return render('/gallery.view.mako');
+        return render('/gallery/view.mako');
         
     def file(self,filename=None):
         filename = os.path.basename(filename)

@@ -14,7 +14,7 @@
         </div>
         % endfor
     </div>
-    <span>${h.link_to("Post", h.url("news/post"))}</span>
+    <span>${h.link_to("Post", h.url(controller='news', action='post'))}</span>
 </div>
 
 <%def name="title()">News</%def>

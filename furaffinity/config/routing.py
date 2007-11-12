@@ -28,6 +28,11 @@ def make_map():
     map.connect('/gallery/view/:id', controller='gallery', action='view' )
     map.connect('/gallery/image/:filename', controller='gallery', action='file' )
 
+    map.connect('/journal/submit_upload', controller='journal', action='post_commit' )
+    map.connect('/journal/submit', controller='journal', action='post' )
+    map.connect('/journal', controller='journal', action='index' )
+    map.connect('/journal/view/:id', controller='journal', action='view' )
+
     # CUSTOM ROUTES HERE
 
     map.connect(':controller/:action/:id')

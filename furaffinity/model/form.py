@@ -31,3 +31,8 @@ class SubmitForm(formencode.Schema):
     description = formencode.validators.NotEmpty(not_empty=True)
     commit = formencode.validators.PlainText(not_empty=False)
 
+class JournalForm(formencode.Schema):
+    title = formencode.validators.String(not_empty=True)
+    content = formencode.validators.NotEmpty(not_empty=True)
+    commit = formencode.validators.PlainText(not_empty=False)
+

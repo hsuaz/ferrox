@@ -1,19 +1,54 @@
 <%inherit file="../base.mako" />
 
 <div id="news_page">
-    <span>News</span>
-    <div class="recent_news">
-        % for item in c.news:
-        <div class="news_story">
+    % if c.auth_user.can("administrate"):
+        <div class="news_admin">
+            ${h.link_to('Post News', h.url(controller = 'news', action='post'))}
+        </div>
+    % endif
+    % for item in c.newspage:
+        % if not item.is_deleted or c.auth_user.can("administrate"):
+            % if item.is_deleted:
+                <div class="news_story_deleted">
+            % else:
+                <div class="news_story">
+            % endif
             <div class="news_header">
                 <div class="news_headline">${item.title}</div>
-                <div class="news_author">By: ${item.author.display_name}</div>
-                <div class="news_date">Date: ${item.time}</div>
+                <div class="news_author">
+                    By: 
+                    % if item.is_anonymous:
+                        FA Staff
+                    % else:
+                        ${item.author.display_name}
+                    % endif
+                </div>
+                <div class="news_date">Date: ${item.time.strftime("%T %D")}</div>
             </div>
             <div class="news_content">${item.content}</div>
         </div>
-        % endfor
-    </div>
+        % endif
+        % if c.auth_user.can("administrate"):
+        <div class="news_admin_bottom">
+            <span class="js-news-edit">
+                ${h.link_to("Edit", h.url(controller="news", action="edit", id=item.id))}
+            </span>
+                % if item.is_deleted:
+                    <span class="js-news-undelete">
+                        ${h.link_to("Undelete", h.url(controller="news", action="undelete", id=item.id))}
+                    </span>
+                % else:
+                    <span class="js-news-delete">
+                        ${h.link_to("Delete", h.url(controller="news", action="delete", id=item.id))} 
+                    </span>
+                % endif
+            </span>
+        </div>
+        % endif
+    % endfor
+    <div id="news_nav">
+        ${c.newsnav}
+    </div> 
     <span>${h.link_to("Post", h.url(controller='news', action='post'))}</span>
 </div>
 

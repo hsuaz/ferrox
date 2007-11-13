@@ -22,6 +22,12 @@ class LoginForm(formencode.Schema):
     username = formencode.validators.PlainText(not_empty=True)
     password = formencode.validators.PlainText(not_empty=True)
     commit = formencode.validators.PlainText(not_empty=True)
+    
+class NewsForm(formencode.Schema):
+    title = formencode.validators.NotEmpty()
+    content = formencode.validators.NotEmpty()
+    is_anonymous = formencode.validators.Bool()
+    commit = formencode.validators.PlainText(not_empty=True)
 
 class SubmitForm(formencode.Schema):
     fullfile = FileUploadValidator(not_empty=True)
@@ -30,4 +36,3 @@ class SubmitForm(formencode.Schema):
     title = formencode.validators.String(not_empty=True)
     description = formencode.validators.NotEmpty(not_empty=True)
     commit = formencode.validators.PlainText(not_empty=False)
-

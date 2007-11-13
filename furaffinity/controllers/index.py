@@ -10,7 +10,9 @@ class IndexController(BaseController):
 
     def index(self):
         news_q = model.Session.query(model.News)
-        c.news = news_q.order_by(model.News.time.desc()).limit(5)
+        news_q = news_q.filter_by(is_deleted = False)
+        news_q = news_q.order_by(model.News.time.desc())
+        c.news = news_q.limit(5)
         return render('/index.mako')
 
     def register(self):

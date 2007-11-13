@@ -10,6 +10,11 @@ body {
     background: #739cbe;
 }
 
+.small
+{
+    font-size: small;
+}
+
 /* Header CSS */
 
 #user_header {
@@ -142,10 +147,26 @@ body {
 }
 /* End Main Page CSS */
 
+div.denied
+{
+    background: #FFDDDD;
+    margin: 10px 25%;
+    border: 2px solid red;
+    padding: 5px;
+    text-align: center;
+}
+
 /* Start News */
-#news_page {
-    width: 95%;
+#news_page {.news_story
+{
     background: #d4dce8;
+    margin: 10px;
+    padding: 10px;
+}
+
+
+    width: 95%;
+    /* background: #d4dce8; */
     margin: .5% auto 0;
 }
 
@@ -160,6 +181,45 @@ body {
     background: #d4dce8;
     margin: 10px;
     padding: 10px;
+}
+
+.news_story_deleted
+{
+    background: #aaaaaa;
+    margin: 10px;
+    padding: 10px;
+}
+
+.news_admin_bottom
+{
+    background: #aabbdd;
+    font-size: small;
+    margin: 10px;
+    margin-top: -10px;
+    border-top: 1px solid black;
+    padding: 5px;
+}
+
+.news_admin
+{
+    background: #aabbdd;
+    font-size: small;
+    margin: 10px;
+    border: 1px solid black;
+    padding: 5px;
+}
+
+span.checkbox_text
+{
+    padding-right: 0.5em;
+}
+
+#news_post
+{
+    font-size: small;
+    font-weight: bold;
+    margin: 10px;
+    padding: 5px;
 }
 
 .news_header
@@ -182,6 +242,15 @@ body {
 .news_date
 {
     font-size: small;
+}
+
+div.news_form
+{
+    font-size: small;
+    font-weight: bold;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    border-bottom: solid 1px gray;
 }
 /* End News */
 

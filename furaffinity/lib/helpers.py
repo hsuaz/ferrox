@@ -7,6 +7,8 @@ from webhelpers import *
 
 import re
 
+import time
+
 def sanitize(string):
     """Cleanse an untrusted string of any characters unfriendly to HTML."""
     string = string.replace('&', '&amp;')
@@ -19,6 +21,13 @@ def sanitize(string):
 def normalize_newlines(string):
     """Adjust all line endings to be the Linux line break, \\x0a."""
     return re.compile("\x0d\x0a|\x0d").sub("\x0a", string)
+    
+def to_dict(model):
+    '''Convert a SQLAlchemy model instance into a dictionary'''
+    model_dict = {}
+    for propname in model.c.keys():
+        model_dict[propname] = getattr(model, propname)
+    return model_dict
 
 def embed_flash(url):
     return """

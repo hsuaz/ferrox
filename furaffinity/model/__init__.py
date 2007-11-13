@@ -85,7 +85,8 @@ news_table = Table('news', metadata,
     Column('title', types.Unicode, nullable=False),
     Column('content', types.Unicode, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
-    Column('is_deleted', types.Boolean, nullable=False, default=False)
+    Column('is_anonymous', types.Boolean, nullable=False, default=False),
+    Column('is_deleted', types.Boolean, nullable=False, default=False),
 )    
 submission_table = Table('submission', metadata,
 	Column('id', types.Integer, primary_key=True),
@@ -225,9 +226,10 @@ user_mapper = mapper(User, user_table, properties = dict(
 )
 
 class News(object):
-    def __init__(self, title, content):
+    def __init__(self, title, content, author):
         self.title = title
         self.content = content
+        self.author = author
       
 news_mapper = mapper(News, news_table, properties = dict(author = relation(User)),)
 

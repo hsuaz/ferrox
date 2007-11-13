@@ -48,8 +48,7 @@ def setup_config(command, filename, section, vars):
     u.role = admin_role
     model.Session.save(u)
 
-    n = model.News('headline', 'news content')
-    n.author = u
+    n = model.News('headline', 'news content', u)
     model.Session.save(n)
 
     model.Session.commit()

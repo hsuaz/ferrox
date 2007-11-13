@@ -20,7 +20,7 @@ def check_perm(permission):
     @decorator
     def check(func, *args, **kwargs):
         if not c.auth_user.can(permission):
-            return render('/denied.mako')
+            return abort(403)
         else:
             return func(*args, **kwargs)
     return check

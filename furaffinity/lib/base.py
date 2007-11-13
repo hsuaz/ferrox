@@ -19,12 +19,29 @@ def check_perm(permission):
     '''Decorator for checking permission on user before running a controller method'''
     @decorator
     def check(func, *args, **kwargs):
-        if not (c.auth_user and c.auth_user.can(permission)):
+        if not c.auth_user.can(permission):
             return render('/denied.mako')
         else:
             return func(*args, **kwargs)
     return check
-
+    
+class GuestRole(model.Role):
+    def __init__(self):
+        self.name = "Guest"
+        self.description = "Just a guest"
+        self.sigil = ""
+    
+class GuestUser(model.User):
+    '''Dummy object for not-logged-in users'''
+    def __init__(self):
+        self.id = 0
+        self.username = "guest"
+        self.display_name = "guest"
+        self.role = GuestRole()
+        self.is_guest = True
+        
+    def can(self, permission):
+        return False
 
 class BaseController(WSGIController):
 
@@ -45,7 +62,7 @@ class BaseController(WSGIController):
             if c.auth_user.can('administrate'):
                 session['admin_ip'] = request.environ['REMOTE_ADDR']
         else:
-            c.auth_user = None
+            c.auth_user = GuestUser()
 
     def __call__(self, environ, start_response):
         """Invoke the Controller"""

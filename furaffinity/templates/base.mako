@@ -9,7 +9,7 @@
     <body>
         <div id="header">
             <div id="user_header">
-                % if not c.auth_user:
+                % if c.auth_user.id == 0:
                 <div id="welcome">Welcome To FurAffinity! Please log in or
                 ${h.link_to('register', h.url('register'))}</div>
                 <div id="login_header">

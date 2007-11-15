@@ -16,27 +16,6 @@ from tempfile import TemporaryFile
 
 log = logging.getLogger(__name__)
 
-imagestore = os.getcwd() + '/furaffinity/public/data'
-imageurl = '/data'
-
-thumbnail_maxsize = 120
-
-class ImageManagerException(Exception):
-    pass
-
-class ImageManagerExceptionFileExists(ImageManagerException):
-    pass
-    
-class ImageManagerExceptionFileNotFound(ImageManagerException):
-    pass
-    
-class ImageManagerExceptionAccessDenied(ImageManagerException):
-    pass
-    
-class ImageManagerExceptionBadAction(ImageManagerException):
-    pass
-    
-
 class JournalController(BaseController):
 
     def index(self):
@@ -46,7 +25,7 @@ class JournalController(BaseController):
         
     @check_perm('post_journal')
     def post(self):
-        c.submitoptions = self.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), 'image')
+        #c.submitoptions = self.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), 'image')
         c.prefill['title'] = ''
         c.prefill['content'] = ''
         return render('/journal/post.mako')
@@ -69,7 +48,8 @@ class JournalController(BaseController):
         journal_entry = model.JournalEntry(
             user_id = c.auth_user.id,
             title = journal_data['title'],
-            content = journal_data['content']
+            content = journal_data['content'],
+            content_parsed = journal_data['content'] # placeholder for bbcode parser
         )
         model.Session.save(journal_entry)
         model.Session.commit()
@@ -99,75 +79,3 @@ class JournalController(BaseController):
         pp = pprint.PrettyPrinter (indent=4)
         return render('/journal/view.mako');
         
-    def dict_to_option (self,opts=(),default=None):
-        output = ''
-        for k in opts.keys():
-            if (opts[k] == ''):
-                v = k
-            else:
-                v = opts[k]
-            if (default == k):
-                selected = ' selected="selected"'
-            else:
-                selected = ''
-            output = "%s\n<option value=\"%s\"%s>%s</option>" % (output, k, selected, v)
-        return output
-    
-    def thumbnail_from_image (self,image,max_size,file_type=None):
-        aspect = float(image.size[0]) / float(image.size[1])
-        if (aspect > 1.0):
-            #wide
-            width = int(max_size)
-            height = int(max_size / aspect)
-        else:
-            #tall
-            width = int(max_size * aspect)
-            height  = int(max_size)
-        
-        if ( file_type == None ):
-            file_type = image.format
-        
-        new_image = image.resize(( width, height ), Image.ANTIALIAS)
-        buffer = TemporaryFile()
-        new_image.save(buffer, file_type)
-        buffer.seek(0)
-        content = buffer.read()
-        buffer.close()
-        #new_image.close()
-        return (content,width,height)
-    
-    def hash(self,s):
-        m = md5.new()
-        m.update(s)
-        return m.hexdigest()
-        
-    def image_manager(self,action,hash,data=''):
-        # Please replace this function with something that doesn't suck.
-        folder = '/' + hash[0:3] + '/'  + hash[3:6] + '/'  + hash[6:9] + '/'  + hash[9:12]
-        filename = hash
-        if (action=='store'):
-            if ( not os.access ( imagestore + folder, os.F_OK ) ):
-                os.makedirs  ( imagestore + folder )
-            if ( os.access ( imagestore + folder + '/' + filename, os.F_OK ) ):
-                raise ImageManagerExceptionFileExists
-            f = open(imagestore + folder + '/' + filename,'wb')
-            if (f):
-                f.write(data)
-                f.close()
-                return True
-            else:
-                raise ImageManagerExceptionAccessDenied
-        elif (action=='dump'):
-            try:
-                f = open ( imagestore + folder + '/' + filename, 'rb' )
-            except IOError:
-                raise ImageManagerExceptionFileNotFound
-            else:
-                c = f.read()
-                f.close()
-                return c
-        elif (action=='delete'):
-            return None;
-        else:
-            raise ImageManagerExceptionBadAction
-            

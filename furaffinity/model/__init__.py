@@ -61,8 +61,9 @@ journal_entry_table = Table('journal_entry', metadata,
 	Column('discussion_id', types.Integer, nullable=False),
     Column('title', types.Unicode, nullable=False),
     Column('content', types.Unicode, nullable=False),
+    Column('content_parsed', types.Unicode, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
-    Column('is_deleted', types.Boolean, nullable=False, default=False)
+    Column('status', Enum(['normal','under_review','removed_by_admin','deleted'], empty_to_none=True, strict=True ), primary_key=True, )
 )
 
 # News
@@ -83,6 +84,7 @@ submission_table = Table('submission', metadata,
 	Column('hash', types.String(64), nullable=False, unique=True, primary_key=True),
 	Column('title', types.String(128), nullable=False),
 	Column('description', types.String, nullable=False),
+	Column('description_parsed', types.String, nullable=False),
 	Column('height', types.Integer, nullable=False),
 	Column('width', types.Integer, nullable=False),
 	Column('type', Enum(['image','video','audio','text'], empty_to_none=True, strict=True), nullable=False),
@@ -113,11 +115,13 @@ user_submission_table = Table('user_submission', metadata,
 
 
 class JournalEntry(object):
-    def __init__(self, user_id, title, content):
+    def __init__(self, user_id, title, content, content_parsed):
         self.user_id = user_id
         self.discussion_id = 0
         self.title = title
         self.content = content
+        self.content_parsed = content_parsed
+        self.status = 'normal'
 journal_entry_mapper = mapper(JournalEntry, journal_entry_table)
 
 
@@ -181,10 +185,11 @@ class User(object):
         return perm_q.count() > 0
 
 class Submission(object):
-    def __init__(self, hash, title, description, height, width, type, mimetype, discussion_id, status ):
+    def __init__(self, hash, title, description, description_parsed, height, width, type, mimetype, discussion_id, status ):
         self.hash = hash
         self.title = title
         self.description = description
+        self.description_parsed = description_parsed
         self.height = height
         self.width = width
         self.type = type

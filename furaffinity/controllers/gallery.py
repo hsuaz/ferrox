@@ -147,6 +147,7 @@ class GalleryController(BaseController):
             hash = fullfile_hash,
             title = submission_data['title'],
             description = submission_data['description'],
+            description_parsed = submission_data['description'], # waiting for bbcode parser
             height = fullfile_height,
             width = fullfile_width,
             type = submission_data['type'],
@@ -200,7 +201,7 @@ class GalleryController(BaseController):
             c.submission_thumbnail = ''
         c.submission_file = h.url_for(controller='gallery', action='file', filename=filename, id=None)
         c.submission_title = submission.title
-        c.submission_description = submission.description
+        c.submission_description = submission.description_parsed
         c.submission_artist = submission.user_submission[0].user.display_name
         c.submission_time = submission.time
         c.submission_type = submission.type

@@ -30,3 +30,17 @@ def embed_flash(url):
 </object>
 """ % (url,url)
 
+def dict_to_option (opts=(),default=None):
+    output = ''
+    for k in opts.keys():
+        if (opts[k] == ''):
+            v = k
+        else:
+            v = opts[k]
+        if (default == k):
+            selected = ' selected="selected"'
+        else:
+            selected = ''
+        output = "%s\n<option value=\"%s\"%s>%s</option>" % (output, k, selected, v)
+    return output
+

@@ -46,7 +46,7 @@ class GalleryController(BaseController):
         
     @check_perm('submit_art')
     def submit(self):
-        c.submitoptions = self.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), 'image')
+        c.submitoptions = h.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), 'image')
         c.prefill['title'] = ''
         c.prefill['description'] = ''
         return render('/gallery/submit.mako')
@@ -61,7 +61,7 @@ class GalleryController(BaseController):
         except model.form.formencode.Invalid, error:
             pp = pprint.PrettyPrinter(indent=4)
             c.prefill = request.params
-            c.submitoptions = self.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), request.params['type'])
+            c.submitoptions = h.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), request.params['type'])
             c.input_errors = "There were input errors: %s %s" % (error, pp.pformat(c.prefill))
             return render('/gallery/submit.mako')
             #return self.submit()
@@ -223,20 +223,6 @@ class GalleryController(BaseController):
         response.headers['Content-Length'] = len(filedata)
         return filedata
         
-    def dict_to_option (self,opts=(),default=None):
-        output = ''
-        for k in opts.keys():
-            if (opts[k] == ''):
-                v = k
-            else:
-                v = opts[k]
-            if (default == k):
-                selected = ' selected="selected"'
-            else:
-                selected = ''
-            output = "%s\n<option value=\"%s\"%s>%s</option>" % (output, k, selected, v)
-        return output
-    
     def thumbnail_from_image (self,image,max_size,file_type=None):
         aspect = float(image.size[0]) / float(image.size[1])
         if (aspect > 1.0):

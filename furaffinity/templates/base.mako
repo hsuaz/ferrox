@@ -43,7 +43,10 @@
                             <li>${h.link_to("Browse", h.url('browse'))}</li>
                             <li>${h.link_to("Forums", 'http://www.furaffinityforums.net')}</li>
                             <li>${h.link_to("Chat", 'http://www.wikiffinity.net/index.php?title=IRC_Chat')}</li>
-                            <li>${h.link_to("Journal", h.url('/journal'))}</li>
+                            % if c.auth_user:
+                            <li>${h.link_to("My Journal", h.url(controller='journal', action='index', username=c.auth_user.username))}</li>
+                            <li>${h.link_to("My Gallery", h.url(controller='gallery', action='index', username=c.auth_user.username))}</li>
+                            % endif
                             <li>${h.link_to("Support", 'http://www.wikiffinity.net/')}</li>
                             <li>${h.link_to("Staff", h.url('/staff'))}</li>
                             <li>${h.link_to("News", h.url('/news'))}</li>

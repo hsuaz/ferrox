@@ -27,12 +27,8 @@ class JournalController(BaseController):
             c.error_title = 'User not found'
             return render('/error.mako')
 
-        if not c.page_owner.journals:
-            c.error_text = "No journals found for user %s." % c.page_owner.display_name
-            c.error_title = 'User not found'
-            return render('/error.mako')
-        else:
-            return render('/journal/index.mako')
+        c.is_mine = (c.auth_user != None) and (c.page_owner.id == c.auth_user.id)
+        return render('/journal/index.mako')
         
     @check_perm('post_journal')
     def post(self):

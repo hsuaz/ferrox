@@ -24,9 +24,11 @@ def make_map():
 	
     map.connect('/gallery/submit_upload', controller='gallery', action='submit_upload' )
     map.connect('/gallery/submit', controller='gallery', action='submit' )
-    map.connect('/gallery', controller='gallery', action='index' )
+    #map.connect('/gallery', controller='gallery', action='index' )
     map.connect('/gallery/view/:id', controller='gallery', action='view' )
     map.connect('/gallery/image/:filename', controller='gallery', action='file' )
+    map.connect('/user/:username/gallery', controller='gallery', action='index' )
+    map.connect('/user/:username/gallery/:pageno', controller='gallery', action='index' )
 
     map.connect('/journal/submit_upload', controller='journal', action='post_commit' )
     map.connect('/journal/submit', controller='journal', action='post' )

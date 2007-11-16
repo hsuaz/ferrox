@@ -25,13 +25,13 @@ def check_perm(permission):
             return func(*args, **kwargs)
     return check
     
-class GuestRole(model.Role):
+class GuestRole(object):
     def __init__(self):
         self.name = "Guest"
         self.description = "Just a guest"
         self.sigil = ""
     
-class GuestUser(model.User):
+class GuestUser(object):
     '''Dummy object for not-logged-in users'''
     def __init__(self):
         self.id = 0

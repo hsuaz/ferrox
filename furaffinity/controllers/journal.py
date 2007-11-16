@@ -18,10 +18,21 @@ log = logging.getLogger(__name__)
 
 class JournalController(BaseController):
 
-    def index(self):
-        c.error_text = 'Doesn\'t work yet.'
-        c.error_title = 'WUT'
-        return render('/error.mako')
+    def index(self, username='None'):
+        user_q = model.Session.query(model.User)
+        try:
+            c.page_owner = user_q.filter_by(username = username).one()
+        except sqlalchemy.exceptions.InvalidRequestError:
+            c.error_text = "User %s not found." % h.sanitize(username)
+            c.error_title = 'User not found'
+            return render('/error.mako')
+
+        if not c.page_owner.journals:
+            c.error_text = "No journals found for user %s." % c.page_owner.display_name
+            c.error_title = 'User not found'
+            return render('/error.mako')
+        else:
+            return render('/journal/index.mako')
         
     @check_perm('post_journal')
     def post(self):

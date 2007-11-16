@@ -30,8 +30,9 @@ def make_map():
 
     map.connect('/journal/submit_upload', controller='journal', action='post_commit' )
     map.connect('/journal/submit', controller='journal', action='post' )
-    map.connect('/journal', controller='journal', action='index' )
+    #map.connect('/journal', controller='journal', action='index' )
     map.connect('/journal/view/:id', controller='journal', action='view' )
+    map.connect('/user/:username/journal', controller='journal', action='index' )
 
     # CUSTOM ROUTES HERE
 

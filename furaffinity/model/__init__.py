@@ -29,7 +29,7 @@ metadata = MetaData()
 user_table = Table('user', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('username', types.String(32), nullable=False),
-    Column('password', types.String(64), nullable=False),
+    Column('password', types.String(128), nullable=False),
     Column('display_name', types.Unicode, nullable=False),
     Column('role_id', types.Integer, ForeignKey('role.id'), default=1)
 )
@@ -57,27 +57,16 @@ permission_table = Table('permission', metadata,
 
 journal_entry_table = Table('journal_entry', metadata,
     Column('id', types.Integer, primary_key=True),
+    Column('user_id', types.Integer, ForeignKey("user.id")),
+	Column('discussion_id', types.Integer, nullable=False),
     Column('title', types.Unicode, nullable=False),
     Column('content', types.Unicode, nullable=False),
+    Column('content_parsed', types.Unicode, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
-    Column('is_deleted', types.Boolean, nullable=False, default=False)
+    Column('status', Enum(['normal','under_review','removed_by_admin','deleted'], empty_to_none=True, strict=True ), index=True, )
 )
 
-journal_table = Table('journal', metadata,
-    Column('id', types.Integer, primary_key=True),
-    Column('header', types.Unicode),
-    Column('footer', types.Unicode)
-)
-
-journal_entries_table = Table('journal_entries', metadata,
-    Column('journal_id', types.Integer, ForeignKey("journal.id")),
-    Column('journal_entry_id', types.Integer, ForeignKey("journal_entry.id"))
-)
-
-user_journals_table = Table('user_journal', metadata,
-    Column('user_id', types.Integer, ForeignKey("user.id")),
-    Column('journal_id', types.Integer, ForeignKey("journal.id"))
-)
+# News
 
 news_table = Table('news', metadata,
     Column('id', types.Integer, primary_key=True),
@@ -88,11 +77,15 @@ news_table = Table('news', metadata,
     Column('is_anonymous', types.Boolean, nullable=False, default=False),
     Column('is_deleted', types.Boolean, nullable=False, default=False),
 )    
+
+# Submissions
+
 submission_table = Table('submission', metadata,
 	Column('id', types.Integer, primary_key=True),
 	Column('hash', types.String(64), nullable=False, unique=True, primary_key=True),
 	Column('title', types.String(128), nullable=False),
 	Column('description', types.String, nullable=False),
+	Column('description_parsed', types.String, nullable=False),
 	Column('height', types.Integer, nullable=False),
 	Column('width', types.Integer, nullable=False),
 	Column('type', Enum(['image','video','audio','text'], empty_to_none=True, strict=True), nullable=False),
@@ -119,18 +112,19 @@ user_submission_table = Table('user_submission', metadata,
 	Column('status', Enum(['primary','normal','deleted'], empty_to_none=True, strict=True), nullable=False),
 )
 
+# Mappers
+
+
 class JournalEntry(object):
-    def __init__(self, title, content):
+    def __init__(self, user_id, title, content, content_parsed):
+        self.user_id = user_id
+        self.discussion_id = 0
         self.title = title
         self.content = content
+        self.content_parsed = content_parsed
+        self.status = 'normal'
 journal_entry_mapper = mapper(JournalEntry, journal_entry_table)
 
-class Journal(object):
-    pass
-journal_mapper = mapper(Journal, journal_table, properties = dict(
-    entries = relation(JournalEntry, secondary=journal_entries_table, lazy=False)
-    ),
-)
 
 class Permission(object):
     def __init__(self, name, description):
@@ -192,10 +186,11 @@ class User(object):
         return perm_q.count() > 0
 
 class Submission(object):
-    def __init__(self, hash, title, description, height, width, type, mimetype, discussion_id, status ):
+    def __init__(self, hash, title, description, description_parsed, height, width, type, mimetype, discussion_id, status ):
         self.hash = hash
         self.title = title
         self.description = description
+        self.description_parsed = description_parsed
         self.height = height
         self.width = width
         self.type = type
@@ -219,7 +214,7 @@ class DerivedSubmission(object):
         self.derivetype = derivetype
 
 user_mapper = mapper(User, user_table, properties = dict(
-    journals = relation(Journal, secondary=user_journals_table),
+    journals = relation(JournalEntry, backref='user'),
     role = relation(Role),
     user_submission = relation(UserSubmission, backref='user')
     ),
@@ -232,7 +227,6 @@ class News(object):
         self.author = author
       
 news_mapper = mapper(News, news_table, properties = dict(author = relation(User)),)
-
 
 user_submission_mapper = mapper(UserSubmission, user_submission_table, properties=dict(
     submission = relation(Submission, backref='user_submission') #

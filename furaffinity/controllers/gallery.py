@@ -39,14 +39,45 @@ class ImageManagerExceptionBadAction(ImageManagerException):
 
 class GalleryController(BaseController):
 
-    def index(self):
-        c.error_text = 'Doesn\'t work yet.'
-        c.error_title = 'WUT'
-        return render('/error.mako')
+    def index(self, username=None, pageno=1):
+        user_q = model.Session.query(model.User)
+        try:
+            page_owner = user_q.filter_by(username = username).one()
+        except sqlalchemy.exceptions.InvalidRequestError:
+            c.error_text = "User %s not found." % h.sanitize(username)
+            c.error_title = 'User not found'
+            return render('/error.mako')
+
+        
+        c.page_owner_display_name = page_owner.display_name
+            
+        # I'm having to do WAY too much coding in templates, so...
+        if page_owner.user_submission:
+            c.submissions = []
+            for item in page_owner.user_submission:
+                if ( item.submission.derived_submission[0] ):
+                    thumbnail = self.get_submission_file(item.submission.derived_submission[0])
+                else:
+                    thumbnail = None
+                c.submissions.append ( dict (
+                    id = item.submission.id,
+                    title = item.submission.title,
+                    date = item.submission.time,
+                    description = item.submission.description_parsed,
+                    thumbnail = thumbnail
+                ))
+        else:
+            c.submissions = None
+            c.page_owner = page_owner.display_name
+            
+        c.is_mine = (c.auth_user != None) and (page_owner.id == c.auth_user.id)
+        #pp = pprint.PrettyPrinter(indent=4)
+        #return "<pre>%s</pre>" % pp.pformat(c.submissions)
+        return render('/gallery/index.mako')
         
     @check_perm('submit_art')
     def submit(self):
-        c.submitoptions = self.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), 'image')
+        c.submitoptions = h.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), 'image')
         c.prefill['title'] = ''
         c.prefill['description'] = ''
         return render('/gallery/submit.mako')
@@ -61,7 +92,7 @@ class GalleryController(BaseController):
         except model.form.formencode.Invalid, error:
             pp = pprint.PrettyPrinter(indent=4)
             c.prefill = request.params
-            c.submitoptions = self.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), request.params['type'])
+            c.submitoptions = h.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), request.params['type'])
             c.input_errors = "There were input errors: %s %s" % (error, pp.pformat(c.prefill))
             return render('/gallery/submit.mako')
             #return self.submit()
@@ -147,6 +178,7 @@ class GalleryController(BaseController):
             hash = fullfile_hash,
             title = submission_data['title'],
             description = submission_data['description'],
+            description_parsed = submission_data['description'], # waiting for bbcode parser
             height = fullfile_height,
             width = fullfile_width,
             type = submission_data['type'],
@@ -190,9 +222,10 @@ class GalleryController(BaseController):
             c.error_text = 'Requested submission was not found.'
             c.error_title = 'Not Found'
             abort ( 404 )
-        filename=submission.hash+mimetypes.guess_extension(submission.mimetype)
+        filename=self.get_submission_file(submission)
         if ( submission.derived_submission != None ):
-            tn_filename= "%s%s"%(submission.derived_submission[0].hash,mimetypes.guess_extension(submission.derived_submission[0].mimetype))
+            #tn_filename= "%s%s"%(submission.derived_submission[0].hash,mimetypes.guess_extension(submission.derived_submission[0].mimetype))
+            tn_filename=self.get_submission_file(submission.derived_submission[0])
             c.submission_thumbnail = h.url_for(controller='gallery', action='file', filename=tn_filename, id=None)
         else:
             #c.submission_thumbnail = h.url_for(controller='gallery', action='file', filename=tn_filename, id=None)
@@ -200,7 +233,7 @@ class GalleryController(BaseController):
             c.submission_thumbnail = ''
         c.submission_file = h.url_for(controller='gallery', action='file', filename=filename, id=None)
         c.submission_title = submission.title
-        c.submission_description = submission.description
+        c.submission_description = submission.description_parsed
         c.submission_artist = submission.user_submission[0].user.display_name
         c.submission_time = submission.time
         c.submission_type = submission.type
@@ -222,20 +255,6 @@ class GalleryController(BaseController):
         response.headers['Content-Length'] = len(filedata)
         return filedata
         
-    def dict_to_option (self,opts=(),default=None):
-        output = ''
-        for k in opts.keys():
-            if (opts[k] == ''):
-                v = k
-            else:
-                v = opts[k]
-            if (default == k):
-                selected = ' selected="selected"'
-            else:
-                selected = ''
-            output = "%s\n<option value=\"%s\"%s>%s</option>" % (output, k, selected, v)
-        return output
-    
     def thumbnail_from_image (self,image,max_size,file_type=None):
         aspect = float(image.size[0]) / float(image.size[1])
         if (aspect > 1.0):
@@ -294,3 +313,5 @@ class GalleryController(BaseController):
         else:
             raise ImageManagerExceptionBadAction
             
+    def get_submission_file(self,submission):
+        return submission.hash+mimetypes.guess_extension(submission.mimetype)

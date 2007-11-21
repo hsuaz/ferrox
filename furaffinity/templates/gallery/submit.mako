@@ -1,4 +1,4 @@
-<%inherit file="base.mako" />
+<%inherit file="../base.mako" />
 
 % if c.input_errors:
 ${c.input_errors}<br><br>

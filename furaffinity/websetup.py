@@ -27,6 +27,9 @@ def setup_config(command, filename, section, vars):
     submit_perm = model.Permission('submit_art',
                                   'Can submit content to site.')
     normal_role.permissions.append(submit_perm)
+    journal_perm = model.Permission('post_journal',
+                                  'Can post journals to site.')
+    normal_role.permissions.append(journal_perm)
     model.Session.save(normal_role)
 
     admin_role = model.Role('Administrator', 'Administrator')
@@ -35,6 +38,7 @@ def setup_config(command, filename, section, vars):
                                   'General access to administration tools.')
     admin_role.permissions.append(admin_perm)
     admin_role.permissions.append(submit_perm)
+    admin_role.permissions.append(journal_perm)
     model.Session.save(admin_role)
 
     print "Creating test data"
@@ -46,6 +50,16 @@ def setup_config(command, filename, section, vars):
     u = model.User('eevee', 'pretzel')
     u.display_name = 'Eevee'
     u.role = admin_role
+    model.Session.save(u)
+    
+    u = model.User('net-cat', 'asdf')
+    u.display_name = 'net-cat'
+    u.role = admin_role
+    model.Session.save(u)
+    
+    u = model.User('luser', 'asdf')
+    u.display_name = 'Luser'
+    u.role = normal_role
     model.Session.save(u)
 
     n = model.News('headline', 'news content', u)

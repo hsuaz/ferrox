@@ -29,7 +29,7 @@ metadata = MetaData()
 user_table = Table('user', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('username', types.String(32), nullable=False),
-    Column('password', types.String(64), nullable=False),
+    Column('password', types.String(128), nullable=False),
     Column('display_name', types.Unicode, nullable=False),
     Column('role_id', types.Integer, ForeignKey('role.id'), default=1)
 )
@@ -63,7 +63,7 @@ journal_entry_table = Table('journal_entry', metadata,
     Column('content', types.Unicode, nullable=False),
     Column('content_parsed', types.Unicode, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
-    Column('status', Enum(['normal','under_review','removed_by_admin','deleted'], empty_to_none=True, strict=True ), primary_key=True, )
+    Column('status', Enum(['normal','under_review','removed_by_admin','deleted'], empty_to_none=True, strict=True ), index=True, )
 )
 
 # News

@@ -51,6 +51,16 @@ def setup_config(command, filename, section, vars):
     u.display_name = 'Eevee'
     u.role = admin_role
     model.Session.save(u)
+    
+    u = model.User('net-cat', 'asdf')
+    u.display_name = 'net-cat'
+    u.role = admin_role
+    model.Session.save(u)
+    
+    u = model.User('luser', 'asdf')
+    u.display_name = 'Luser'
+    u.role = normal_role
+    model.Session.save(u)
 
     n = model.News('headline', 'news content')
     n.author = u

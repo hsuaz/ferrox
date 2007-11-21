@@ -43,4 +43,3 @@ def dict_to_option (opts=(),default=None):
             selected = ''
         output = "%s\n<option value=\"%s\"%s>%s</option>" % (output, k, selected, v)
     return output
-

@@ -3,12 +3,18 @@
 <div id="news_page">
     <span>Journal for ${c.page_owner.display_name}</span>
     <div class="recent_news">
-    % if c.page_owner.journals:
-        % for item in c.page_owner.journals:
+    % if c.journals:
+        % for item in c.journals:
         <div class="journal">
             <div class="journal_header">
                 <div class="journal_title">${h.link_to(item.title, h.url(controller='journal', action='view', id=item.id, username=None))}</div>
                 <div class="journal_date">Date: ${item.time}</div>
+                % if c.is_mine:
+                <div class="journal_controls">
+                    ${h.link_to('Edit', h.url(controller='journal', action='edit', username=None, id=item.id))}
+                    ${h.link_to('Delete', h.url(controller='journal', action='delete', username=None, id=item.id))}
+                </div>
+                % endif
             </div>
             <div class="journal_content">${item.content}</div>
         </div>

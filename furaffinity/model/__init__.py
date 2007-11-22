@@ -1,10 +1,4 @@
 import random
-try:
-    import hashlib
-    use_hashlib = True
-except:
-    import sha
-    use_hashlib = False
     
 import pylons
 
@@ -12,6 +6,7 @@ from sqlalchemy import Column, MetaData, Table, ForeignKey, types
 from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from furaffinity.model import form;
+import furaffinity.lib.hashing as hashing
 
 from datetime import datetime
 
@@ -30,6 +25,8 @@ user_table = Table('user', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('username', types.String(32), nullable=False),
     Column('password', types.String(128), nullable=False),
+    Column('salt', types.String(5), nullable=False),
+    Column('hash_algorithm', Enum(['WHIRLPOOL','SHA512','SHA1']), nullable=False),
     Column('display_name', types.Unicode, nullable=False),
     Column('role_id', types.Integer, ForeignKey('role.id'), default=1)
 )
@@ -147,37 +144,20 @@ class User(object):
         self.display_name = username
 
     def set_password(self, password):
-        if use_hashlib:
-            algo_name = 'sha256'
-            algo = hashlib.new(algo_name)
-            algo.update(str(random.random()))
-            salt = algo.hexdigest()[-10:]
-            algo = hashlib.new(algo_name)
-            algo.update(salt + password)
-            self.password = "%s$%s$%s" % (algo_name, salt, algo.hexdigest())
-        else:
-            algo_name = 'sha1'
-            algo = sha.new()
-            algo.update(str(random.random()))
-            salt = algo.hexdigest()[-10:]
-            algo = sha.new()
-            algo.update(salt + password)
-            self.password = "%s$%s$%s" % (algo_name, salt, algo.hexdigest())
+        hash = hashing.FerroxHash()
+        self.salt = hashing.make_salt()
+        hash.update(self.salt)
+        hash.update(password)
+        self.password = hash.hexdigest()
+        self.hash_algorithm = hash.algorithm
 
     def check_password(self, password):
-        (algo_name, salt, hashed_password) = self.password.split('$')
-        if use_hashlib:
-            algo = hashlib.new(algo_name)
-            algo.update(salt)
-            algo.update(password)
-            return algo.hexdigest() == hashed_password
-        else:
-            if algo_name != 'sha1':
-                raise RuntimeError("Hashed password needs python2.5")
-            algo = sha.new()
-            algo.update(salt)
-            algo.update(password)
-            return algo.hexdigest() == hashed_password
+        hash = hashing.FerroxHash()
+        if ( self.hash_algorithm != hash.algorithm ):
+            return False
+        hash.update(self.salt)
+        hash.update(password)
+        return ( hash.hexdigest() == self.password )
 
     def can(self, permission):
         perm_q = Session.query(Role).with_parent(self).filter(

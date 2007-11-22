@@ -5,6 +5,7 @@ syntax: glob
 .*.swp
 data
 furaffinity.db
+mydev.ini
 
 syntax: regexp
 ^build/

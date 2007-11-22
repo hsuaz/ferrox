@@ -11,6 +11,7 @@ from pylons.i18n import _, ungettext, N_
 from pylons.templating import render
 
 import furaffinity.lib.helpers as h
+import furaffinity.lib.hashing as hashing
 import furaffinity.model as model
 
 from decorator import decorator
@@ -40,13 +41,15 @@ def check_perms(permissions):
             return render('/denied.mako')
     return check
     
-class GuestRole(model.Role):
+#class GuestRole(model.Role):
+class GuestRole():
     def __init__(self):
         self.name = "Guest"
         self.description = "Just a guest"
         self.sigil = ""
     
-class GuestUser(model.User):
+#class GuestUser(model.User):
+class GuestUser():
     '''Dummy object for not-logged-in users'''
     def __init__(self):
         self.id = 0

@@ -26,7 +26,7 @@ user_table = Table('user', metadata,
     Column('username', types.String(32), nullable=False),
     Column('password', types.String(128), nullable=False),
     Column('salt', types.String(5), nullable=False),
-    Column('hash_algorithm', Enum(['WHIRLPOOL','SHA512','SHA1']), nullable=False),
+    Column('hash_algorithm', Enum(['WHIRLPOOL','SHA512','SHA256','SHA1']), nullable=False),
     Column('display_name', types.Unicode, nullable=False),
     Column('role_id', types.Integer, ForeignKey('role.id'), default=1)
 )
@@ -77,16 +77,22 @@ news_table = Table('news', metadata,
 
 # Submissions
 
-submission_table = Table('submission', metadata,
+image_metadata_table = Table('image_metadata', metadata,
 	Column('id', types.Integer, primary_key=True),
 	Column('hash', types.String(64), nullable=False, unique=True, primary_key=True),
+	Column('height', types.Integer, nullable=False),
+	Column('width', types.Integer, nullable=False),
+	Column('mimetype', types.String(35), nullable=False),
+    Column('submission_count', types.Integer, nullable=False)
+)
+
+submission_table = Table('submission', metadata,
+	Column('id', types.Integer, primary_key=True),
+	Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id")),
 	Column('title', types.String(128), nullable=False),
 	Column('description', types.String, nullable=False),
 	Column('description_parsed', types.String, nullable=False),
-	Column('height', types.Integer, nullable=False),
-	Column('width', types.Integer, nullable=False),
 	Column('type', Enum(['image','video','audio','text'], empty_to_none=True, strict=True), nullable=False),
-	Column('mimetype', types.String(35), nullable=False),
 	Column('discussion_id', types.Integer, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
     Column('status', Enum(['normal','under_review','removed_by_admin','unlinked','deleted'], empty_to_none=True, strict=True ), primary_key=True, nullable=False)
@@ -94,10 +100,7 @@ submission_table = Table('submission', metadata,
 
 derived_submission_table = Table('derived_submission', metadata,
     Column('submission_id', types.Integer, ForeignKey("submission.id"), primary_key=True),
-    Column('hash', types.String(64), nullable=False),
-	Column('height', types.Integer, nullable=False),
-	Column('width', types.Integer, nullable=False),
-    Column('mimetype', types.String(20), nullable=False),
+    Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
     Column('derivetype', Enum(['thumb'], empty_to_none=True, strict=True ), primary_key=True, nullable=False)
 )
 
@@ -149,11 +152,11 @@ class User(object):
         hash.update(self.salt)
         hash.update(password)
         self.password = hash.hexdigest()
-        self.hash_algorithm = hash.algorithm
+        self.hash_algorithm = hashing.hash_algorithm
 
     def check_password(self, password):
         hash = hashing.FerroxHash()
-        if ( self.hash_algorithm != hash.algorithm ):
+        if ( self.hash_algorithm != hashing.hash_algorithm ):
             return False
         hash.update(self.salt)
         hash.update(password)
@@ -165,32 +168,44 @@ class User(object):
         )
         return perm_q.count() > 0
 
-class Submission(object):
-    def __init__(self, hash, title, description, description_parsed, height, width, type, mimetype, discussion_id, status ):
+class ImageMetadata(object):
+    def __init__(self, hash, height, width, mimetype, count, disable=False ):
         self.hash = hash
+        self.height = height
+        self.width = width
+        self.mimetype = mimetype
+        if ( disable ):
+            self.submission_count = -count
+        else:
+            self.submission_count = count
+    
+    def count_inc(self):
+        sign = abs(self.count) / self.count
+        count = sign * (abs(count) + 1)
+
+    def count_dec(self):
+        sign = abs(self.count) / self.count
+        count = sign * (abs(count) - 1)
+
+class Submission(object):
+    def __init__(self, image_metadata_id, title, description, description_parsed, type, discussion_id, status ):
+        self.image_metadata_id = image_metadata_id
         self.title = title
         self.description = description
         self.description_parsed = description_parsed
-        self.height = height
-        self.width = width
         self.type = type
-        self.mimetype = mimetype
         self.discussion_id = discussion_id
         self.status = status
 
 class UserSubmission(object):
     def __init__(self, user_id, relationship, status ):
         self.user_id = user_id
-        #self.submission_id = submission_id
         self.relationship = relationship
         self.status = status
 
 class DerivedSubmission(object):
-    def __init__(self, hash, mimetype, derivetype, width, height ):
-        self.hash = hash
-        self.width = width
-        self.height = height
-        self.mimetype = mimetype
+    def __init__(self, image_metadata_id, derivetype ):
+        self.image_metadata_id = image_metadata_id
         self.derivetype = derivetype
 
 user_mapper = mapper(User, user_table, properties = dict(
@@ -213,9 +228,15 @@ user_submission_mapper = mapper(UserSubmission, user_submission_table, propertie
     )
 )
 
-submission_mapper = mapper(Submission, submission_table)
-
-derived_submission_mapper = mapper(DerivedSubmission,derived_submission_table, properties=dict(
-    submission = relation(Submission, backref='derived_submission')
+submission_mapper = mapper(Submission, submission_table, properties=dict(
+    image_metadata = relation(ImageMetadata, backref='submission')
     )
 )
+
+derived_submission_mapper = mapper(DerivedSubmission,derived_submission_table, properties=dict(
+    submission = relation(Submission, backref='derived_submission'),
+    image_metadata = relation(ImageMetadata, backref='derived_submission')
+    )
+)
+
+image_metadata_mapper = mapper(ImageMetadata, image_metadata_table)

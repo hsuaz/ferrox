@@ -6,8 +6,9 @@ available to Controllers. This module is available to both as 'h'.
 from webhelpers import *
 
 import re
-
 import time
+import struct
+import socket
 
 def sanitize(string):
     """Cleanse an untrusted string of any characters unfriendly to HTML."""
@@ -52,3 +53,13 @@ def dict_to_option (opts=(),default=None):
             selected = ''
         output = "%s\n<option value=\"%s\"%s>%s</option>" % (output, k, selected, v)
     return output
+
+def ip_to_integer(ip_string):
+    """Convert an IP in a.b.c.d form into a packed integer."""
+    return struct.unpack('I', socket.inet_aton(ip_string))[0]
+
+def ip_to_string(ip_integer):
+    """Convert an IP in packed integer form to a.b.c.d form."""
+    return socket.inet_ntoa(struct.pack('I', ip_integer))
+
+

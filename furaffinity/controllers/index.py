@@ -34,7 +34,7 @@ class IndexController(BaseController):
             session.save()
             h.redirect_to(request.headers.get('referer', '/'))
         else:
-            c.error_msg = "Either there is no such account '%s', or the provided password was incorrect." % h.sanitize(username)
+            c.error_msg = "Either there is no such account '%s', or the provided password was incorrect." % h.escape_once(username)
             c.prefill['username'] = username
             return self.login()
 

@@ -11,11 +11,11 @@ import pylons
 from sqlalchemy import Column, MetaData, Table, ForeignKey, types
 from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
-from furaffinity.model import form;
+from furaffinity.model import form
 
 from datetime import datetime
-
 from enum import *
+import re
 
 
 
@@ -51,6 +51,18 @@ permission_table = Table('permission', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('name', types.String(32), nullable=False),
     Column('description', types.String(256), nullable=False),
+)
+
+if re.match('^mysql', pylons.config['sqlalchemy.url']):
+    ip_type = types.MSInteger(unsigned=True)
+else:
+    ip_type = types.String(length=11)
+ip_log_table = Table('ip_log', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('user_id', types.Integer, ForeignKey('user.id'), nullable=False),
+    Column('ip', ip_type, nullable=False),
+    Column('start_time', types.DateTime, nullable=False, default=datetime.now),
+    Column('end_time', types.DateTime, nullable=False, default=datetime.now),
 )
 
 # Journals
@@ -184,6 +196,17 @@ class User(object):
             Role.permissions.any(name=permission)
         )
         return perm_q.count() > 0
+
+class IPLogEntry(object):
+    def __init__(self, user_id, ip_integer):
+        self.user_id = user_id
+        self.ip = ip_integer
+        self.start_time = datetime.now()
+        self.end_time = datetime.now()
+ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
+    user=relation(User, backref='ip_log')
+    ),
+)
 
 class Submission(object):
     def __init__(self, hash, title, description, description_parsed, height, width, type, mimetype, discussion_id, status ):

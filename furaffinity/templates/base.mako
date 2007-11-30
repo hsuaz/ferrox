@@ -65,7 +65,7 @@
                         % if c.auth_user:
                         <li>${h.link_to("Control Panel", h.url('control_panel'))}</li>
                         % if c.auth_user.can('administrate'):
-                        <li>${h.link_to("Admin Control Panel", h.url('administration'))}</li>
+                        <li>${h.link_to("Admin Control Panel", h.url('admin'))}</li>
                         % endif
                         % endif
                         % if not c.auth_user:

@@ -276,6 +276,17 @@ div.news_form
     padding: 4px;
 }
 
+/* Admin controls */
+
+#admin_menu {
+    background: #d4dce8;
+    padding: 0.33em;
+    margin: 0.5em 0;
+    -moz-border-radius: 5px;
+}
+#admin_menu li {
+    display: inline;
+}
 
 /* Global "widgets" */
 
@@ -326,4 +337,15 @@ input[type="submit"],
 input[type="reset"],
 input[type="button"] {
     cursor: pointer;
+}
+
+/* Generic data table */
+table.standard_table {
+    border-collapse: collapse;
+    margin: 0.25em 0;
+}
+table.standard_table td,
+table.standard_table th {
+    border: 1px solid black;
+    padding: 0.33em;
 }

@@ -349,3 +349,69 @@ table.standard_table th {
     border: 1px solid black;
     padding: 0.33em;
 }
+
+/* Username links */
+.userlink {
+    position: relative;
+}
+.userlink a {
+    font-weight: bold;
+}
+.userlink a img {
+    border: none;
+    vertical-align: bottom;
+}
+.userlink .popup {
+    visibility: hidden;
+    position: absolute;
+    left: 0;
+    z-index: 10;
+    background: white;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid black;
+    width: 15em;
+    padding: 0.5em;
+}
+.userlink .popup .avatar {
+    float: right;
+    height: 50px;
+}
+.userlink .popup .name {
+    font-weight: bold;
+}
+.userlink .popup .role {
+    font-size: 0.8em;
+    font-style: italic;
+    margin-bottom: 0.5em;
+}
+.userlink .popup .rel {
+    font-size: 0.8em;
+}
+.userlink .popup .links {
+    font-size: 0.8em;
+    margin-top: 0.5em;
+}
+.userlink .popup .online {
+    color: white;
+    background-color: rgb(0, 128, 0);
+    background-color: rgba(0, 128, 0, 0.5);
+    font-size: 0.75em;
+    font-weight: bold;
+    text-align: center;
+    padding: 0.17em;
+    margin: 0.5em -0.66em -0.66em -0.66em;
+}
+.userlink .popup .offline {
+    color: white;
+    background-color: rgb(128, 0, 0);
+    background-color: rgba(128, 0, 0, 0.5);
+    font-size: 0.75em;
+    font-weight: bold;
+    text-align: center;
+    padding: 0.17em;
+    margin: 0.5em -0.66em -0.66em -0.66em;
+}
+.userlink:hover .popup {
+    visibility: visible;
+}
+

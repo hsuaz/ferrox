@@ -21,6 +21,7 @@ def make_map():
     map.connect('/login_check', controller='index', action='login_check')
     map.connect('/logout', controller='index', action='logout')
     map.connect('/register', controller='index', action='register')
+    map.connect('/user/:username', controller='user', action='view')
 	
     map.connect('/gallery/submit_upload', controller='gallery', action='submit_upload' )
     map.connect('/gallery/submit', controller='gallery', action='submit' )

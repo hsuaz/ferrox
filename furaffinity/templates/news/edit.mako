@@ -12,7 +12,7 @@
                     % endif
                 </div>
                 <div class="news_author">
-                    By: ${c.item.author.display_name}
+                    By: ${self.user_link(c.item.author)}
                     (Anonymous? ${h.check_box('is_anonymous', checked=c.item.is_anonymous)})
                 </div>
                 <div class="news_date">Date: ${c.item.time.strftime("%T %D")}</div>

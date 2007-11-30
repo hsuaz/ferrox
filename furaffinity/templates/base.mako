@@ -26,7 +26,7 @@
                     ${h.end_form()}
                 </div>
                 % else:
-                <div id="welcome">Welcome back ${c.auth_user.role.sigil}${h.link_to(c.auth_user.display_name, h.url('user', username = c.auth_user.username))}</div>
+                <div id="welcome">Welcome back ${self.user_link(c.auth_user)}</div>
                 <div id="message_header">
                     ${h.form(h.url('/logout'), method='post')}
                     ${h.submit('Logout')}
@@ -98,5 +98,31 @@
 
 <%def name="javascript_includes()">
     ${h.javascript_include_tag("jquery-1.2.1.pack.js")}
+</%def>
+
+<%def name="user_link(user)">
+    <span class="userlink">
+        <a href="${h.url_for(controller='/user', action='view', username=user.username)}"><img src="/images/foxy.gif" alt="[user]"/></a>
+        <a href="${h.url_for(controller='/user', action='view', username=user.username)}">${user.username}</a>
+        <div class="popup">
+            <img src="/images/foxy.gif" alt="" class="avatar"/>
+            <div class="name">${user.role.sigil}${user.display_name}</div>
+            <div class="role">${user.role.name}</div>
+<!--
+            <div class="rel">Not <a href="/users/eevee/watch">watched</a> by you</div>
+            <div class="rel">Has you friended</div>
+-->
+            <div class="links">
+                <a href="${h.url_for(controller='/user', action='view', username=user.username)}">Profile</a> |
+                <a href="${h.url_for(controller='/gallery', action='index', username=user.username)}">Gallery</a> |
+                <a href="${h.url_for(controller='/journal', action='index', username=user.username)}">Journal</a>
+            </div>
+            % if user.is_online():
+            <div class="online">online</div>
+            % else:
+            <div class="offline">offline</div>
+            % endif
+        </div>
+    </span>
 </%def>
 

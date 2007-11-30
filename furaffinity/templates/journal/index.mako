@@ -1,7 +1,7 @@
 <%inherit file="../base.mako" />
 
 <div id="news_page">
-    <span>Journal for ${c.page_owner.display_name}</span>
+    <span>Journal for ${self.user_link(c.page_owner)}</span>
     <div class="recent_news">
     % if c.journals:
         % for item in c.journals:
@@ -24,7 +24,7 @@
             <div class="journal_header">
                 <div class="journal_title">Error</div>
             </div>
-            <div class="journal_content">No journals found for user ${c.page_owner.display_name}.</div>
+            <div class="journal_content">No journals found for user ${self.user_link(c.page_owner)}.</div>
         </div>
     % endif
     </div>

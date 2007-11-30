@@ -92,7 +92,7 @@
             <div class="news_story">
                 <div class="news_header">
                     <div class="news_headline">${item.title}</div>
-                    <div class="news_author">By: ${item.author.display_name}</div>
+                    <div class="news_author">By: ${self.user_link(item.author)}</div>
                     <div class="news_date">Date: ${item.time}</div>
                 </div>
                 <div class="news_content">${item.content}</div>

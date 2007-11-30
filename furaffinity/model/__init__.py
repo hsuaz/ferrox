@@ -13,11 +13,11 @@ from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from furaffinity.model import form
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import *
 import re
 
-
+import sys
 
 Session = scoped_session(sessionmaker(autoflush=True, transactional=True,
     bind=pylons.config['pylons.g'].sa_engine))
@@ -190,6 +190,11 @@ class User(object):
             algo.update(salt)
             algo.update(password)
             return algo.hexdigest() == hashed_password
+
+    def is_online(self):
+        ip_log_q = Session.query(IPLogEntry).with_parent(self)
+        last_log_entry = ip_log_q.order_by(IPLogEntry.end_time.desc()).first()
+        return datetime.now() - last_log_entry.end_time < timedelta(0, 60 * 15)
 
     def can(self, permission):
         perm_q = Session.query(Role).with_parent(self).filter(

@@ -20,7 +20,7 @@
                     % if item.is_anonymous:
                         FA Staff
                     % else:
-                        ${item.author.display_name}
+                        ${self.user_link(item.author)}
                     % endif
                 </div>
                 <div class="news_date">Date: ${item.time.strftime("%T %D")}</div>

@@ -8,7 +8,7 @@
         <div class="journal">
             <div class="journal_header">
                 <div class="journal_title">${h.link_to(item.title, h.url(controller='journal', action='view', id=item.id, username=None))}</div>
-                <div class="journal_date">Date: ${item.time}</div>
+                <div class="journal_date">Date: ${h.format_time(item.time)}</div>
                 % if c.is_mine:
                 <div class="journal_controls">
                     ${h.link_to('Edit', h.url(controller='journal', action='edit', username=None, id=item.id))}

@@ -62,4 +62,7 @@ def ip_to_string(ip_integer):
     """Convert an IP in packed integer form to a.b.c.d form."""
     return socket.inet_ntoa(struct.pack('I', ip_integer))
 
+def format_time(datetime):
+    """Format a datetime object standardly."""
+    return datetime.strftime('%m/%d/%y %I:%M %p')
 

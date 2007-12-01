@@ -15,7 +15,7 @@
                     By: ${self.user_link(c.item.author)}
                     (Anonymous? ${h.check_box('is_anonymous', checked=c.item.is_anonymous)})
                 </div>
-                <div class="news_date">Date: ${c.item.time.strftime("%T %D")}</div>
+                <div class="news_date">Date: ${h.format_time(c.item.time)}</div>
             </div>
             <div class="news_form">
                 ${h.text_area('content', size="80x10", content=c.form_defaults['content'] or '')}

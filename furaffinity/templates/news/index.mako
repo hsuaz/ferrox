@@ -23,7 +23,7 @@
                         ${self.user_link(item.author)}
                     % endif
                 </div>
-                <div class="news_date">Date: ${item.time.strftime("%T %D")}</div>
+                <div class="news_date">Date: ${h.format_time(item.time)}</div>
             </div>
             <div class="news_content">${item.content}</div>
         </div>

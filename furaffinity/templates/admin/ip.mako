@@ -13,8 +13,8 @@
     <tr>
         <td> ${h.ip_to_string(ip_log_entry.ip)} </td>
         <td> ${self.user_link(ip_log_entry.user)} </td>
-        <td> ${ip_log_entry.start_time} </td>
-        <td> ${ip_log_entry.end_time} </td>
+        <td> ${h.format_time(ip_log_entry.start_time)} </td>
+        <td> ${h.format_time(ip_log_entry.end_time)} </td>
     </tr>
     % endfor
 </table>

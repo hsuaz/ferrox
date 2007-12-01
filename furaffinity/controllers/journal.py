@@ -35,7 +35,7 @@ class JournalController(BaseController):
         try:
             c.page_owner = user_q.filter_by(username = username).one()
         except sqlalchemy.exceptions.InvalidRequestError:
-            c.error_text = "User %s not found." % h.sanitize(username)
+            c.error_text = "User %s not found." % h.escape_once(username)
             c.error_title = 'User not found'
             return render('/error.mako')
 

@@ -125,7 +125,7 @@ class JournalController(BaseController):
     def delete_commit(self, id=None):
         # -- validate form input --
         pp = pprint.PrettyPrinter(indent=4)
-        validator = model.form.JournalDeleteForm();
+        validator = model.form.DeleteForm();
         delete_form_data = None
         try:
             delete_form_data = validator.to_python(request.params);
@@ -164,7 +164,7 @@ class JournalController(BaseController):
             c.error_title = 'Not Found'
             abort ( 404 )
             
-        submission = None
+        journal_entry = None
         try:
             journal_entry = model.Session.query(model.JournalEntry).filter(model.JournalEntry.id==id).one()
         except sqlalchemy.exceptions.InvalidRequestError:

@@ -88,14 +88,14 @@ image_metadata_table = Table('image_metadata', metadata,
 
 submission_table = Table('submission', metadata,
 	Column('id', types.Integer, primary_key=True),
-	Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id")),
+	Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
 	Column('title', types.String(128), nullable=False),
 	Column('description', types.String, nullable=False),
 	Column('description_parsed', types.String, nullable=False),
 	Column('type', Enum(['image','video','audio','text'], empty_to_none=True, strict=True), nullable=False),
 	Column('discussion_id', types.Integer, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
-    Column('status', Enum(['normal','under_review','removed_by_admin','unlinked','deleted'], empty_to_none=True, strict=True ), primary_key=True, nullable=False)
+    Column('status', Enum(['normal','under_review','removed_by_admin','unlinked','deleted'], empty_to_none=True, strict=True ), index=True, nullable=False)
 )
 
 derived_submission_table = Table('derived_submission', metadata,
@@ -180,16 +180,30 @@ class ImageMetadata(object):
             self.submission_count = count
     
     def count_inc(self):
-        sign = abs(self.count) / self.count
-        count = sign * (abs(count) + 1)
+        if ( self.submission_count > 0 ):
+            sign = abs(self.submission_count) / self.submission_count
+        else:
+            sign = 1
+        self.submission_count = sign * (abs(self.submission_count) + 1)
 
     def count_dec(self):
-        sign = abs(self.count) / self.count
-        count = sign * (abs(count) - 1)
+        if ( self.submission_count > 0 ):
+            sign = abs(self.submission_count) / self.submission_count
+            self.submission_count = sign * (abs(self.submission_count) - 1)
+        
+    def enable(self):
+        self.submission_count = abs(self.submission_count)
+        
+    def disable(self):
+        self.submission_count = -abs(self.submission_count)
+        
+    def is_enabled(self):
+        return ( self.submission_count > 0 )
+        
+        
 
 class Submission(object):
-    def __init__(self, image_metadata_id, title, description, description_parsed, type, discussion_id, status ):
-        self.image_metadata_id = image_metadata_id
+    def __init__(self, title, description, description_parsed, type, discussion_id, status ):
         self.title = title
         self.description = description
         self.description_parsed = description_parsed
@@ -204,8 +218,7 @@ class UserSubmission(object):
         self.status = status
 
 class DerivedSubmission(object):
-    def __init__(self, image_metadata_id, derivetype ):
-        self.image_metadata_id = image_metadata_id
+    def __init__(self, derivetype ):
         self.derivetype = derivetype
 
 user_mapper = mapper(User, user_table, properties = dict(
@@ -221,22 +234,29 @@ class News(object):
         self.content = content
         self.author = author
       
-news_mapper = mapper(News, news_table, properties = dict(author = relation(User)),)
+news_mapper = mapper(News, news_table, properties = dict(author = relation(User)))
 
 user_submission_mapper = mapper(UserSubmission, user_submission_table, properties=dict(
     submission = relation(Submission, backref='user_submission') #
     )
 )
 
+image_metadata_mapper = mapper(ImageMetadata, image_metadata_table)
+
 submission_mapper = mapper(Submission, submission_table, properties=dict(
-    image_metadata = relation(ImageMetadata, backref='submission')
+    metadata = relation(ImageMetadata, backref='submission')
     )
 )
 
 derived_submission_mapper = mapper(DerivedSubmission,derived_submission_table, properties=dict(
     submission = relation(Submission, backref='derived_submission'),
-    image_metadata = relation(ImageMetadata, backref='derived_submission')
+    metadata = relation(ImageMetadata, backref='derived_submission')
     )
 )
 
-image_metadata_mapper = mapper(ImageMetadata, image_metadata_table)
+
+#image_metadata_mapper = mapper(ImageMetadata, image_metadata_table, properties=dict(
+#    submission = relation(Submission, backref='metadata'),
+#    derived_submission = relation(DerivedSubmission, backref='metadata')
+#    )
+#)

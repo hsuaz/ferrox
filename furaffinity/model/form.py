@@ -42,6 +42,6 @@ class JournalForm(formencode.Schema):
     content = formencode.validators.NotEmpty(not_empty=True)
     commit = formencode.validators.PlainText(not_empty=False)
 
-class JournalDeleteForm(formencode.Schema):
+class DeleteForm(formencode.Schema):
     confirm = formencode.validators.PlainText(not_empty=False, if_missing=None)
     cancel = formencode.validators.PlainText(not_empty=False, if_missing=None)

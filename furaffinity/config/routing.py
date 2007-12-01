@@ -24,6 +24,10 @@ def make_map():
 	
     map.connect('/gallery/submit_upload', controller='gallery', action='submit_upload' )
     map.connect('/gallery/submit', controller='gallery', action='submit' )
+    map.connect('/gallery/edit/:id', controller='gallery', action='edit' )
+    map.connect('/gallery/edit_commit/:id', controller='gallery', action='edit_commit' )
+    map.connect('/gallery/delete/:id', controller='gallery', action='delete' )
+    map.connect('/gallery/delete_commit/:id', controller='gallery', action='delete_commit' )
     #map.connect('/gallery', controller='gallery', action='index' )
     map.connect('/gallery/view/:id', controller='gallery', action='view' )
     map.connect('/gallery/image/:filename', controller='gallery', action='file' )

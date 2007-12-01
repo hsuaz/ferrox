@@ -4,7 +4,11 @@
 ${c.input_errors}<br><br>
 % endif
 
+% if c.edit:
+${h.form(h.url(action='edit_commit'), method='post', multipart=True)}
+% else:
 ${h.form(h.url(action='submit_upload'), method='post', multipart=True)}
+% endif
 <div><label for="fullfile">Full View File:</label><span>${h.file_field('fullfile')}</span></div>
 <div><label for="thumbfile">Thumbnail File:</label><span>${h.file_field('thumbfile')}</span></div>
 <div><label for="type">Submission Type:</label><span>${h.select('type', c.submitoptions)}</span></div>

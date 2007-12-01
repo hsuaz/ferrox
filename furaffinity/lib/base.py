@@ -15,6 +15,7 @@ import furaffinity.lib.hashing as hashing
 import furaffinity.model as model
 
 from decorator import decorator
+from datetime import datetime
 
 def check_perm(permission):
     '''Decorator for checking permission on user before running a controller method'''
@@ -41,15 +42,13 @@ def check_perms(permissions):
             return render('/denied.mako')
     return check
     
-#class GuestRole(model.Role):
-class GuestRole():
+class GuestRole(object):
     def __init__(self):
         self.name = "Guest"
         self.description = "Just a guest"
         self.sigil = ""
     
-#class GuestUser(model.User):
-class GuestUser():
+class GuestUser(object):
     '''Dummy object for not-logged-in users'''
     def __init__(self):
         self.id = 0
@@ -79,6 +78,17 @@ class BaseController(WSGIController):
 
             if c.auth_user.can('administrate'):
                 session['admin_ip'] = request.environ['REMOTE_ADDR']
+
+            # Log IPs
+            ip_integer = h.ip_to_integer(request.environ['REMOTE_ADDR'])
+            ip_log_q = model.Session.query(model.IPLogEntry)
+            last_ip_record = ip_log_q.filter_by(user_id = user_id) \
+                .order_by(model.ip_log_table.c.end_time.desc()).first()
+            if last_ip_record and int(last_ip_record.ip) == ip_integer:
+                last_ip_record.end_time = datetime.now()
+            else:
+                model.Session.save(model.IPLogEntry(user_id, ip_integer))
+            model.Session.commit()
         else:
             c.auth_user = GuestUser()
 

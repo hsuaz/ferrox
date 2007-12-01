@@ -5,14 +5,17 @@ import pylons
 from sqlalchemy import Column, MetaData, Table, ForeignKey, types
 from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.databases.mysql import MSInteger, MSEnum
 from furaffinity.model import form;
 import furaffinity.lib.hashing as hashing
 
 from datetime import datetime
 
+from datetime import datetime, timedelta
 from enum import *
+import re
 
-
+import sys
 
 Session = scoped_session(sessionmaker(autoflush=True, transactional=True,
     bind=pylons.config['pylons.g'].sa_engine))
@@ -48,6 +51,18 @@ permission_table = Table('permission', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('name', types.String(32), nullable=False),
     Column('description', types.String(256), nullable=False),
+)
+
+if re.match('^mysql', pylons.config['sqlalchemy.url']):
+    ip_type = MSInteger(unsigned=True)
+else:
+    ip_type = types.String(length=11)
+ip_log_table = Table('ip_log', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('user_id', types.Integer, ForeignKey('user.id'), nullable=False),
+    Column('ip', ip_type, nullable=False),
+    Column('start_time', types.DateTime, nullable=False, default=datetime.now),
+    Column('end_time', types.DateTime, nullable=False, default=datetime.now),
 )
 
 # Journals
@@ -155,12 +170,27 @@ class User(object):
         self.hash_algorithm = hashing.hash_algorithm
 
     def check_password(self, password):
-        hash = hashing.FerroxHash()
-        if ( self.hash_algorithm != hashing.hash_algorithm ):
+        (algo_name, salt, hashed_password) = self.password.split('$')
+        if use_hashlib:
+            algo = hashlib.new(algo_name)
+            algo.update(salt)
+            algo.update(password)
+            return algo.hexdigest() == hashed_password
+        else:
+            if algo_name != 'sha1':
+                raise RuntimeError("Hashed password needs python2.5")
+            algo = sha.new()
+            algo.update(salt)
+            algo.update(password)
+            return algo.hexdigest() == hashed_password
+
+    def is_online(self):
+        ip_log_q = Session.query(IPLogEntry).with_parent(self)
+        last_log_entry = ip_log_q.order_by(IPLogEntry.end_time.desc()).first()
+        if ( last_log_entry ):
+            return datetime.now() - last_log_entry.end_time < timedelta(0, 60 * 15)
+        else:
             return False
-        hash.update(self.salt)
-        hash.update(password)
-        return ( hash.hexdigest() == self.password )
 
     def can(self, permission):
         perm_q = Session.query(Role).with_parent(self).filter(
@@ -201,6 +231,17 @@ class ImageMetadata(object):
         return ( self.submission_count > 0 )
         
         
+
+class IPLogEntry(object):
+    def __init__(self, user_id, ip_integer):
+        self.user_id = user_id
+        self.ip = ip_integer
+        self.start_time = datetime.now()
+        self.end_time = datetime.now()
+ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
+    user=relation(User, backref='ip_log')
+    ),
+)
 
 class Submission(object):
     def __init__(self, title, description, description_parsed, type, discussion_id, status ):
@@ -255,8 +296,3 @@ derived_submission_mapper = mapper(DerivedSubmission,derived_submission_table, p
 )
 
 
-#image_metadata_mapper = mapper(ImageMetadata, image_metadata_table, properties=dict(
-#    submission = relation(Submission, backref='metadata'),
-#    derived_submission = relation(DerivedSubmission, backref='metadata')
-#    )
-#)

@@ -15,7 +15,7 @@ unknown submission type: ${c.submission_type}<br>
 % endif
 ${h.image_tag(c.submission_thumbnail,"%s Thumbnail"%c.submission_title)}<br>
 Description: ${c.submission_description}<br>
-Submitted at: ${c.submission_time}<br><br>
+Submitted at: ${h.format_time(c.submission_time)}<br><br>
 
 ${c.misc}
 <%def name="title()">${c.submission_title} by ${c.submission_artist}</%def>

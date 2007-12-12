@@ -69,12 +69,3 @@ def setup_config(command, filename, section, vars):
     model.Session.commit()
 
     
-    # Is the hash function secure?
-    if ( not hashing.hash_secure ):
-        print """
-=========================
-    SECURITY WARNING!
-=========================
-The hash function in use is not suitable for use in a production environment.
-This software will run, but passwords are NOT secure."""
-    print "Global Hashing Function: %s" % hashing.hash_algorithm

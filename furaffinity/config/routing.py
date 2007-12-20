@@ -46,7 +46,8 @@ def make_map():
     map.connect('/users/:username/journals/:id/delete_commit', controller='journal', action='delete_commit')
     #map.connect('/journal', controller='journal', action='index')
 
-    # CUSTOM ROUTES HERE
+    map.connect('/debug', controller='debug', action='index')
+    map.connect('/debug/crash', controller='debug', action='crash')
 
     map.connect(':controller/:action/:id', action='index', id=None)
     map.connect('*url', controller='template', action='view')

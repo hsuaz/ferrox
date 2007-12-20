@@ -276,15 +276,15 @@ div.news_form
     padding: 4px;
 }
 
-/* Admin controls */
+/* Horizontal sub-menu */
 
-#admin_menu {
+#submenu {
     background: #d4dce8;
     padding: 0.33em;
     margin: 0.5em 0;
     -moz-border-radius: 5px;
 }
-#admin_menu li {
+#submenu li {
     display: inline;
 }
 

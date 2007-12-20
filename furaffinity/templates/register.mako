@@ -1,6 +1,6 @@
 <%inherit file="base.mako" />
 
-${h.form(h.url(action='register_check'), method='post')}
+${h.form(h.url(controller='index', action='register_check'), method='post')}
 <div><label for="username">Username:</label><span>${h.text_field('username')}</span></div>
 <div><label for="email">Email:</label><span>${h.text_field('email')}</span></div>
 <div><label for="email_confirm">Confirm Email:</label><span>${h.text_field('email_confirm')}</span></div>

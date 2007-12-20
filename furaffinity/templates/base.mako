@@ -11,9 +11,9 @@
             <div id="user_header">
                 % if c.auth_user.id == 0:
                 <div id="welcome">Welcome To FurAffinity! Please log in or
-                ${h.link_to('register', h.url('register'))}</div>
+                ${h.link_to('register', h.url(controller='index', action='register'))}</div>
                 <div id="login_header">
-                    ${h.form(h.url('/login_check'), method='post')}
+                    ${h.form(h.url(controller='index', action='login_check'), method='post')}
                     <span>
                         <label for="username">Username:</label>
                         <span>${h.text_field('username')}</span>
@@ -28,28 +28,28 @@
                 % else:
                 <div id="welcome">Welcome back ${self.user_link(c.auth_user)}</div>
                 <div id="message_header">
-                    ${h.form(h.url('/logout'), method='post')}
+                    ${h.form(h.url(controller='index', action='logout'), method='post')}
                     ${h.submit('Logout')}
                     ${h.end_form()}
                 </div>
                 % endif
             </div>
             <div id="nav_header">
-                <h1 id="logo">${h.link_to(h.image_tag('header.jpg', 'FurAffinity'), h.url('/'))} </h1>
+                <h1 id="logo">${h.link_to(h.image_tag('header.jpg', 'FurAffinity'), h.url(controller='index'))} </h1>
                 <div id="nav_bar">
                     <div id="nav">
                         <ul>
-                            <li>${h.link_to("Submit Art", h.url_for(controller='gallery', action='submit'))}</li>
-                            <li>${h.link_to("Browse", h.url('browse'))}</li>
+                            <li>${h.link_to("Submit Art", h.url(controller='gallery', action='submit'))}</li>
+                            <li>${h.link_to("Browse", h.url(controller='gallery'))}</li>
                             <li>${h.link_to("Forums", 'http://www.furaffinityforums.net')}</li>
                             <li>${h.link_to("Chat", 'http://www.wikiffinity.net/index.php?title=IRC_Chat')}</li>
                             % if c.auth_user:
                             <li>${h.link_to("My Journal", h.url(controller='journal', action='index', username=c.auth_user.username))}</li>
-                            <li>${h.link_to("My Gallery", h.url(controller='gallery', action='index', username=c.auth_user.username))}</li>
+                            <li>${h.link_to("My Gallery", h.url(controller='gallery', action='user_index', username=c.auth_user.username))}</li>
                             % endif
                             <li>${h.link_to("Support", 'http://www.wikiffinity.net/')}</li>
-                            <li>${h.link_to("Staff", h.url('/staff'))}</li>
-                            <li>${h.link_to("News", h.url('/news'))}</li>
+                            <li>${h.link_to("Staff", h.url(controller='staff'))}</li>
+                            <li>${h.link_to("News", h.url(controller='news'))}</li>
                         </ul>
                         <div id="search">
                             ${h.form(h.url(controller='search', action='search'), method='post')}
@@ -63,13 +63,13 @@
                     </div>
                     <ul id="control_panels">
                         % if c.auth_user:
-                        <li>${h.link_to("Control Panel", h.url('control_panel'))}</li>
+                        <li>${h.link_to("Control Panel", h.url(controller='user', action='settings', username=c.auth_user.username))}</li>
                         % if c.auth_user.can('administrate'):
-                        <li>${h.link_to("Admin Control Panel", h.url('admin'))}</li>
+                        <li>${h.link_to("Admin Control Panel", h.url(controller='admin'))}</li>
                         % endif
                         % endif
                         % if not c.auth_user:
-                        <li>${h.link_to("Lost Password", h.url('lost_password'))}</li>
+                        <li>${h.link_to("Lost Password", h.url(controller='index', action='lost_password'))}</li>
                         % endif
                     </ul>
                 </div>
@@ -102,8 +102,8 @@
 
 <%def name="user_link(user)">
     <span class="userlink">
-        <a href="${h.url_for(controller='/user', action='view', username=user.username)}"><img src="/images/foxy.gif" alt="[user]"/></a>
-        <a href="${h.url_for(controller='/user', action='view', username=user.username)}">${user.username}</a>
+        <a href="${h.url_for(controller='user', action='view', username=user.username)}"><img src="/images/foxy.gif" alt="[user]"/></a>
+        <a href="${h.url_for(controller='user', action='view', username=user.username)}">${user.username}</a>
         <div class="popup">
             <img src="/images/foxy.gif" alt="" class="avatar"/>
             <div class="name">${user.role.sigil}${user.display_name}</div>
@@ -113,9 +113,9 @@
             <div class="rel">Has you friended</div>
 -->
             <div class="links">
-                <a href="${h.url_for(controller='/user', action='view', username=user.username)}">Profile</a> |
-                <a href="${h.url_for(controller='/gallery', action='index', username=user.username)}">Gallery</a> |
-                <a href="${h.url_for(controller='/journal', action='index', username=user.username)}">Journal</a>
+                <a href="${h.url_for(controller='user', action='view', username=user.username)}">Profile</a> |
+                <a href="${h.url_for(controller='gallery', action='user_index', username=user.username)}">Gallery</a> |
+                <a href="${h.url_for(controller='journal', action='index', username=user.username)}">Journal</a>
             </div>
             % if user.is_online():
             <div class="online">online</div>

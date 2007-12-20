@@ -1,4 +1,4 @@
-<%inherit file="../base.mako" />
+<%inherit file="base.mako" />
 
 <big><big>${c.submission_title}</big></big><br>
 <big>by: ${c.submission_artist}</big><br>

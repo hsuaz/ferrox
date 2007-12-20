@@ -10,27 +10,14 @@ import mimetypes
 import sqlalchemy.exceptions
 import pprint
 import StringIO
+import furaffinity.lib.paginate as paginate
 from tempfile import TemporaryFile
 
 log = logging.getLogger(__name__)
 
 class JournalController(BaseController):
 
-    def index(self, username='None', pageno=1, perpage=5):
-        try:
-            pageno = int(pageno)
-        except ValueError:
-            c.error_text = 'Page number must be a number.'
-            c.error_title = 'Not Found'
-            abort ( 404 )
-            
-        try:
-            perpage = int(perpage)
-        except ValueError:
-            c.error_text = 'Per page must be a number.'
-            c.error_title = 'Not Found'
-            abort ( 400 )
-            
+    def index(self, username=None):
         user_q = model.Session.query(model.User)
         try:
             c.page_owner = user_q.filter_by(username = username).one()
@@ -39,10 +26,11 @@ class JournalController(BaseController):
             c.error_title = 'User not found'
             return render('/error.mako')
 
+        page = request.params.get('page', 0)
         journal_q = model.Session.query(model.JournalEntry)
-        #count = journal_q.filter_by(status = 'normal').count()
-        offset = (pageno-1)*perpage
-        c.journals = journal_q.filter_by(user_id = c.page_owner.id).filter_by(status = 'normal')[offset:offset+perpage]
+        c.journals = journal_q.filter_by(user_id = c.page_owner.id).filter_by(status = 'normal')
+        c.journal_page = paginate.Page(journal_q, page_nr=page, items_per_page=2)
+        c.journal_nav = c.journal_page.navigator(link_var='page')
 
         c.is_mine = (c.auth_user and (c.page_owner.id == c.auth_user.id))
         return render('/journal/index.mako')
@@ -77,7 +65,7 @@ class JournalController(BaseController):
         )
         model.Session.save(journal_entry)
         model.Session.commit()
-        h.redirect_to(h.url_for(controller='journal', action='view', id = journal_entry.id))
+        h.redirect_to(h.url_for(controller='journal', action='view', username=c.auth_user.username, id=journal_entry.id))
             
     @check_perms(['post_journal','administrate'])
     def edit(self,id=None):
@@ -146,12 +134,8 @@ class JournalController(BaseController):
 
     def view(self,id=None):
         journal_entry = self.get_journal(id)
+        c.journal_entry = journal_entry
 
-        c.journal_entry_title = journal_entry.title
-        c.journal_entry_content = journal_entry.content
-        c.journal_entry_author = journal_entry.user.display_name
-        c.journal_entry_time = journal_entry.time
-        c.journal_entry_id = journal_entry.id
         c.is_mine = self.is_my_journal(journal_entry.user)
 
         return render('/journal/view.mako');

@@ -3,7 +3,7 @@ import logging
 import formencode
 
 from furaffinity.lib.base import *
-import furaffinity.lib.paginate as paginate 
+import furaffinity.lib.paginate as paginate
 
 from furaffinity.model import form
 
@@ -16,10 +16,10 @@ class AdminController(BaseController):
         return render('admin/index.mako')
 
     def ip(self):
-        page = request.params.get('p', 0)
+        page = request.params.get('page', 0)
         ip_q = model.Session.query(model.IPLogEntry)
         ip_q = ip_q.order_by(model.IPLogEntry.end_time.desc())
         c.ip_page = paginate.Page(ip_q, page_nr=page, items_per_page=10)
-        c.ip_nav = c.ip_page.navigator(link_var='p')
+        c.ip_nav = c.ip_page.navigator(link_var='page', **c.route)
         return render('admin/ip.mako')
 

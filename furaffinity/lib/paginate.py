@@ -45,6 +45,7 @@ THE SOFTWARE.
 import webhelpers.pagination.orm as orm
 import webhelpers
 import nose
+from pylons import c
 
 __version__ = '$Revision: 100 $'
 __author__ = 'Christoph Haas <email@christoph-haas.de>'
@@ -242,7 +243,10 @@ class Page(list):
             # with the respective page number added.
             # Further kwargs that are passed to the navigator will
             # also be added as URL parameters.
-            arg_dict = {link_var:pagenr}
+            arg_dict = {}
+            if pagenr != self.first_page:
+                arg_dict[link_var] = pagenr
+            arg_dict.update(c.route)
             arg_dict.update(kwargs)
             link_url = webhelpers.url_for(**arg_dict)
             if ajax_id:

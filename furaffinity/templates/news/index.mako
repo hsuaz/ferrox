@@ -31,15 +31,15 @@
         % if c.auth_user.can("administrate"):
         <div class="news_admin_bottom">
             <span class="js-news-edit">
-                ${h.link_to("Edit", h.url(controller="news", action="edit", id=item.id))}
+                ${h.link_to("Edit", h.url(controller='news', action='edit', id=item.id))}
             </span>
                 % if item.is_deleted:
                     <span class="js-news-undelete">
-                        ${h.link_to("Undelete", h.url(controller="news", action="undelete", id=item.id))}
+                        ${h.link_to("Undelete", h.url(controller='news', action='undelete', id=item.id))}
                     </span>
                 % else:
                     <span class="js-news-delete">
-                        ${h.link_to("Delete", h.url(controller="news", action="delete", id=item.id))} 
+                        ${h.link_to("Delete", h.url(controller='news', action='delete', id=item.id))} 
                     </span>
                 % endif
             </span>

@@ -24,7 +24,7 @@
                 % endif
             </div>
             ${h.submit('Save')}
-            ${h.link_to('Cancel', h.url(controller='news', action='index', id=''), class_="small")}
+            ${h.link_to('Cancel', h.url(controller='news', action='index'), class_="small")}
             ${h.end_form()}
         </div>]]
     </div> 

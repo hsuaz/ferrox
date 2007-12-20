@@ -17,13 +17,11 @@ from sqlalchemy import or_,and_
 
 log = logging.getLogger(__name__)
 
-
 thumbnail_maxsize = 120
-
 
 class GalleryController(BaseController):
 
-    def index(self, username=None, pageno=1):
+    def user_index(self, username=None):
         user_q = model.Session.query(model.User)
         try:
             page_owner = user_q.filter_by(username = username).one()
@@ -32,8 +30,7 @@ class GalleryController(BaseController):
             c.error_title = 'User not found'
             return render('/error.mako')
 
-        
-        c.page_owner_display_name = page_owner.display_name
+        c.page_owner = page_owner
             
         # I'm having to do WAY too much coding in templates, so...
         submission_q = model.Session.query(model.UserSubmission)
@@ -55,7 +52,6 @@ class GalleryController(BaseController):
                 ))
         else:
             c.submissions = None
-            c.page_owner = page_owner.display_name
             
         c.is_mine = (c.auth_user != None) and (page_owner.id == c.auth_user.id)
         #pp = pprint.PrettyPrinter(indent=4)
@@ -71,9 +67,10 @@ class GalleryController(BaseController):
         return render('/gallery/submit.mako')
 
     @check_perms(['submit_art','administrate'])
-    def edit(self,id=None):
+    def edit(self, id=None):
         submission = self.get_submission(id)
-        self.is_my_submission(submission,True)
+        self.is_my_submission(submission, True)
+        c.submission = submission
         c.submitoptions = h.dict_to_option(dict(image="Image", video="Flash", audio="Music", text="Story"), 'image')
         c.edit = True
         c.prefill['title'] = submission.title
@@ -81,9 +78,9 @@ class GalleryController(BaseController):
         return render('/gallery/submit.mako')
 
     @check_perms(['submit_art','administrate'])
-    def delete(self,id=None):
+    def delete(self, id=None):
         submission = self.get_submission(id)
-        self.is_my_submission(submission,True)
+        self.is_my_submission(submission, True)
         c.text = "Are you sure you want to delete the submission titled \" %s \"?"%submission.title
         c.url = h.url(action="delete_commit",id=id)
         c.fields = {}

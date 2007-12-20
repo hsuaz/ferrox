@@ -9,6 +9,7 @@ from pylons.controllers.util import abort, etag_cache, redirect_to
 from pylons.decorators import jsonify, validate
 from pylons.i18n import _, ungettext, N_
 from pylons.templating import render
+from routes import request_config
 
 import furaffinity.lib.helpers as h
 import furaffinity.lib.hashing as hashing
@@ -64,6 +65,7 @@ class BaseController(WSGIController):
 
     def __before__(self, action, **params):
         c.prefill = {}
+        c.route = request_config().mapper_dict
 
         user_q = model.Session.query(model.User)
         user_id = session.get('user_id', None)

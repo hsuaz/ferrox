@@ -39,7 +39,9 @@
                 <div id="nav_bar">
                     <div id="nav">
                         <ul>
-                            <li>${h.link_to("Submit Art", h.url(controller='gallery', action='submit'))}</li>
+                            % if c.auth_user:
+                            <li>${h.link_to("Submit Art", h.url(controller='gallery', action='submit', username=c.auth_user.username))}</li>
+                            % endif
                             <li>${h.link_to("Browse", h.url(controller='gallery'))}</li>
                             <li>${h.link_to("Forums", 'http://www.furaffinityforums.net')}</li>
                             <li>${h.link_to("Chat", 'http://www.wikiffinity.net/index.php?title=IRC_Chat')}</li>

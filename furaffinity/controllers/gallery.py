@@ -24,17 +24,15 @@ class GalleryController(BaseController):
     def user_index(self, username=None):
         user_q = model.Session.query(model.User)
         try:
-            page_owner = user_q.filter_by(username = username).one()
+            c.page_owner = user_q.filter_by(username = username).one()
         except sqlalchemy.exceptions.InvalidRequestError:
             c.error_text = "User %s not found." % h.escape_once(username)
             c.error_title = 'User not found'
             return render('/error.mako')
-
-        c.page_owner = page_owner
             
         # I'm having to do WAY too much coding in templates, so...
         submission_q = model.Session.query(model.UserSubmission)
-        submissions = submission_q.filter(model.UserSubmission.status != 'deleted').filter_by(user_id = page_owner.id).all()
+        submissions = submission_q.filter(model.UserSubmission.status != 'deleted').filter_by(user_id = c.page_owner.id).all()
         #[offset:offset+perpage]
         if submissions:
             c.submissions = []
@@ -53,7 +51,7 @@ class GalleryController(BaseController):
         else:
             c.submissions = None
             
-        c.is_mine = (c.auth_user != None) and (page_owner.id == c.auth_user.id)
+        c.is_mine = (c.auth_user != None) and (c.page_owner.id == c.auth_user.id)
         #pp = pprint.PrettyPrinter(indent=4)
         #return "<pre>%s</pre>" % pp.pformat(c.submissions)
         return render('/gallery/index.mako')

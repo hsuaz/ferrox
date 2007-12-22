@@ -104,6 +104,7 @@ journal_entry_table = Table('journal_entry', metadata,
     Column('content_parsed', types.Unicode, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
     Column('status', journal_status_type, index=True ),
+    Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
     mysql_engine='InnoDB'
 )
 
@@ -117,6 +118,7 @@ news_table = Table('news', metadata,
     Column('time', types.DateTime, nullable=False, default=datetime.now),
     Column('is_anonymous', types.Boolean, nullable=False, default=False),
     Column('is_deleted', types.Boolean, nullable=False, default=False),
+    Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
     mysql_engine='InnoDB'
 )    
 
@@ -142,6 +144,7 @@ submission_table = Table('submission', metadata,
 	Column('discussion_id', types.Integer, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
     Column('status', submission_status_type, index=True, nullable=False),
+    Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
     mysql_engine='InnoDB'
 )
 
@@ -161,6 +164,25 @@ user_submission_table = Table('user_submission', metadata,
     mysql_engine='InnoDB'
 )
 
+editlog_table = Table('editlog', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('last_edited_at', types.DateTime, nullable=False, default=datetime.now),
+    Column('last_edited_by_id', types.Integer, ForeignKey('user.id')),
+    mysql_engine='InnoDB'
+)
+
+editlog_entry_table = Table('editlog_entry', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
+    Column('edited_at', types.DateTime, nullable=False, default=datetime.now),
+    Column('edited_by_id', types.Integer, ForeignKey('user.id')),
+    Column('reason', types.String(250)),
+    Column('previous_title', types.String, nullable=False),
+    Column('previous_text', types.String, nullable=False),
+    Column('previous_text_parsed', types.String, nullable=False),
+    mysql_engine='InnoDB'
+)
+
 # Mappers
 
 
@@ -172,22 +194,16 @@ class JournalEntry(object):
         self.content = content
         self.content_parsed = content_parsed
         self.status = 'normal'
-journal_entry_mapper = mapper(JournalEntry, journal_entry_table)
-
 
 class Permission(object):
     def __init__(self, name, description):
         self.name = name
         self.description = description
-permission_mapper = mapper(Permission, permission_table)
 
 class Role(object):
     def __init__(self, name, description=''):
         self.name = name
         self.description = description
-role_mapper = mapper(Role, role_table, properties={
-    'permissions':relation(Permission, secondary=role_permission_table)
-})
 
 class User(object):
     def __init__(self, username, password):
@@ -282,11 +298,6 @@ class IPLogEntry(object):
         self.ip = ip_integer
         self.start_time = datetime.now()
         self.end_time = datetime.now()
-ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
-    user=relation(User, backref='ip_log')
-    ),
-)
-
 class Submission(object):
     def __init__(self, title, description, description_parsed, type, discussion_id, status ):
         self.title = title
@@ -306,6 +317,28 @@ class DerivedSubmission(object):
     def __init__(self, derivetype ):
         self.derivetype = derivetype
 
+class News(object):
+    def __init__(self, title, content, author):
+        self.title = title
+        self.content = content
+        self.author = author
+
+class EditLog(object):
+    def __init__(self):
+        self.last_edited_by = c.auth_user
+
+class EditLogEntry(object):
+    def __init__(self, reason, previous_text, previous_text_parsed):
+        self.edited_by = c.auth_user
+        self.reason = reason
+        self.previous_text = previous_text
+        self.previous_text_parsed = previous_text_parsed
+
+ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
+    user=relation(User, backref='ip_log')
+    ),
+)
+
 user_mapper = mapper(User, user_table, properties = dict(
     journals = relation(JournalEntry, backref='user'),
     role = relation(Role),
@@ -313,13 +346,22 @@ user_mapper = mapper(User, user_table, properties = dict(
     ),
 )
 
-class News(object):
-    def __init__(self, title, content, author):
-        self.title = title
-        self.content = content
-        self.author = author
-      
-news_mapper = mapper(News, news_table, properties = dict(author = relation(User)))
+editlog_mapper = mapper(EditLog,editlog_table, properties=dict(
+    last_edited_by = relation(User)
+    )
+)
+
+editlog_entry_mapper = mapper(EditLogEntry, editlog_entry_table, properties=dict(
+    editlog = relation(EditLog, backref='editlog_entries'),
+    edited_by = relation(User),
+    )
+)
+        
+news_mapper = mapper(News, news_table, properties = dict(
+    author = relation(User),
+    editlog = relation(EditLog)
+    )
+)
 
 user_submission_mapper = mapper(UserSubmission, user_submission_table, properties=dict(
     submission = relation(Submission, backref='user_submission') #
@@ -329,7 +371,8 @@ user_submission_mapper = mapper(UserSubmission, user_submission_table, propertie
 image_metadata_mapper = mapper(ImageMetadata, image_metadata_table)
 
 submission_mapper = mapper(Submission, submission_table, properties=dict(
-    metadata = relation(ImageMetadata, backref='submission')
+    metadata = relation(ImageMetadata, backref='submission'),
+    editlog = relation(EditLog)
     )
 )
 
@@ -339,4 +382,13 @@ derived_submission_mapper = mapper(DerivedSubmission,derived_submission_table, p
     )
 )
 
+permission_mapper = mapper(Permission, permission_table)
 
+role_mapper = mapper(Role, role_table, properties={
+    'permissions':relation(Permission, secondary=role_permission_table)
+})
+
+journal_entry_mapper = mapper(JournalEntry, journal_entry_table, properties=dict(
+    editlog = relation(EditLog)
+    )
+)

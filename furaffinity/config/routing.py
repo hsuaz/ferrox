@@ -10,7 +10,8 @@ from routes import Mapper
 def make_map():
     """Create, configure and return the routes Mapper"""
     map = Mapper(directory=config['pylons.paths']['controllers'],
-                 always_scan=config['debug'])
+                 always_scan=config['debug'],
+                 explicit=True)
 
     # The ErrorController route (handles 404/500 error pages); it should
     # likely stay at the top, ensuring it can always be resolved
@@ -21,34 +22,33 @@ def make_map():
     map.connect('/login_check', controller='index', action='login_check')
     map.connect('/logout', controller='index', action='logout')
     map.connect('/register', controller='index', action='register')
-    map.connect('/user/:username', controller='user', action='view')
+    map.connect('/users/:username', controller='user', action='view')
+    map.connect('/users/:username/settings', controller='user', action='settings')
 	
-    map.connect('/gallery/submit_upload', controller='gallery', action='submit_upload' )
-    map.connect('/gallery/submit', controller='gallery', action='submit' )
-    map.connect('/gallery/edit/:id', controller='gallery', action='edit' )
-    map.connect('/gallery/edit_commit/:id', controller='gallery', action='edit_commit' )
-    map.connect('/gallery/delete/:id', controller='gallery', action='delete' )
-    map.connect('/gallery/delete_commit/:id', controller='gallery', action='delete_commit' )
-    #map.connect('/gallery', controller='gallery', action='index' )
-    map.connect('/gallery/view/:id', controller='gallery', action='view' )
-    map.connect('/gallery/image/:filename', controller='gallery', action='file' )
-    map.connect('/user/:username/gallery', controller='gallery', action='user_index' )
-    map.connect('/user/:username/gallery/:pageno', controller='gallery', action='user_index' )
+    map.connect('/users/:username/gallery', controller='gallery', action='user_index')
+    map.connect('/users/:username/gallery/submit', controller='gallery', action='submit')
+    map.connect('/users/:username/gallery/submit_upload', controller='gallery', action='submit_upload')
+    map.connect('/users/:username/gallery/:id', controller='gallery', action='view')
+    map.connect('/users/:username/gallery/:id/edit', controller='gallery', action='edit')
+    map.connect('/users/:username/gallery/:id/edit_commit', controller='gallery', action='edit_commit')
+    map.connect('/users/:username/gallery/:id/delete', controller='gallery', action='delete')
+    map.connect('/users/:username/gallery/:id/delete_commit', controller='gallery', action='delete_commit')
+    map.connect('/gallery', controller='gallery', action='index')
+    map.connect('/gallery/images/:filename', controller='gallery', action='file')
 
-    map.connect('/journal/submit_upload', controller='journal', action='post_commit' )
-    map.connect('/journal/submit', controller='journal', action='post' )
-    map.connect('/journal/edit/:id', controller='journal', action='edit' )
-    map.connect('/journal/edit_commit/:id', controller='journal', action='edit_commit' )
-    map.connect('/journal/delete/:id', controller='journal', action='delete' )
-    map.connect('/journal/delete_commit/:id', controller='journal', action='delete_commit' )
-    #map.connect('/journal', controller='journal', action='index' )
-    map.connect('/journal/view/:id', controller='journal', action='view' )
-    map.connect('/user/:username/journal', controller='journal', action='index' )
-    map.connect('/user/:username/journal/:pageno', controller='journal', action='index' )
-    
+    map.connect('/users/:username/journals', controller='journal', action='index')
+    map.connect('/users/:username/journals/post', controller='journal', action='post')
+    map.connect('/users/:username/journals/post_commit', controller='journal', action='post_commit')
+    map.connect('/users/:username/journals/:id', controller='journal', action='view')
+    map.connect('/users/:username/journals/:id/edit', controller='journal', action='edit')
+    map.connect('/users/:username/journals/:id/edit_commit', controller='journal', action='edit_commit')
+    map.connect('/users/:username/journals/:id/delete', controller='journal', action='delete')
+    map.connect('/users/:username/journals/:id/delete_commit', controller='journal', action='delete_commit')
+    #map.connect('/journal', controller='journal', action='index')
+
     # CUSTOM ROUTES HERE
 
-    map.connect(':controller/:action/:id')
+    map.connect(':controller/:action/:id', action='index', id=None)
     map.connect('*url', controller='template', action='view')
 
     return map

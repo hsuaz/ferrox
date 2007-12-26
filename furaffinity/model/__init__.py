@@ -46,7 +46,7 @@ else:
 journal_status_type = Enum(['normal','under_review','removed_by_admin','deleted'], empty_to_none=True, strict=True )
 submission_type_type = Enum(['image','video','audio','text'], empty_to_none=True, strict=True)
 submission_status_type = Enum(['normal','under_review','removed_by_admin','unlinked','deleted'], empty_to_none=True, strict=True )
-derived_submission_derivetype_type = Enum(['thumb'], empty_to_none=True, strict=True )
+derived_submission_derivetype_type = Enum(['thumb','halfview'], empty_to_none=True, strict=True )
 user_submission_status_type = Enum(['primary','normal','deleted'], empty_to_none=True, strict=True)
 user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin'], empty_to_none=True, strict=True)
 
@@ -149,9 +149,10 @@ submission_table = Table('submission', metadata,
 )
 
 derived_submission_table = Table('derived_submission', metadata,
-    Column('submission_id', types.Integer, ForeignKey("submission.id"), primary_key=True),
+    Column('id', types.Integer, primary_key=True),
+    Column('submission_id', types.Integer, ForeignKey("submission.id"), nullable=False),
     Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
-    Column('derivetype', derived_submission_derivetype_type, primary_key=True, nullable=False),
+    Column('derivetype', derived_submission_derivetype_type, nullable=False),
     mysql_engine='InnoDB'
 )
 
@@ -306,7 +307,15 @@ class Submission(object):
         self.type = type
         self.discussion_id = discussion_id
         self.status = status
-
+        
+    def get_derived_index (self,types):
+        for index in xrange(0,len(self.derived_submission)):
+            for type in types:
+                #print "%d lf:%s ch:%s" % (index, self.derived_submission[index].derivetype, type)
+                if (self.derived_submission[index].derivetype == type):
+                    return index
+        return None
+        
 class UserSubmission(object):
     def __init__(self, user_id, relationship, status ):
         self.user_id = user_id

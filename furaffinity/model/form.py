@@ -30,12 +30,13 @@ class NewsForm(formencode.Schema):
     commit = formencode.validators.PlainText(not_empty=True)
 
 class SubmitForm(formencode.Schema):
-    fullfile = FileUploadValidator(not_empty=True)
+    fullfile = FileUploadValidator()
+    halffile = FileUploadValidator()
     thumbfile = FileUploadValidator()
-    type = formencode.validators.PlainText(not_empty=False)
     title = formencode.validators.String(not_empty=True)
     description = formencode.validators.NotEmpty(not_empty=True)
     commit = formencode.validators.PlainText(not_empty=False)
+
 
 class JournalForm(formencode.Schema):
     title = formencode.validators.String(not_empty=True)

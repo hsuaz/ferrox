@@ -32,7 +32,7 @@ def store(hash,mimetype,data):
         image_metadata = model.Session.query(model.ImageMetadata).filter(model.ImageMetadata.hash==hash).one()
     except sqlalchemy.exceptions.InvalidRequestError:
         folder = '/' + hash[0:3] + '/'  + hash[3:6] + '/'  + hash[6:9] + '/'  + hash[9:12]
-        filename = hash + mimetypes.guess_extension(mimetype)
+        filename = hash + (mimetypes.guess_extension(mimetype) or '.txt')
         if ( not os.access ( imagestore + folder, os.F_OK ) ):
             os.makedirs  ( imagestore + folder )
         if ( os.access ( imagestore + folder + '/' + filename, os.F_OK ) ):
@@ -65,7 +65,7 @@ def dump(hash):
     except sqlalchemy.exceptions.InvalidRequestError:
         raise ImageManagerExceptionFileNotFound
     folder = '/' + hash[0:3] + '/'  + hash[3:6] + '/'  + hash[6:9] + '/'  + hash[9:12]
-    filename = hash + mimetypes.guess_extension(image_metadata.mimetype)
+    filename = hash + (mimetypes.guess_extension(image_metadata.mimetype) or '.txt')
     try:
         f = open ( imagestore + folder + '/' + filename, 'rb' )
     except IOError:
@@ -77,7 +77,7 @@ def dump(hash):
 
         
 def get_submission_file(metadata):
-    return metadata.hash+mimetypes.guess_extension(metadata.mimetype)
+    return metadata.hash+(mimetypes.guess_extension(metadata.mimetype ) or '.txt')
 
 def delete(hash):
     hash = hash.split('.')[0]
@@ -106,7 +106,7 @@ def purge(hash):
         raise ImageManagerExceptionFileNotFound
     model.Session.delete(image_metadata)
     folder = '/' + hash[0:3] + '/'  + hash[3:6] + '/'  + hash[6:9] + '/'  + hash[9:12]
-    filename = hash + mimetypes.guess_extension(image_metadata.mimetype)
+    filename = hash + (mimetypes.guess_extension(image_metadata.mimetype ) or '.txt')
 
     try:
         os.unlink ( imagestore + folder + '/' + filename, 'rb' )

@@ -13,7 +13,12 @@ ${h.link_to('Text Submission',c.submission_file)}, not yet implemented<br>
 % else:
 unknown submission type: ${c.submission_type}<br>
 % endif
+% if (c.submission_halfview):
+${h.image_tag(c.submission_halfview,"%s Half View"%c.submission_title)}<br>
+% endif
+% if (c.submission_thumbnail):
 ${h.image_tag(c.submission_thumbnail,"%s Thumbnail"%c.submission_title)}<br>
+% endif
 Description: ${c.submission_description}<br>
 Submitted at: ${h.format_time(c.submission_time)}<br><br>
 

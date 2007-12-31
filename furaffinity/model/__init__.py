@@ -46,7 +46,7 @@ else:
 journal_status_type = Enum(['normal','under_review','removed_by_admin','deleted'], empty_to_none=True, strict=True )
 submission_type_type = Enum(['image','video','audio','text'], empty_to_none=True, strict=True)
 submission_status_type = Enum(['normal','under_review','removed_by_admin','unlinked','deleted'], empty_to_none=True, strict=True )
-derived_submission_derivetype_type = Enum(['thumb'], empty_to_none=True, strict=True )
+derived_submission_derivetype_type = Enum(['thumb','halfview'], empty_to_none=True, strict=True )
 user_submission_status_type = Enum(['primary','normal','deleted'], empty_to_none=True, strict=True)
 user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin'], empty_to_none=True, strict=True)
 
@@ -104,6 +104,7 @@ journal_entry_table = Table('journal_entry', metadata,
     Column('content_parsed', types.Unicode, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
     Column('status', journal_status_type, index=True ),
+    Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
     mysql_engine='InnoDB'
 )
 
@@ -117,6 +118,7 @@ news_table = Table('news', metadata,
     Column('time', types.DateTime, nullable=False, default=datetime.now),
     Column('is_anonymous', types.Boolean, nullable=False, default=False),
     Column('is_deleted', types.Boolean, nullable=False, default=False),
+    Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
     mysql_engine='InnoDB'
 )    
 
@@ -142,13 +144,15 @@ submission_table = Table('submission', metadata,
 	Column('discussion_id', types.Integer, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
     Column('status', submission_status_type, index=True, nullable=False),
+    Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
     mysql_engine='InnoDB'
 )
 
 derived_submission_table = Table('derived_submission', metadata,
-    Column('submission_id', types.Integer, ForeignKey("submission.id"), primary_key=True),
+    Column('id', types.Integer, primary_key=True),
+    Column('submission_id', types.Integer, ForeignKey("submission.id"), nullable=False),
     Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
-    Column('derivetype', derived_submission_derivetype_type, primary_key=True, nullable=False),
+    Column('derivetype', derived_submission_derivetype_type, nullable=False),
     mysql_engine='InnoDB'
 )
 
@@ -158,6 +162,25 @@ user_submission_table = Table('user_submission', metadata,
 	Column('submission_id', types.Integer, ForeignKey("submission.id")),
 	Column('relationship', user_submission_relationship_type, nullable=False),
 	Column('status', user_submission_status_type, nullable=False),
+    mysql_engine='InnoDB'
+)
+
+editlog_table = Table('editlog', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('last_edited_at', types.DateTime, nullable=False, default=datetime.now),
+    Column('last_edited_by_id', types.Integer, ForeignKey('user.id')),
+    mysql_engine='InnoDB'
+)
+
+editlog_entry_table = Table('editlog_entry', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
+    Column('edited_at', types.DateTime, nullable=False, default=datetime.now),
+    Column('edited_by_id', types.Integer, ForeignKey('user.id')),
+    Column('reason', types.String(250)),
+    Column('previous_title', types.String, nullable=False),
+    Column('previous_text', types.String, nullable=False),
+    Column('previous_text_parsed', types.String, nullable=False),
     mysql_engine='InnoDB'
 )
 
@@ -172,22 +195,16 @@ class JournalEntry(object):
         self.content = content
         self.content_parsed = content_parsed
         self.status = 'normal'
-journal_entry_mapper = mapper(JournalEntry, journal_entry_table)
-
 
 class Permission(object):
     def __init__(self, name, description):
         self.name = name
         self.description = description
-permission_mapper = mapper(Permission, permission_table)
 
 class Role(object):
     def __init__(self, name, description=''):
         self.name = name
         self.description = description
-role_mapper = mapper(Role, role_table, properties={
-    'permissions':relation(Permission, secondary=role_permission_table)
-})
 
 class User(object):
     def __init__(self, username, password):
@@ -282,11 +299,6 @@ class IPLogEntry(object):
         self.ip = ip_integer
         self.start_time = datetime.now()
         self.end_time = datetime.now()
-ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
-    user=relation(User, backref='ip_log')
-    ),
-)
-
 class Submission(object):
     def __init__(self, title, description, description_parsed, type, discussion_id, status ):
         self.title = title
@@ -295,7 +307,15 @@ class Submission(object):
         self.type = type
         self.discussion_id = discussion_id
         self.status = status
-
+        
+    def get_derived_index (self,types):
+        for index in xrange(0,len(self.derived_submission)):
+            for type in types:
+                #print "%d lf:%s ch:%s" % (index, self.derived_submission[index].derivetype, type)
+                if (self.derived_submission[index].derivetype == type):
+                    return index
+        return None
+        
 class UserSubmission(object):
     def __init__(self, user_id, relationship, status ):
         self.user_id = user_id
@@ -306,6 +326,28 @@ class DerivedSubmission(object):
     def __init__(self, derivetype ):
         self.derivetype = derivetype
 
+class News(object):
+    def __init__(self, title, content, author):
+        self.title = title
+        self.content = content
+        self.author = author
+
+class EditLog(object):
+    def __init__(self):
+        self.last_edited_by = c.auth_user
+
+class EditLogEntry(object):
+    def __init__(self, reason, previous_text, previous_text_parsed):
+        self.edited_by = c.auth_user
+        self.reason = reason
+        self.previous_text = previous_text
+        self.previous_text_parsed = previous_text_parsed
+
+ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
+    user=relation(User, backref='ip_log')
+    ),
+)
+
 user_mapper = mapper(User, user_table, properties = dict(
     journals = relation(JournalEntry, backref='user'),
     role = relation(Role),
@@ -313,13 +355,22 @@ user_mapper = mapper(User, user_table, properties = dict(
     ),
 )
 
-class News(object):
-    def __init__(self, title, content, author):
-        self.title = title
-        self.content = content
-        self.author = author
-      
-news_mapper = mapper(News, news_table, properties = dict(author = relation(User)))
+editlog_mapper = mapper(EditLog,editlog_table, properties=dict(
+    last_edited_by = relation(User)
+    )
+)
+
+editlog_entry_mapper = mapper(EditLogEntry, editlog_entry_table, properties=dict(
+    editlog = relation(EditLog, backref='editlog_entries'),
+    edited_by = relation(User),
+    )
+)
+        
+news_mapper = mapper(News, news_table, properties = dict(
+    author = relation(User),
+    editlog = relation(EditLog)
+    )
+)
 
 user_submission_mapper = mapper(UserSubmission, user_submission_table, properties=dict(
     submission = relation(Submission, backref='user_submission') #
@@ -329,7 +380,8 @@ user_submission_mapper = mapper(UserSubmission, user_submission_table, propertie
 image_metadata_mapper = mapper(ImageMetadata, image_metadata_table)
 
 submission_mapper = mapper(Submission, submission_table, properties=dict(
-    metadata = relation(ImageMetadata, backref='submission')
+    metadata = relation(ImageMetadata, backref='submission'),
+    editlog = relation(EditLog)
     )
 )
 
@@ -339,4 +391,13 @@ derived_submission_mapper = mapper(DerivedSubmission,derived_submission_table, p
     )
 )
 
+permission_mapper = mapper(Permission, permission_table)
 
+role_mapper = mapper(Role, role_table, properties={
+    'permissions':relation(Permission, secondary=role_permission_table)
+})
+
+journal_entry_mapper = mapper(JournalEntry, journal_entry_table, properties=dict(
+    editlog = relation(EditLog)
+    )
+)

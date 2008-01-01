@@ -46,6 +46,8 @@ def make_map():
     map.connect('/users/:username/journals/:id/delete_commit', controller='journal', action='delete_commit')
     #map.connect('/journal', controller='journal', action='index')
 
+    map.connect('/stylesheets2/:sheet', controller='stylesheets', action='index')
+
     map.connect('/debug', controller='debug', action='index')
     map.connect('/debug/crash', controller='debug', action='crash')
 

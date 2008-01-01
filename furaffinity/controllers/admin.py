@@ -20,6 +20,6 @@ class AdminController(BaseController):
         ip_q = model.Session.query(model.IPLogEntry)
         ip_q = ip_q.order_by(model.IPLogEntry.end_time.desc())
         c.ip_page = paginate.Page(ip_q, page_nr=page, items_per_page=10)
-        c.ip_nav = c.ip_page.navigator(link_var='page', **c.route)
+        c.ip_nav = c.ip_page.navigator(link_var='page')
         return render('admin/ip.mako')
 

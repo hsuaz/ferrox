@@ -1,104 +1,114 @@
 <%inherit file="base.mako" />
 
-<div id="main_page">
-    <div id="recent">
-        <div id="recent_artwork">
-            <span>Recent Artwork</span>
-            <div class="recent_work">
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
+<div id="left-column">
+    <div class="basic-box">
+        <h2>Recent Artwork</h2>
+        <div class="thumbnail-grid">
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
             </div>
-            <div class="recent_work">
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
             </div>
-        </div>
-        <div id="recent_stories">
-            <span>Recent Stories</span>
-            <div class="recent_work">
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
             </div>
-        </div>
-        <div id="recent_poetry">
-            <span>Recent Poetry</span>
-            <div class="recent_work">
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
             </div>
-        </div>
-        <div id="recent_music">
-            <span>Recent Music</span>
-            <div class="recent_work">
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
-                <div class="work">
-                    ${h.image_tag("thumb.jpg", "foo")}
-                </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
             </div>
         </div>
     </div>
-    <div id="news">
-        <span>News</span>
-        <div class="recent_news">
-            % for item in c.news:
-            <div class="news_story">
-                <div class="news_header">
-                    <div class="news_headline">${item.title}</div>
-                    <div class="news_author">By: ${self.user_link(item.author)}</div>
-                    <div class="news_date">Date: ${h.format_time(item.time)}</div>
-                </div>
-                <div class="news_content">${item.content}</div>
+    <div class="basic-box">
+        <h2>Recent Stories</h2>
+        <div class="thumbnail-grid">
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
             </div>
-            % endfor
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
         </div>
+    </div>
+    <div class="basic-box">
+        <h2>Recent Poetry</h2>
+        <div class="thumbnail-grid">
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+        </div>
+    </div>
+    <div class="basic-box">
+        <h2>Recent Music</h2>
+        <div class="thumbnail-grid">
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+            <div class="thumbnail">
+                ${h.image_tag("thumb.jpg", "foo")}
+            </div>
+        </div>
+    </div>
+</div>
+<div id="right-column">
+    <div class="basic-box">
+        <h2>News</h2>
+        % for item in c.news:
+        <div class="entry">
+            <div class="header">
+                <div class="title">${item.title}</div>
+                <div class="avatar FINISHME"><img src="http://userpic.livejournal.com/41114350/600603" alt="avatar"/></div>
+                <div class="author">By: ${self.user_link(item.author)}</div>
+                <div class="date">Date: ${h.format_time(item.time)}</div>
+            </div>
+            <div class="content">
+                ${item.content}
+            </div>
+        </div>
+        <div class="entry">
+            <div class="header">
+                <div class="title">${item.title}</div>
+                <div class="avatar FINISHME"><img src="/images/ad1.gif" alt="avatar"/></div>
+                <div class="author">By: ${self.user_link(item.author)}</div>
+                <div class="date">Date: ${h.format_time(item.time)}</div>
+            </div>
+            <div class="content">
+                ${item.content}
+            </div>
+        </div>
+        % endfor
     </div>
 </div>
 

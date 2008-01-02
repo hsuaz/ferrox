@@ -21,15 +21,38 @@ def to_dict(model):
         model_dict[propname] = getattr(model, propname)
     return model_dict
 
-def embed_flash(url):
-    return """
-<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" id="page_content">
+def embed_flash(url,dims=None):
+    rv = """
+<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0" id="page_content" """
+
+    if ( dims != None ):
+        rv = rv + "height=\"%d\" width=\"%d\"" % dims
+
+    rv = rv + """>
     <param name="movie" value="%s" />
     <param name="quality" value="high" />
     <param name="bgcolor" value="#FFFFFF" />
-    <embed src="%s" quality="high" bgcolor="#FFFFFF" name="myMoviename" aligh="" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer"></embed>
+    <embed src="%s" quality="high" bgcolor="#FFFFFF" name="myMoviename" align="" type="application/x-shockwave-flash"  pluginspage="http://www.macromedia.com/go/getflashplayer" """ % (url,url)
+    
+    if ( dims != None ):
+        rv = rv + "height=\"%d\" width=\"%d\"" % dims
+    
+    rv = rv + """></embed>
 </object>
-""" % (url,url)
+""" 
+    
+    return rv
+
+def embed_mp3(url):
+    return """
+    <object width="300" height="42">
+    <param name="src" value="%s">
+    <param name="autoplay" value="true">
+    <param name="controller" value="true">
+    <param name="bgcolor" value="#FF9900">
+    <embed src="%s" autostart="true" loop="false" width="300" height="42" controller="true" bgcolor="#FF9900"></embed>
+    </object>
+"""%(url,url)
 
 def dict_to_option (opts=(),default=None):
     output = ''

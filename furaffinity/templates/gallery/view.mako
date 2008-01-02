@@ -7,7 +7,7 @@ ${h.embed_flash(c.submission_file)}<br>
 % elif (c.submission_type == 'image'):
 ${h.image_tag(c.submission_file,c.submission_title)}<br>
 % elif (c.submission_type == 'audio'):
-${h.link_to('Music Submission', c.submission_file)}, not yet implemented<br>
+${h.embed_mp3(c.submission_file)} (Music Submission)<br>
 % elif (c.submission_type == 'text'):
 ${h.link_to('Text Submission',c.submission_file)}, not yet implemented<br>
 % else:

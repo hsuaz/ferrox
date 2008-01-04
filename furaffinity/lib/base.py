@@ -42,13 +42,13 @@ def check_perms(permissions):
                     return func(*args, **kwargs)
             return render('/denied.mako')
     return check
-    
+
 class GuestRole(object):
     def __init__(self):
         self.name = "Guest"
         self.description = "Just a guest"
         self.sigil = ""
-    
+
 class GuestUser(object):
     '''Dummy object for not-logged-in users'''
     def __init__(self):
@@ -57,7 +57,12 @@ class GuestUser(object):
         self.display_name = "guest"
         self.role = GuestRole()
         self.is_guest = True
-        
+
+    def __nonzero__(self):
+        '''Guest user objects evaluate to False so we can simply test the truth
+        of c.auth_user to see if the user is logged in.'''
+        return False
+
     def can(self, permission):
         return False
 
@@ -65,6 +70,7 @@ class BaseController(WSGIController):
 
     def __before__(self, action, **params):
         c.prefill = {}
+        c.error_msgs = []
         c.route = request_config().mapper_dict
 
         user_q = model.Session.query(model.User)

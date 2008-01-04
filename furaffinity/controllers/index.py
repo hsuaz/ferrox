@@ -17,13 +17,16 @@ class IndexController(BaseController):
 
     def register(self):
         return render('/register.mako')
-    
+
+    def register_check(self):
+        return render('/PLACEHOLDER.mako')
+
     def login(self):
         if c.auth_user:
             # This shouldn't really happen, so no need to be nice about it
             h.redirect_to('/')
         return render('/login.mako')
-        
+
     #@https()
     def login_check(self):
         username = request.params.get('username') or ''
@@ -34,7 +37,7 @@ class IndexController(BaseController):
             session.save()
             h.redirect_to(request.headers.get('referer', '/'))
         else:
-            c.error_msg = "Either there is no such account '%s', or the provided password was incorrect." % h.escape_once(username)
+            c.error_msgs.append("Either there is no such account '%s', or the provided password was incorrect." % h.escape_once(username))
             c.prefill['username'] = username
             return self.login()
 

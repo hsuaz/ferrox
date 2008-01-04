@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <title>${self.title()} -- Fur Affinity [dot] net</title>
     <link rel="shortcut icon" type="image/png" href="/images/icons/pawprint.png"/>
@@ -11,16 +11,20 @@
 <div id="header">
     <div id="user">
         % if c.auth_user.id == 0:
-        <p>Welcome to FurAffinity! Please log in or
-        ${h.link_to('register', h.url(controller='index', action='register'))}</p>
+        <p>
+            Welcome to FurAffinity! Please log in or
+            ${h.link_to('register', h.url(controller='index', action='register'))}.
+        </p>
+        <p>(${h.link_to("Lost your password?", h.url(controller='index', action='lost_password'))})</p>
         ${h.form(h.url(controller='index', action='login_check'), method='post')}
-            <label> Username: ${h.text_field('username')} </label>
-            <label> Password: ${h.password_field('password')} </label>
+        <dl class="standard-form">
+            <dt>Username</dt>
+            <dd>${h.text_field('username')}</dd>
+            <dt>Password</dt>
+            <dd>${h.password_field('password')}</dd>
+        </dl>
         ${h.submit('Login')}
         ${h.end_form()}
-        <ul class="inline">
-            <li>${h.link_to("Lost Password", h.url(controller='index', action='lost_password'))}</li>
-        </ul>
         % else:
         ${h.form(h.url(controller='index', action='logout'), method='post')}
         <p>Welcome back, ${self.user_link(c.auth_user)}!  ${h.submit('Log out')}</p>
@@ -44,14 +48,14 @@
         </ul>
         % endif
     </div>
-    <h1 id="logo">${h.link_to(h.image_tag('/images/fa_2008dark.jpg', 'FurAffinity'), h.url(controller='index'))}</h1>
+    <h1 id="logo">${h.link_to(h.image_tag('/images/fa_2008dark.jpg', 'FurAffinity'), h.url(controller='index', action='index'))}</h1>
 </div>
 <div id="navigation">
     <div class="basic-box" id="site-nav">
         <h2>Site</h2>
         <ul>
-            <li>${h.link_to("Home", h.url(controller='index'))}</li>
-            <li>${h.link_to("Browse", h.url(controller='gallery'))}</li>
+            <li>${h.link_to("Home", h.url(controller='index', action='index'))}</li>
+            <li>${h.link_to("Browse", h.url(controller='gallery', action='index'))}</li>
             <li>${h.link_to("News", h.url(controller='news'))}</li>
             <li>${h.link_to("Staff", h.url(controller='staff'))}</li>
         </ul>
@@ -67,8 +71,10 @@
     <div class="basic-box" id="search">
         <h2>Search gallery</h2>
         ${h.form(h.url(controller='search', action='search'), method='post')}
-        ${h.text_field('search')}
-        ${h.submit('Search')}
+        <p>
+            ${h.text_field('search')}
+            ${h.submit('Search')}
+        </p>
         ${h.end_form()}
     </div>
 </div>
@@ -77,10 +83,13 @@
     <li>${h.image_tag('/images/ad2.gif', 'Ad 2')}</li>
 </ul>
 
-% if c.error_msg:
-<div id="error">
-    ${c.error_msg}
-</div>
+% if c.error_msgs:
+<ul id="error">
+    asdfsadf
+    % for error in c.error_msgs:
+    <li>${error}</li>
+    % endfor
+</ul>
 % endif
 
 <div id="content">
@@ -110,8 +119,8 @@
     ${h.stylesheet_link_tag('404site.css')}
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet='reset')}"/>
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet='common')}"/>
-    <link rel="alternate stylesheet" type="text/css" title="Duality" href="${h.url_for(controller='stylesheets', action='index', sheet='duality')}"/>
-    <link rel="stylesheet" type="text/css" title="Sufficiently Advanced" href="${h.url_for(controller='stylesheets', action='index', sheet='sufficiently-advanced')}"/>
+    <link rel="stylesheet" type="text/css" title="Duality" href="${h.url_for(controller='stylesheets', action='index', sheet='duality')}"/>
+    <link rel="alternate stylesheet" type="text/css" title="Sufficiently Advanced" href="${h.url_for(controller='stylesheets', action='index', sheet='sufficiently-advanced')}"/>
 </%def>
 
 <%def name="javascript_includes()">

@@ -13,37 +13,41 @@ def make_map():
                  always_scan=config['debug'],
                  explicit=True)
 
+    # We do this a lot, so be epic lazy
+    require_post = dict(conditions=dict(method=['POST']))
+
     # The ErrorController route (handles 404/500 error pages); it should
     # likely stay at the top, ensuring it can always be resolved
     map.connect('error/:action/:id', controller='error')
 
     map.connect('/', controller='index', action='index')
     map.connect('/login', controller='index', action='login')
-    map.connect('/login_check', controller='index', action='login_check')
-    map.connect('/logout', controller='index', action='logout')
+    map.connect('/login_check', controller='index', action='login_check', **require_post)
+    map.connect('/logout', controller='index', action='logout', **require_post)
     map.connect('/register', controller='index', action='register')
+    map.connect('/register', controller='index', action='register_check', **require_post)
     map.connect('/users/:username', controller='user', action='view')
     map.connect('/users/:username/settings', controller='user', action='settings')
-	
+
     map.connect('/users/:username/gallery', controller='gallery', action='user_index')
     map.connect('/users/:username/gallery/submit', controller='gallery', action='submit')
-    map.connect('/users/:username/gallery/submit_upload', controller='gallery', action='submit_upload')
+    map.connect('/users/:username/gallery/submit_upload', controller='gallery', action='submit_upload', **require_post)
     map.connect('/users/:username/gallery/:id', controller='gallery', action='view')
     map.connect('/users/:username/gallery/:id/edit', controller='gallery', action='edit')
-    map.connect('/users/:username/gallery/:id/edit_commit', controller='gallery', action='edit_commit')
+    map.connect('/users/:username/gallery/:id/edit_commit', controller='gallery', action='edit_commit', **require_post)
     map.connect('/users/:username/gallery/:id/delete', controller='gallery', action='delete')
-    map.connect('/users/:username/gallery/:id/delete_commit', controller='gallery', action='delete_commit')
+    map.connect('/users/:username/gallery/:id/delete_commit', controller='gallery', action='delete_commit', **require_post)
     map.connect('/gallery', controller='gallery', action='index')
     map.connect('/gallery/images/:filename', controller='gallery', action='file')
 
     map.connect('/users/:username/journals', controller='journal', action='index')
     map.connect('/users/:username/journals/post', controller='journal', action='post')
-    map.connect('/users/:username/journals/post_commit', controller='journal', action='post_commit')
+    map.connect('/users/:username/journals/post_commit', controller='journal', action='post_commit', **require_post)
     map.connect('/users/:username/journals/:id', controller='journal', action='view')
     map.connect('/users/:username/journals/:id/edit', controller='journal', action='edit')
-    map.connect('/users/:username/journals/:id/edit_commit', controller='journal', action='edit_commit')
+    map.connect('/users/:username/journals/:id/edit_commit', controller='journal', action='edit_commit', **require_post)
     map.connect('/users/:username/journals/:id/delete', controller='journal', action='delete')
-    map.connect('/users/:username/journals/:id/delete_commit', controller='journal', action='delete_commit')
+    map.connect('/users/:username/journals/:id/delete_commit', controller='journal', action='delete_commit', **require_post)
     #map.connect('/journal', controller='journal', action='index')
 
     map.connect('/stylesheets2/:sheet', controller='stylesheets', action='index')

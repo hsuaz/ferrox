@@ -14,3 +14,6 @@ class UserController(BaseController):
     def view(self):
         return render('user/view.mako')
 
+    def settings(self):
+        return render('/PLACEHOLDER.mako')
+

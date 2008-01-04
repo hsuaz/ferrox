@@ -59,8 +59,7 @@ body { background: ${c.colors['background']}; color: ${c.colors['text']}; font-f
 .entry .header .date:after { content: ''; display: block; clear: left; height: 0; background: ${c.colors['MED_REPLACEME']}; }
 .entry .content { clear: both; margin: 0.25em; }
 
-
-/*** thumbnail grid ***/
+/* thumbnail grid */
 .thumbnail-grid .thumbnail { float: left; width: 120px; height: 120px; padding: 0.25em; margin: 1em; border: 1px solid ${c.colors['MED_REPLACEME']}; }
 .thumbnail-grid:after { display: block; clear: both; visibility: hidden; content: 'vee was here'; height: 0; }
 

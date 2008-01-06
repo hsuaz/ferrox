@@ -9,7 +9,10 @@ ${h.image_tag(c.submission_file,c.submission_title)}<br>
 % elif (c.submission_type == 'audio'):
 ${h.embed_mp3(c.submission_file)} (Music Submission)<br>
 % elif (c.submission_type == 'text'):
-${h.link_to('Text Submission',c.submission_file)}, not yet implemented<br>
+${h.link_to('Text Submission',c.submission_file)}, Text submission<br>
+<pre>
+${c.submission_content}
+</pre>
 % else:
 unknown submission type: ${c.submission_type}<br>
 % endif

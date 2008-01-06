@@ -64,6 +64,18 @@ def get_mime_type ( fileobject ):
         return 'application/x-shockwave-flash'
     elif ( mpeg_audio_detector(fileobject['content']) > (0,0) ):
         return 'audio/mpeg'
+    elif ( fileobject['content'][0:5] == r'{\rtf' ):
+        return 'text/richtext'
+    elif ( fileobject['content'][0:2] == 'PK' ):
+        # Note that this covers DOCX and ODF, as well as ZIP files.
+        # We'll have to deal with that at some point.
+        return 'application/zip'
     else:
         return 'text/plain'
         #return mimetypes.guess_type(fileobject['filename'])[0]
+
+
+#Word/Office        
+#0       string          \376\067\0\043                  application/msword
+#0       string          \320\317\021\340\241\261        application/msword
+#0       string          \333\245-\0\0\0                 application/msword

@@ -33,7 +33,7 @@ def make_map():
     map.connect('/users/:username/gallery/:id/edit_commit', controller='gallery', action='edit_commit')
     map.connect('/users/:username/gallery/:id/delete', controller='gallery', action='delete')
     map.connect('/users/:username/gallery/:id/delete_commit', controller='gallery', action='delete_commit')
-    map.connect('/gallery', controller='gallery', action='index')
+    map.connect('/gallery', controller='gallery', action='user_index')
     map.connect('/gallery/images/:filename', controller='gallery', action='file')
 
     map.connect('/users/:username/journals', controller='journal', action='index')

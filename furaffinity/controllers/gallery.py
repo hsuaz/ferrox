@@ -8,6 +8,8 @@ from furaffinity.lib.thumbnailer.IMpipe import Thumbnailer
 from furaffinity.lib.mimemagic import get_mime_type
 from pylons.decorators.secure import *
 
+from chardet.universaldetector import UniversalDetector
+import codecs
 import os
 import md5
 import mimetypes
@@ -27,17 +29,23 @@ halfview_size = 300
 class GalleryController(BaseController):
 
     def user_index(self, username=None):
-        user_q = model.Session.query(model.User)
-        try:
-            c.page_owner = user_q.filter_by(username = username).one()
-        except sqlalchemy.exceptions.InvalidRequestError:
-            c.error_text = "User %s not found." % h.escape_once(username)
-            c.error_title = 'User not found'
-            return render('/error.mako')
+        c.page_owner = None
+        if ( username != None ):
+            user_q = model.Session.query(model.User)
+            try:
+                c.page_owner = user_q.filter_by(username = username).one()
+            except sqlalchemy.exceptions.InvalidRequestError:
+                c.error_text = "User %s not found." % h.escape_once(username)
+                c.error_title = 'User not found'
+                return render('/error.mako')
             
         # I'm having to do WAY too much coding in templates, so...
         submission_q = model.Session.query(model.UserSubmission)
-        submissions = submission_q.filter(model.UserSubmission.status != 'deleted').filter_by(user_id = c.page_owner.id).all()
+        if ( c.page_owner != None ):
+            submissions = submission_q.filter(model.UserSubmission.status != 'deleted').filter_by(user_id = c.page_owner.id).all()
+        else:
+            submissions = submission_q.filter(model.UserSubmission.status != 'deleted').all()
+            
         #[offset:offset+perpage]
         if submissions:
             c.submissions = []
@@ -47,19 +55,22 @@ class GalleryController(BaseController):
                     thumbnail = filestore.get_submission_file(item.submission.derived_submission[tn_ind].metadata)
                 else:
                     thumbnail = None
-                c.submissions.append ( dict (
+                template_item =  dict (
                     id = item.submission.id,
                     title = item.submission.title,
                     date = item.submission.time,
                     description = item.submission.description_parsed,
-                    thumbnail = thumbnail
-                ))
+                    thumbnail = thumbnail,
+                    username = item.user.username
+                )
+                c.submissions.append ( template_item )
         else:
             c.submissions = None
             
-        c.is_mine = (c.auth_user != None) and (c.page_owner.id == c.auth_user.id)
+        c.is_mine = ( c.page_owner != None ) and (c.auth_user != None) and (c.page_owner.id == c.auth_user.id)
         #pp = pprint.PrettyPrinter(indent=4)
         #return "<pre>%s</pre>" % pp.pformat(c.submissions)
+        print c.submissions
         return render('/gallery/index.mako')
         
     @check_perm('submit_art')
@@ -309,6 +320,10 @@ class GalleryController(BaseController):
         c.submission_time = submission.time
         c.submission_type = submission.type
         
+        if ( submission.type == 'text' ):
+            filedata = filestore.dump(filestore.get_submission_file(submission.metadata))
+            c.submission_content = filedata[0]
+        
         pp = pprint.PrettyPrinter (indent=4)
         #c.misc = submission.derived_submission[0].metadata.mimetype
         return render('/gallery/view.mako');
@@ -484,7 +499,18 @@ class GalleryController(BaseController):
                         # Yes it is
                         submission_data['fullfile'].update(toobig)
                         toobig.clear()
-                        
+            elif ( submission_type == 'text' ):
+                if ( submission_data['fullfile']['mimetype'] == 'text/plain' or submission_data['fullfile']['mimetype'] == 'text/html' ):
+                    detector = UniversalDetector()
+                    detector.feed(submission_data['fullfile']['content'])
+                    #print detector.result['encoding']
+                    detector.close()
+                    #print detector.result['encoding']
+                    #print codecs.getdecoder(detector.result['encoding'])
+                    decoded = codecs.getdecoder(detector.result['encoding'])(submission_data['fullfile']['content'],'replace')[0]
+                    submission_data['fullfile']['content'] = codecs.getencoder('utf_8')(h.escape_once(decoded),'replace')[0]
+                    
+                    
             submission_data['fullfile']['hash'] = self.hash(submission_data['fullfile']['content'])
         if ( submission_data['halffile'] != None ):
             submission_data['halffile']['hash'] = self.hash(submission_data['halffile']['content'])

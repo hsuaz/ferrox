@@ -10,6 +10,19 @@ import time
 import struct
 import socket
 
+try:
+    import magic
+    def get_mime_type(fileobject):
+        ms = magic.open(magic.MAGIC_MIME)
+        ms.load()
+        type = ms.buffer(fileobject['content'])
+        ms.close()
+        return type
+except ImportError:
+    import mimetypes
+    def get_mime_type(fileobject):
+        return mimetypes.guess_type(fileobject['filename'])
+        
 def normalize_newlines(string):
     """Adjust all line endings to be the Linux line break, \\x0a."""
     return re.compile("\x0d\x0a|\x0d").sub("\x0a", string)

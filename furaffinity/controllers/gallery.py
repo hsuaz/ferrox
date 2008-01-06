@@ -4,19 +4,18 @@ import logging
 
 from furaffinity.lib.base import *
 from furaffinity.lib import filestore
-from furaffinity.lib.thumbnailer.IMpipe import Thumbnailer
-from furaffinity.lib.mimemagic import get_mime_type
+from furaffinity.lib.thumbnailer import Thumbnailer
 from pylons.decorators.secure import *
 
 from chardet.universaldetector import UniversalDetector
 import codecs
 import os
 import md5
-import mimetypes
+#import mimetypes
 import sqlalchemy.exceptions
 import pprint
-from PIL import Image
-from PIL import ImageFile
+#from PIL import Image
+#from PIL import ImageFile
 from tempfile import TemporaryFile
 from sqlalchemy import or_,and_
 
@@ -68,9 +67,6 @@ class GalleryController(BaseController):
             c.submissions = None
             
         c.is_mine = ( c.page_owner != None ) and (c.auth_user != None) and (c.page_owner.id == c.auth_user.id)
-        #pp = pprint.PrettyPrinter(indent=4)
-        #return "<pre>%s</pre>" % pp.pformat(c.submissions)
-        print c.submissions
         return render('/gallery/index.mako')
         
     @check_perm('submit_art')
@@ -359,8 +355,16 @@ class GalleryController(BaseController):
             return 'video'
         elif ( major == 'audio' and minor == 'mpeg' ):
             return 'audio'
-        else:
+        elif ( major == 'text' ):
             return 'text'
+            try:
+                ['plain','html'].index(minor)
+            except ValueError:
+                return 'unknown'
+            else:
+                return 'text'
+        else:
+            return 'unknown'
 
         
     def get_submission(self,id):
@@ -395,8 +399,11 @@ class GalleryController(BaseController):
         # Is there a new image uploaded?
         if ( submission_data['fullfile'] != None ):
             # Yes, find out what type of submission we're dealing with...
-            submission_data['fullfile']['mimetype'] = get_mime_type(submission_data['fullfile'])
+            submission_data['fullfile']['mimetype'] = h.get_mime_type(submission_data['fullfile'])
             submission_type = self.get_submission_type(submission_data['fullfile']['mimetype'])
+            #print "Mimetype: %s" % submission_data['fullfile']['mimetype']
+            if ( submission_type == 'unknown' ):
+                abort(403)
         else:
             # No, grab it out of current submission.
             submission_type = submission.type
@@ -412,11 +419,11 @@ class GalleryController(BaseController):
             # Yes we do.
             
             # Is it an image?
-            submission_data['thumbfile']['mimetype'] = get_mime_type(submission_data['thumbfile'])
+            submission_data['thumbfile']['mimetype'] = h.get_mime_type(submission_data['thumbfile'])
             if ( self.get_submission_type(submission_data['thumbfile']['mimetype']) == 'image' ):
                 # Yes it is
                 with Thumbnailer() as t:
-                    t.parse(submission_data['thumbfile']['content'])
+                    t.parse(submission_data['thumbfile']['content'],submission_data['thumbfile']['mimetype'])
                     
                     # Is it too big?
                     toobig = t.generate(thumbnail_size)
@@ -442,11 +449,11 @@ class GalleryController(BaseController):
             if ( submission_type == 'image' ):
                 # Yes we do
                 # Is it an image?
-                submission_data['halffile']['mimetype'] = get_mime_type(submission_data['halffile'])
+                submission_data['halffile']['mimetype'] = h.get_mime_type(submission_data['halffile'])
                 if ( self.get_submission_type(submission_data['halffile']['mimetype']) == 'image' ):
                     # Yes it is
                     with Thumbnailer() as t:
-                        t.parse(submission_data['halffile']['content'])
+                        t.parse(submission_data['halffile']['content'],submission_data['halffile']['mimetype'])
                         
                         # Is it too big?
                         toobig = t.generate(halfview_size)
@@ -475,7 +482,7 @@ class GalleryController(BaseController):
         if ( submission_data['fullfile'] != None ):
             if ( submission_type == 'image' ):
                 with Thumbnailer() as t:
-                    t.parse(submission_data['fullfile']['content'])
+                    t.parse(submission_data['fullfile']['content'],submission_data['fullfile']['mimetype'])
                     submission_data['fullfile']['width'] = t.width
                     submission_data['fullfile']['height'] = t.height
                     # Do we need to make a thumbnail?

@@ -23,9 +23,10 @@
 from __future__ import with_statement
 import os
 from tempfile import *
-from PILworkaround import ImageFromString
+#from PILworkaround import ImageFromString
 from PIL import Image
-import StringIO 
+from PIL import ImageFile
+import cStringIO 
 
 class Thumbnailer:
     def __enter__(self):
@@ -33,20 +34,43 @@ class Thumbnailer:
     
     def __init__(self):
         self.temporary_files = []
-        self.original = None;
         self.type = None;
         self.height = 0;
         self.width = 0;
         self.image = None
         
-    def parse(self,file_stream):
-        #temporary_file = mkstemp()
-        #os.close(temporary_file[0])
-        #self.temporary_files.append(temporary_file)
+    def parse(self,file_stream,mimetype):
+        mogrify_interlaced_png = True
+    
+        # Can I do this with ImageFile?
+        if ( mimetype == 'image/png' ):
+            # No.
+            temporary_file = mkstemp()
+            os.close(temporary_file[0])
+            self.temporary_files.append(temporary_file)
 
-        #self.original = temporary_file
-        with ImageFromString() as pill:
-            self.image = pill.parse(file_stream)
+            f = open(temporary_file[1],'r+b')
+            f.seek(0)
+            f.write(file_stream)
+            f.close()
+
+            try:
+                self.image = Image.open(temporary_file[1])
+                self.image.load()
+            except IOError, (err):
+                if ( str(err) == 'cannot read interlaced PNG files' ):
+                    if ( mogrify_interlaced_png ):
+                        os.system ( "mogrify -interlace none %s" % temporary_file[1] )
+                        self.image = Image.open(temporary_file[1])
+                        self.image.load()
+                    else:
+                        raise
+        else:
+            # Probably
+            p = ImageFile.Parser()
+            p.feed(file_stream)
+            self.image = p.close()
+            
         self.type = self.image.format
         self.width = self.image.size[0]
         self.height = self.image.size[1]
@@ -69,7 +93,7 @@ class Thumbnailer:
                 width = int(linear_dimension * aspect)
                 height  = int(linear_dimension)
             i = self.image.resize((width, height), Image.ANTIALIAS)
-            stringbuff = StringIO.StringIO()
+            stringbuff = cStringIO.StringIO()
             i.save(stringbuff, self.type)
             data = stringbuff.getvalue()
             stringbuff.close()
@@ -82,9 +106,9 @@ class Thumbnailer:
     def __exit__(self, type, value, tb):
         # This still causes locking errors with certain filetypes.
         # I can't figure out how to make PIL close a file...
-        #if ( tb == None ):
-        #    for temporary_file in self.temporary_files:
-        #        if ( os.path.exists(temporary_file[1]) ):
-        #            os.unlink(temporary_file[1])
+        if ( tb == None ):
+            for temporary_file in self.temporary_files:
+                if ( os.path.exists(temporary_file[1]) ):
+                    os.unlink(temporary_file[1])
         pass;    
 

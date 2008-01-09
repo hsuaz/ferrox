@@ -33,6 +33,7 @@ def make_map():
     map.connect('/users/:username/gallery/:id/edit_commit', controller='gallery', action='edit_commit')
     map.connect('/users/:username/gallery/:id/delete', controller='gallery', action='delete')
     map.connect('/users/:username/gallery/:id/delete_commit', controller='gallery', action='delete_commit')
+    map.connect('/users/:username/gallery/:id/editlog', controller='editlog', action='submission')
     map.connect('/gallery', controller='gallery', action='user_index')
     map.connect('/gallery/images/:filename', controller='gallery', action='file')
 
@@ -44,6 +45,7 @@ def make_map():
     map.connect('/users/:username/journals/:id/edit_commit', controller='journal', action='edit_commit')
     map.connect('/users/:username/journals/:id/delete', controller='journal', action='delete')
     map.connect('/users/:username/journals/:id/delete_commit', controller='journal', action='delete_commit')
+    map.connect('/users/:username/journals/:id/editlog', controller='editlog', action='journal')
     #map.connect('/journal', controller='journal', action='index')
 
     # CUSTOM ROUTES HERE

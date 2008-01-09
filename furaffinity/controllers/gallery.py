@@ -25,6 +25,26 @@ fullfile_size = 1280
 thumbnail_size = 120
 halfview_size = 300
 
+
+def get_submission(id):
+    try:
+        id = int(id)
+    except ValueError:
+        c.error_text = 'Submission ID must be a number.'
+        c.error_title = 'Not Found'
+        abort ( 404 )
+        
+    submission = None
+    try:
+        submission = model.Session.query(model.Submission).filter(model.Submission.id==id).one()
+    except sqlalchemy.exceptions.InvalidRequestError:
+        c.error_text = 'Requested submission was not found.'
+        c.error_title = 'Not Found'
+        abort ( 404 )
+        
+    return submission
+
+
 class GalleryController(BaseController):
 
     def user_index(self, username=None):
@@ -78,7 +98,7 @@ class GalleryController(BaseController):
 
     @check_perms(['submit_art','administrate'])
     def edit(self, id=None):
-        submission = self.get_submission(id)
+        submission = get_submission(id)
         self.is_my_submission(submission, True)
         c.submission = submission
         c.edit = True
@@ -88,7 +108,7 @@ class GalleryController(BaseController):
 
     @check_perms(['submit_art','administrate'])
     def delete(self, id=None):
-        submission = self.get_submission(id)
+        submission = get_submission(id)
         self.is_my_submission(submission, True)
         c.text = "Are you sure you want to delete the submission titled \" %s \"?"%submission.title
         c.url = h.url(action="delete_commit",id=id)
@@ -111,7 +131,7 @@ class GalleryController(BaseController):
             #return self.submit()
             
         # -- get image from database, make sure user has permission --
-        submission = self.get_submission(id)
+        submission = get_submission(id)
         self.is_my_submission(submission,True)
         
         # -- get relevant information from submission_data --
@@ -143,9 +163,14 @@ class GalleryController(BaseController):
             submission_data['halffile']['metadata'].width = submission_data['halffile']['width']
             
         # -- put submission in database --
-        submission.title = submission_data['title']
-        submission.description = submission_data['description']
-        submission.description_parsed = submission_data['description'] # waiting for bbcode parser
+        if ( submission.title != submission_data['title'] or submission.description != submission_data['description'] ):
+            if ( submission.editlog == None ):
+                submission.editlog = model.EditLog(c.auth_user)
+            editlog_entry = model.EditLogEntry(c.auth_user,'no reasons yet',submission.title,submission.description,submission.description_parsed)
+            submission.editlog.update(editlog_entry)
+            submission.title = submission_data['title']
+            submission.description = submission_data['description']
+            submission.description_parsed = submission_data['description'] # waiting for bbcode parser
         submission.type = submission_data['type']
         submission.status = 'normal'
         if ( submission_data['fullfile'] != None ):
@@ -190,7 +215,7 @@ class GalleryController(BaseController):
             return "There were input errors: %s" % (error)
             #return self.delete(id)
         
-        submission = self.get_submission(id)
+        submission = get_submission(id)
         self.is_my_submission(submission,True)
         
         if (delete_form_data['confirm'] != None):
@@ -288,7 +313,7 @@ class GalleryController(BaseController):
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
             
     def view(self,id=None):
-        submission = self.get_submission(id)
+        submission = get_submission(id)
         filename=filestore.get_submission_file(submission.metadata)
         
         c.submission_thumbnail = submission.get_derived_index(['thumb'])
@@ -367,24 +392,6 @@ class GalleryController(BaseController):
             return 'unknown'
 
         
-    def get_submission(self,id):
-        try:
-            id = int(id)
-        except ValueError:
-            c.error_text = 'Submission ID must be a number.'
-            c.error_title = 'Not Found'
-            abort ( 404 )
-            
-        submission = None
-        try:
-            submission = model.Session.query(model.Submission).filter(model.Submission.id==id).one()
-        except sqlalchemy.exceptions.InvalidRequestError:
-            c.error_text = 'Requested submission was not found.'
-            c.error_title = 'Not Found'
-            abort ( 404 )
-            
-        return submission
-
     def is_my_submission(self,submission,abort=False):
         if ( not c.auth_user or (not c.auth_user.can('administrate') and (c.auth_user.id != journal_entry.user_id)) ):
             if (abort):

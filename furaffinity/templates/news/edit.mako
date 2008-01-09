@@ -3,7 +3,7 @@
 <div id="news_page">
     <div class="recent_news">
         <div class="news_story">
-            ${h.form(h.url(controller='news', action='do_edit'), method='post')}
+            ${h.form(h.url(controller='news', action='do_edit', id=c.id), method='post')}
             <div class="news_header">
                 <div class="news_headline">
                     ${h.text_field('title', value=c.form_defaults['title'] or '')}
@@ -26,7 +26,7 @@
             ${h.submit('Save')}
             ${h.link_to('Cancel', h.url(controller='news', action='index'), class_="small")}
             ${h.end_form()}
-        </div>]]
+        </div>
     </div> 
 </div>
 

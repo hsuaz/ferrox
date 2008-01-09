@@ -333,13 +333,21 @@ class News(object):
         self.author = author
 
 class EditLog(object):
-    def __init__(self):
-        self.last_edited_by = c.auth_user
+    def __init__(self,user):
+        self.last_edited_by = user
+        self.last_edited_at = datetime.now()
+        
+    def update(self,editlog_entry):
+        self.last_edited_by = editlog_entry.edited_by
+        self.last_edited_at = editlog_entry.edited_at
+        self.editlog_entries.append(editlog_entry)
 
 class EditLogEntry(object):
-    def __init__(self, reason, previous_text, previous_text_parsed):
-        self.edited_by = c.auth_user
+    def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed):
+        self.edited_by = user
+        self.edited_at = datetime.now()
         self.reason = reason
+        self.previous_title = previous_title
         self.previous_text = previous_text
         self.previous_text_parsed = previous_text_parsed
 

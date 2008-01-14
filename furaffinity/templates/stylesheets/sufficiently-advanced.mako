@@ -51,7 +51,7 @@ a:hover { color: #ad5757; }
 
 #ads { position: absolute; bottom: 0; right: 0; margin: 0.17em; }
 
-#content { position: relative; padding: 0.75em; padding-top: 0; }
+#content { position: relative; margin: 0.75em; }
 
 #footer { text-align: center; font-size: 0.8em; padding: 0.5em; border-top: 0.25em double #919bad; }
 
@@ -94,13 +94,15 @@ input[type='radio'] { cursor: pointer; }
 .basic-box h2 { font-size: 2em; border-bottom: 1px solid black; }
 
 /* journal/news entry */
-.entry { padding: 0.5em; }
-.entry + .entry { border-top: 1px solid black; }
+.entry { padding: 0.5em; border-top: 1px solid black; }
+h2 + .entry,
+.entry:first-child { border-top: none; }
 .entry .header .title { float: left; font-size: 1.67em; font-weight: bold; color: #919bad; }
 .entry .header .avatar { float: right; }
 .entry .header .avatar img { max-height: 50px; width: 50px; }
 .entry .header .author { clear: left; }
 .entry .content { clear: both; margin-top: 0.25em; padding-top: 0.25em; border-top: 1px dotted #919bad; }
+.entry .admin { text-align: right; }
 
 /* thumbnail grid */
 .thumbnail-grid { margin: 0 auto; clear: both; }

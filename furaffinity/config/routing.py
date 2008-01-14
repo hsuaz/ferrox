@@ -29,6 +29,9 @@ def make_map():
     map.connect('/users/:username', controller='user', action='view')
     map.connect('/users/:username/settings', controller='user', action='settings')
 
+    map.connect('/news/:id/edit', controller='news', action='edit')
+    map.connect('/news/:id/edit_commit', controller='news', action='edit_commit', **require_post)
+
     map.connect('/users/:username/gallery', controller='gallery', action='user_index')
     map.connect('/users/:username/gallery/submit', controller='gallery', action='submit')
     map.connect('/users/:username/gallery/submit_upload', controller='gallery', action='submit_upload', **require_post)

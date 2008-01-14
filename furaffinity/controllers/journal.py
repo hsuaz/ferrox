@@ -24,7 +24,7 @@ class JournalController(BaseController):
         except sqlalchemy.exceptions.InvalidRequestError:
             c.error_text = "User %s not found." % h.escape_once(username)
             c.error_title = 'User not found'
-            return render('/error.mako')
+            abort(404)
 
         page = request.params.get('page', 0)
         journal_q = model.Session.query(model.JournalEntry)
@@ -146,7 +146,7 @@ class JournalController(BaseController):
         except ValueError:
             c.error_text = 'Journal Entry ID must be a number.'
             c.error_title = 'Not Found'
-            abort ( 404 )
+            abort(404)
             
         journal_entry = None
         try:
@@ -154,7 +154,7 @@ class JournalController(BaseController):
         except sqlalchemy.exceptions.InvalidRequestError:
             c.error_text = 'Requested journal entry was not found.'
             c.error_title = 'Not Found'
-            abort ( 404 )
+            abort(404)
             
         return journal_entry
 
@@ -163,7 +163,7 @@ class JournalController(BaseController):
             if (abort):
                 c.error_text = 'You cannot edit this journal entry.'
                 c.error_title = 'Forbidden'
-                abort ( 403 )
+                abort(403)
             else:
                 return False
         return True

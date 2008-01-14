@@ -1,14 +1,12 @@
+<%namespace name="lib" file="/lib.mako"/>
 <%inherit file="/base.mako" />
 
-<big><big>${c.journal_entry.title}</big></big><br>
-<big>by: ${self.user_link(c.journal_entry.user)}</big><br>
-% if c.is_mine:
-${h.link_to('Edit', h.url(controller='journal', action='edit', username=c.route['username'], id=c.route['id']))}
-${h.link_to('Delete', h.url(controller='journal', action='delete', username=c.route['username'], id=c.route['id']))}<br>
-% endif
-Content: ${c.journal_entry.content_parsed}<br>
-Submitted at: ${h.format_time(c.journal_entry.time)}<br><br>
+<div class="basic-box">
+    <p>${h.link_to("&laquo; All of %s's entries" % c.journal_entry.user.display_name, h.url(controller='journal', action='index', username=c.journal_entry.user.username))}</p>
+    ${lib.journal_entry(c.journal_entry)}
 
-${c.misc}
-<%def name="title()">${c.journal_entry_title} by ${c.journal_entry.user.display_name}</%def>
+    ${c.misc}
+</div>
+
+<%def name="title()">${c.journal_entry.title} by ${c.journal_entry.user.display_name}</%def>
 

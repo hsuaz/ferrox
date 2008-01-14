@@ -1,3 +1,4 @@
+<%namespace name="lib" file="/lib.mako"/>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
@@ -27,7 +28,7 @@
         ${h.end_form()}
         % else:
         ${h.form(h.url(controller='index', action='logout'), method='post')}
-        <p>Welcome back, ${self.user_link(c.auth_user)}!  ${h.submit('Log out')}</p>
+        <p>Welcome back, ${lib.user_link(c.auth_user)}!  ${h.submit('Log out')}</p>
         ${h.end_form()}
         <ul class="inline">
             <li>${h.link_to("Profile", h.url(controller='user', action='view', username=c.auth_user.username))}</li>
@@ -126,30 +127,3 @@
 <%def name="javascript_includes()">
     ${h.javascript_include_tag("jquery-1.2.1.pack.js")}
 </%def>
-
-<%def name="user_link(user)">
-    <span class="userlink">
-        <a href="${h.url_for(controller='user', action='view', username=user.username)}"><img src="/images/foxy.gif" alt="[user]"/></a>
-        <a href="${h.url_for(controller='user', action='view', username=user.username)}">${user.username}</a>
-<!--
-        <div class="popup">
-            <img src="/images/foxy.gif" alt="" class="avatar"/>
-            <div class="name">${user.role.sigil}${user.display_name}</div>
-            <div class="role">${user.role.name}</div>
-            <div class="rel">Not <a href="/users/eevee/watch">watched</a> by you</div>
-            <div class="rel">Has you friended</div>
-            <div class="links">
-                <a href="${h.url_for(controller='user', action='view', username=user.username)}">Profile</a> |
-                <a href="${h.url_for(controller='gallery', action='user_index', username=user.username)}">Gallery</a> |
-                <a href="${h.url_for(controller='journal', action='index', username=user.username)}">Journal</a>
-            </div>
-            % if user.is_online():
-            <div class="online">online</div>
-            % else:
-            <div class="offline">offline</div>
-            % endif
-        </div>
--->
-    </span>
-</%def>
-

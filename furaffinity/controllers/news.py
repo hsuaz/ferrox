@@ -51,11 +51,11 @@ class NewsController(BaseController):
         print dir(c.item)
         c.form_defaults = h.to_dict(c.item)
         return render('news/edit.mako')
-    
+
     @check_perm('administrate')
-    def do_edit(self):
+    def edit_commit(self, id):
         news_q = model.Session.query(model.News)
-        c.item = news_q.filter_by(id = c.id).one()
+        c.item = news_q.filter_by(id = id).one()
         schema = model.form.NewsForm()
         try:
             form_result = schema.to_python(request.params)

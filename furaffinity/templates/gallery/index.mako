@@ -1,3 +1,4 @@
+<%namespace name="lib" file="/lib.mako"/>
 <%inherit file="base.mako" />
 
 <div id="news_page">
@@ -24,7 +25,7 @@
                 <div class="submission_title">Error</div>
             </div>
             <div class="submission_info">
-                No submissions found for ${self.user_link(c.page_owner)}.
+                No submissions found for ${lib.user_link(c.page_owner)}.
             </div>
         </div>
     % endif

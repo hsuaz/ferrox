@@ -1,3 +1,4 @@
+<%namespace name="lib" file="/lib.mako"/>
 <%inherit file="base.mako" />
 
 <p> ${c.ip_nav} </p>
@@ -12,7 +13,7 @@
     % for ip_log_entry in c.ip_page:
     <tr>
         <td> ${h.ip_to_string(ip_log_entry.ip)} </td>
-        <td> ${self.user_link(ip_log_entry.user)} </td>
+        <td> ${lib.user_link(ip_log_entry.user)} </td>
         <td> ${h.format_time(ip_log_entry.start_time)} </td>
         <td> ${h.format_time(ip_log_entry.end_time)} </td>
     </tr>

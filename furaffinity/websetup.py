@@ -68,4 +68,8 @@ def setup_config(command, filename, section, vars):
 
     model.Session.commit()
 
+    try:
+        import magic
+    except ImportError:
+        print 'WARNING: mimetypes will be detected by filename instead of magic. In FreeBSD, install "devel/py-magic" from ports.'
     

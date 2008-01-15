@@ -25,7 +25,7 @@ def make_map():
     map.connect('/login_check', controller='index', action='login_check', **require_post)
     map.connect('/logout', controller='index', action='logout', **require_post)
     map.connect('/register', controller='index', action='register')
-    map.connect('/register', controller='index', action='register_check', **require_post)
+    map.connect('/register_check', controller='index', action='register_check', **require_post)
     map.connect('/users/:username', controller='user', action='view')
     map.connect('/users/:username/settings', controller='user', action='settings')
 
@@ -40,6 +40,8 @@ def make_map():
     map.connect('/users/:username/gallery/:id/edit_commit', controller='gallery', action='edit_commit', **require_post)
     map.connect('/users/:username/gallery/:id/delete', controller='gallery', action='delete')
     map.connect('/users/:username/gallery/:id/delete_commit', controller='gallery', action='delete_commit', **require_post)
+    map.connect('/users/:username/gallery/:id/editlog', controller='editlog', action='submission')
+
     map.connect('/gallery', controller='gallery', action='index')
     map.connect('/gallery/images/:filename', controller='gallery', action='file')
 
@@ -51,6 +53,7 @@ def make_map():
     map.connect('/users/:username/journals/:id/edit_commit', controller='journal', action='edit_commit', **require_post)
     map.connect('/users/:username/journals/:id/delete', controller='journal', action='delete')
     map.connect('/users/:username/journals/:id/delete_commit', controller='journal', action='delete_commit', **require_post)
+    map.connect('/users/:username/journals/:id/editlog', controller='editlog', action='journal')
     #map.connect('/journal', controller='journal', action='index')
 
     map.connect('/stylesheets2/:sheet', controller='stylesheets', action='index')

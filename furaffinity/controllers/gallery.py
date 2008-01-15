@@ -4,17 +4,18 @@ import logging
 
 from furaffinity.lib.base import *
 from furaffinity.lib import filestore
-from furaffinity.lib.thumbnailer.IMpipe import Thumbnailer
-from furaffinity.lib.mimemagic import get_mime_type
+from furaffinity.lib.thumbnailer import Thumbnailer
 from pylons.decorators.secure import *
 
+from chardet.universaldetector import UniversalDetector
+import codecs
 import os
 import md5
-import mimetypes
+#import mimetypes
 import sqlalchemy.exceptions
 import pprint
-from PIL import Image
-from PIL import ImageFile
+#from PIL import Image
+#from PIL import ImageFile
 from tempfile import TemporaryFile
 from sqlalchemy import or_,and_
 
@@ -24,20 +25,46 @@ fullfile_size = 1280
 thumbnail_size = 120
 halfview_size = 300
 
+
+def get_submission(id):
+    try:
+        id = int(id)
+    except ValueError:
+        c.error_text = 'Submission ID must be a number.'
+        c.error_title = 'Not Found'
+        abort ( 404 )
+        
+    submission = None
+    try:
+        submission = model.Session.query(model.Submission).filter(model.Submission.id==id).one()
+    except sqlalchemy.exceptions.InvalidRequestError:
+        c.error_text = 'Requested submission was not found.'
+        c.error_title = 'Not Found'
+        abort ( 404 )
+        
+    return submission
+
+
 class GalleryController(BaseController):
 
     def user_index(self, username=None):
-        user_q = model.Session.query(model.User)
-        try:
-            c.page_owner = user_q.filter_by(username = username).one()
-        except sqlalchemy.exceptions.InvalidRequestError:
-            c.error_text = "User %s not found." % h.escape_once(username)
-            c.error_title = 'User not found'
-            return render('/error.mako')
+        c.page_owner = None
+        if ( username != None ):
+            user_q = model.Session.query(model.User)
+            try:
+                c.page_owner = user_q.filter_by(username = username).one()
+            except sqlalchemy.exceptions.InvalidRequestError:
+                c.error_text = "User %s not found." % h.escape_once(username)
+                c.error_title = 'User not found'
+                return render('/error.mako')
             
         # I'm having to do WAY too much coding in templates, so...
         submission_q = model.Session.query(model.UserSubmission)
-        submissions = submission_q.filter(model.UserSubmission.status != 'deleted').filter_by(user_id = c.page_owner.id).all()
+        if ( c.page_owner != None ):
+            submissions = submission_q.filter(model.UserSubmission.status != 'deleted').filter_by(user_id = c.page_owner.id).all()
+        else:
+            submissions = submission_q.filter(model.UserSubmission.status != 'deleted').all()
+            
         #[offset:offset+perpage]
         if submissions:
             c.submissions = []
@@ -47,19 +74,19 @@ class GalleryController(BaseController):
                     thumbnail = filestore.get_submission_file(item.submission.derived_submission[tn_ind].metadata)
                 else:
                     thumbnail = None
-                c.submissions.append ( dict (
+                template_item =  dict (
                     id = item.submission.id,
                     title = item.submission.title,
                     date = item.submission.time,
                     description = item.submission.description_parsed,
-                    thumbnail = thumbnail
-                ))
+                    thumbnail = thumbnail,
+                    username = item.user.username
+                )
+                c.submissions.append ( template_item )
         else:
             c.submissions = None
             
-        c.is_mine = (c.auth_user != None) and (c.page_owner.id == c.auth_user.id)
-        #pp = pprint.PrettyPrinter(indent=4)
-        #return "<pre>%s</pre>" % pp.pformat(c.submissions)
+        c.is_mine = ( c.page_owner != None ) and (c.auth_user != None) and (c.page_owner.id == c.auth_user.id)
         return render('/gallery/index.mako')
         
     @check_perm('submit_art')
@@ -71,7 +98,7 @@ class GalleryController(BaseController):
 
     @check_perms(['submit_art','administrate'])
     def edit(self, id=None):
-        submission = self.get_submission(id)
+        submission = get_submission(id)
         self.is_my_submission(submission, True)
         c.submission = submission
         c.edit = True
@@ -81,7 +108,7 @@ class GalleryController(BaseController):
 
     @check_perms(['submit_art','administrate'])
     def delete(self, id=None):
-        submission = self.get_submission(id)
+        submission = get_submission(id)
         self.is_my_submission(submission, True)
         c.text = "Are you sure you want to delete the submission titled \" %s \"?"%submission.title
         c.url = h.url(action="delete_commit",id=id)
@@ -104,7 +131,7 @@ class GalleryController(BaseController):
             #return self.submit()
             
         # -- get image from database, make sure user has permission --
-        submission = self.get_submission(id)
+        submission = get_submission(id)
         self.is_my_submission(submission,True)
         
         # -- get relevant information from submission_data --
@@ -136,9 +163,14 @@ class GalleryController(BaseController):
             submission_data['halffile']['metadata'].width = submission_data['halffile']['width']
             
         # -- put submission in database --
-        submission.title = submission_data['title']
-        submission.description = submission_data['description']
-        submission.description_parsed = submission_data['description'] # waiting for bbcode parser
+        if ( submission.title != submission_data['title'] or submission.description != submission_data['description'] ):
+            if ( submission.editlog == None ):
+                submission.editlog = model.EditLog(c.auth_user)
+            editlog_entry = model.EditLogEntry(c.auth_user,'no reasons yet',submission.title,submission.description,submission.description_parsed)
+            submission.editlog.update(editlog_entry)
+            submission.title = submission_data['title']
+            submission.description = submission_data['description']
+            submission.description_parsed = submission_data['description'] # waiting for bbcode parser
         submission.type = submission_data['type']
         submission.status = 'normal'
         if ( submission_data['fullfile'] != None ):
@@ -183,7 +215,7 @@ class GalleryController(BaseController):
             return "There were input errors: %s" % (error)
             #return self.delete(id)
         
-        submission = self.get_submission(id)
+        submission = get_submission(id)
         self.is_my_submission(submission,True)
         
         if (delete_form_data['confirm'] != None):
@@ -281,7 +313,7 @@ class GalleryController(BaseController):
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
             
     def view(self,id=None):
-        submission = self.get_submission(id)
+        submission = get_submission(id)
         filename=filestore.get_submission_file(submission.metadata)
         
         c.submission_thumbnail = submission.get_derived_index(['thumb'])
@@ -308,6 +340,10 @@ class GalleryController(BaseController):
         c.submission_artist = submission.user_submission[0].user.display_name
         c.submission_time = submission.time
         c.submission_type = submission.type
+        
+        if ( submission.type == 'text' ):
+            filedata = filestore.dump(filestore.get_submission_file(submission.metadata))
+            c.submission_content = filedata[0]
         
         pp = pprint.PrettyPrinter (indent=4)
         #c.misc = submission.derived_submission[0].metadata.mimetype
@@ -344,28 +380,18 @@ class GalleryController(BaseController):
             return 'video'
         elif ( major == 'audio' and minor == 'mpeg' ):
             return 'audio'
-        else:
+        elif ( major == 'text' ):
             return 'text'
+            try:
+                ['plain','html'].index(minor)
+            except ValueError:
+                return 'unknown'
+            else:
+                return 'text'
+        else:
+            return 'unknown'
 
         
-    def get_submission(self,id):
-        try:
-            id = int(id)
-        except ValueError:
-            c.error_text = 'Submission ID must be a number.'
-            c.error_title = 'Not Found'
-            abort ( 404 )
-            
-        submission = None
-        try:
-            submission = model.Session.query(model.Submission).filter(model.Submission.id==id).one()
-        except sqlalchemy.exceptions.InvalidRequestError:
-            c.error_text = 'Requested submission was not found.'
-            c.error_title = 'Not Found'
-            abort ( 404 )
-            
-        return submission
-
     def is_my_submission(self,submission,abort=False):
         if ( not c.auth_user or (not c.auth_user.can('administrate') and (c.auth_user.id != journal_entry.user_id)) ):
             if (abort):
@@ -380,8 +406,11 @@ class GalleryController(BaseController):
         # Is there a new image uploaded?
         if ( submission_data['fullfile'] != None ):
             # Yes, find out what type of submission we're dealing with...
-            submission_data['fullfile']['mimetype'] = get_mime_type(submission_data['fullfile'])
+            submission_data['fullfile']['mimetype'] = h.get_mime_type(submission_data['fullfile'])
             submission_type = self.get_submission_type(submission_data['fullfile']['mimetype'])
+            #print "Mimetype: %s" % submission_data['fullfile']['mimetype']
+            if ( submission_type == 'unknown' ):
+                abort(403)
         else:
             # No, grab it out of current submission.
             submission_type = submission.type
@@ -397,11 +426,11 @@ class GalleryController(BaseController):
             # Yes we do.
             
             # Is it an image?
-            submission_data['thumbfile']['mimetype'] = get_mime_type(submission_data['thumbfile'])
+            submission_data['thumbfile']['mimetype'] = h.get_mime_type(submission_data['thumbfile'])
             if ( self.get_submission_type(submission_data['thumbfile']['mimetype']) == 'image' ):
                 # Yes it is
                 with Thumbnailer() as t:
-                    t.parse(submission_data['thumbfile']['content'])
+                    t.parse(submission_data['thumbfile']['content'],submission_data['thumbfile']['mimetype'])
                     
                     # Is it too big?
                     toobig = t.generate(thumbnail_size)
@@ -427,11 +456,11 @@ class GalleryController(BaseController):
             if ( submission_type == 'image' ):
                 # Yes we do
                 # Is it an image?
-                submission_data['halffile']['mimetype'] = get_mime_type(submission_data['halffile'])
+                submission_data['halffile']['mimetype'] = h.get_mime_type(submission_data['halffile'])
                 if ( self.get_submission_type(submission_data['halffile']['mimetype']) == 'image' ):
                     # Yes it is
                     with Thumbnailer() as t:
-                        t.parse(submission_data['halffile']['content'])
+                        t.parse(submission_data['halffile']['content'],submission_data['halffile']['mimetype'])
                         
                         # Is it too big?
                         toobig = t.generate(halfview_size)
@@ -460,7 +489,7 @@ class GalleryController(BaseController):
         if ( submission_data['fullfile'] != None ):
             if ( submission_type == 'image' ):
                 with Thumbnailer() as t:
-                    t.parse(submission_data['fullfile']['content'])
+                    t.parse(submission_data['fullfile']['content'],submission_data['fullfile']['mimetype'])
                     submission_data['fullfile']['width'] = t.width
                     submission_data['fullfile']['height'] = t.height
                     # Do we need to make a thumbnail?
@@ -484,7 +513,18 @@ class GalleryController(BaseController):
                         # Yes it is
                         submission_data['fullfile'].update(toobig)
                         toobig.clear()
-                        
+            elif ( submission_type == 'text' ):
+                if ( submission_data['fullfile']['mimetype'] == 'text/plain' or submission_data['fullfile']['mimetype'] == 'text/html' ):
+                    detector = UniversalDetector()
+                    detector.feed(submission_data['fullfile']['content'])
+                    #print detector.result['encoding']
+                    detector.close()
+                    #print detector.result['encoding']
+                    #print codecs.getdecoder(detector.result['encoding'])
+                    decoded = codecs.getdecoder(detector.result['encoding'])(submission_data['fullfile']['content'],'replace')[0]
+                    submission_data['fullfile']['content'] = codecs.getencoder('utf_8')(h.escape_once(decoded),'replace')[0]
+                    
+                    
             submission_data['fullfile']['hash'] = self.hash(submission_data['fullfile']['content'])
         if ( submission_data['halffile'] != None ):
             submission_data['halffile']['hash'] = self.hash(submission_data['halffile']['content'])

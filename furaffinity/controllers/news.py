@@ -67,8 +67,13 @@ class NewsController(BaseController):
         else:
             title = h.escape_once(form_result['title'])
             content = h.escape_once(form_result['content'])
-            c.item.title = title
-            c.item.content = content
+            if ( c.item.title != title or c.item.content != content ):
+                if ( c.item.editlog == None ):
+                    c.item.editlog = model.EditLog(c.auth_user)
+                editlog_entry = model.EditLogEntry(c.auth_user,'no reasons yet',c.item.title,c.item.content,c.item.content)
+                c.item.editlog.update(editlog_entry)
+                c.item.title = title
+                c.item.content = content
             c.item.is_anonymous = form_result['is_anonymous']
             model.Session.save(c.item)
             model.Session.commit()        

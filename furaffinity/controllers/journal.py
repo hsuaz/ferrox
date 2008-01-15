@@ -15,6 +15,24 @@ from tempfile import TemporaryFile
 
 log = logging.getLogger(__name__)
 
+def get_journal(id=None):
+    try:
+        id = int(id)
+    except ValueError:
+        c.error_text = 'Journal Entry ID must be a number.'
+        c.error_title = 'Not Found'
+        abort(404)
+
+    journal_entry = None
+    try:
+        journal_entry = model.Session.query(model.JournalEntry).filter(model.JournalEntry.id==id).one()
+    except sqlalchemy.exceptions.InvalidRequestError:
+        c.error_text = 'Requested journal entry was not found.'
+        c.error_title = 'Not Found'
+        abort(404)
+
+    return journal_entry
+
 class JournalController(BaseController):
 
     def index(self, username=None):
@@ -69,7 +87,7 @@ class JournalController(BaseController):
             
     @check_perms(['post_journal','administrate'])
     def edit(self,id=None):
-        journal_entry = self.get_journal(id)
+        journal_entry = get_journal(id)
         self.is_my_journal(journal_entry,True)
         c.edit = True;
         c.prefill['title'] = journal_entry.title
@@ -90,19 +108,24 @@ class JournalController(BaseController):
             c.input_errors = "There were input errors: %s<br><pre>%s</pre>" % (error, pp.pformat(c.prefill))
             return render('/gallery/submit.mako')
         
-        journal_entry = self.get_journal(id)
+        journal_entry = get_journal(id)
         self.is_my_journal(journal_entry,True)
         
         # -- update journal in database --
-        journal_entry.title = journal_data['title']
-        journal_entry.content = journal_data['content']
-        journal_entry.content_parsed = journal_data['content'] # placeholder for bbcode parser
+        if ( journal_entry.title != journal_data['title'] or journal_entry.content != journal_data['content'] ):
+            if ( journal_entry.editlog == None ):
+                journal_entry.editlog = model.EditLog(c.auth_user)
+            editlog_entry = model.EditLogEntry(c.auth_user,'no reasons yet',journal_entry.title,journal_entry.content,journal_entry.content)
+            journal_entry.editlog.update(editlog_entry)
+            journal_entry.title = journal_data['title']
+            journal_entry.content = journal_data['content']
+            journal_entry.content_parsed = journal_data['content'] # placeholder for bbcode parser
         model.Session.commit()
         h.redirect_to(h.url_for(controller='journal', action='view', id = journal_entry.id))
 
     @check_perms(['post_journal','administrate'])
     def delete(self,id=None):
-        journal_entry = self.get_journal(id)
+        journal_entry = get_journal(id)
         self.is_my_journal(journal_entry,True)
         c.text = "Are you sure you want to delete the journal titled \" %s \"?"%journal_entry.title
         c.url = h.url(action="delete_commit",id=id)
@@ -121,7 +144,7 @@ class JournalController(BaseController):
             return "There were input errors: %s" % (error)
             #return self.delete(id)
         
-        journal_entry = self.get_journal(id)
+        journal_entry = get_journal(id)
         self.is_my_journal(journal_entry,True)
         
         if (delete_form_data['confirm'] != None):
@@ -133,31 +156,13 @@ class JournalController(BaseController):
             h.redirect_to(h.url_for(controller='journal', action='view', id = journal_entry.id))
 
     def view(self,id=None):
-        journal_entry = self.get_journal(id)
+        journal_entry = get_journal(id)
         c.journal_entry = journal_entry
 
         c.is_mine = self.is_my_journal(journal_entry.user)
 
         return render('/journal/view.mako');
         
-    def get_journal(self,id=None):
-        try:
-            id = int(id)
-        except ValueError:
-            c.error_text = 'Journal Entry ID must be a number.'
-            c.error_title = 'Not Found'
-            abort(404)
-            
-        journal_entry = None
-        try:
-            journal_entry = model.Session.query(model.JournalEntry).filter(model.JournalEntry.id==id).one()
-        except sqlalchemy.exceptions.InvalidRequestError:
-            c.error_text = 'Requested journal entry was not found.'
-            c.error_title = 'Not Found'
-            abort(404)
-            
-        return journal_entry
-
     def is_my_journal(self,journal_entry,abort=False):
         if ( not c.auth_user or (not c.auth_user.can('administrate') and (c.auth_user.id != journal_entry.user_id)) ):
             if (abort):

@@ -1,3 +1,5 @@
+.xFINISHME { outline: 2px solid #ff8080; }
+
 /*** layout things that should never change ***/
 
 #skip-to-content { display: none; }
@@ -18,7 +20,6 @@ ul.inline { margin: 0.25em 0; }
 ul.inline li { display: inline; }
 ul.inline li:before { content: '• '; }
 ul.inline li:first-child:before { content: ''; }
-ul.inline li.selected a { outline: 2px solid #919bad; -moz-outline-radius: 4px; }
 
 /* usernames */
 .userlink { position: relative; /* XXX breaks IE somehow */ }

@@ -60,7 +60,14 @@ user_table = Table('user', metadata,
     #Column('hash_algorithm', hash_algorithm_type, nullable=False),
     Column('display_name', types.Unicode, nullable=False),
     Column('role_id', types.Integer, ForeignKey('role.id'), default=1),
-     mysql_engine='InnoDB'
+    mysql_engine='InnoDB'
+)
+
+user_preference_table = Table('user_preference', metadata,
+    Column('user_id', types.Integer, ForeignKey('user.id'), primary_key=True),
+    Column('key', types.String(32), primary_key=True),
+    Column('value', types.String(256), nullable=False),
+    mysql_engine='InnoDB'
 )
 
 role_table = Table('role', metadata,
@@ -73,7 +80,7 @@ role_table = Table('role', metadata,
 
 role_permission_table = Table('role_permission', metadata,
     Column('role_id', types.Integer, ForeignKey('role.id'), primary_key=True),
-    Column('permission_id', types.Integer, ForeignKey('permission.id'),primary_key=True),
+    Column('permission_id', types.Integer, ForeignKey('permission.id'), primary_key=True),
     mysql_engine='InnoDB'
 )
 
@@ -98,7 +105,7 @@ ip_log_table = Table('ip_log', metadata,
 journal_entry_table = Table('journal_entry', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('user_id', types.Integer, ForeignKey("user.id")),
-	Column('discussion_id', types.Integer, nullable=False),
+    Column('discussion_id', types.Integer, nullable=False),
     Column('title', types.Unicode, nullable=False),
     Column('content', types.Unicode, nullable=False),
     Column('content_parsed', types.Unicode, nullable=False),
@@ -125,23 +132,23 @@ news_table = Table('news', metadata,
 # Submissions
 
 image_metadata_table = Table('image_metadata', metadata,
-	Column('id', types.Integer, primary_key=True, autoincrement=True),
-	Column('hash', types.String(64), nullable=False, unique=True, index=True),
-	Column('height', types.Integer, nullable=False),
-	Column('width', types.Integer, nullable=False),
-	Column('mimetype', types.String(35), nullable=False),
+    Column('id', types.Integer, primary_key=True, autoincrement=True),
+    Column('hash', types.String(64), nullable=False, unique=True, index=True),
+    Column('height', types.Integer, nullable=False),
+    Column('width', types.Integer, nullable=False),
+    Column('mimetype', types.String(35), nullable=False),
     Column('submission_count', types.Integer, nullable=False),
     mysql_engine='InnoDB'
 )
 
 submission_table = Table('submission', metadata,
-	Column('id', types.Integer, primary_key=True),
-	Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
-	Column('title', types.String(128), nullable=False),
-	Column('description', types.String, nullable=False),
-	Column('description_parsed', types.String, nullable=False),
-	Column('type', submission_type_type, nullable=False),
-	Column('discussion_id', types.Integer, nullable=False),
+    Column('id', types.Integer, primary_key=True),
+    Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
+    Column('title', types.String(128), nullable=False),
+    Column('description', types.String, nullable=False),
+    Column('description_parsed', types.String, nullable=False),
+    Column('type', submission_type_type, nullable=False),
+    Column('discussion_id', types.Integer, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
     Column('status', submission_status_type, index=True, nullable=False),
     Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
@@ -158,10 +165,10 @@ derived_submission_table = Table('derived_submission', metadata,
 
 user_submission_table = Table('user_submission', metadata,
     Column('id', types.Integer, primary_key=True),
-	Column('user_id', types.Integer, ForeignKey("user.id")),
-	Column('submission_id', types.Integer, ForeignKey("submission.id")),
-	Column('relationship', user_submission_relationship_type, nullable=False),
-	Column('status', user_submission_status_type, nullable=False),
+    Column('user_id', types.Integer, ForeignKey("user.id")),
+    Column('submission_id', types.Integer, ForeignKey("submission.id")),
+    Column('relationship', user_submission_relationship_type, nullable=False),
+    Column('status', user_submission_status_type, nullable=False),
     mysql_engine='InnoDB'
 )
 
@@ -186,7 +193,6 @@ editlog_entry_table = Table('editlog_entry', metadata,
 
 # Mappers
 
-
 class JournalEntry(object):
     def __init__(self, user_id, title, content, content_parsed):
         self.user_id = user_id
@@ -205,6 +211,43 @@ class Role(object):
     def __init__(self, name, description=''):
         self.name = name
         self.description = description
+
+class UserPreference(object):
+    def __init__(self, user, key, value):
+        self.user = user
+        self.key = key
+        self.value = value
+
+class GuestRole(object):
+    def __init__(self):
+        self.name = "Guest"
+        self.description = "Just a guest"
+        self.sigil = ""
+
+class GuestUser(object):
+    '''Dummy object for not-logged-in users'''
+    preferences = dict(
+        style_sheet='duality',
+        style_color='dark',
+    )
+
+    def __init__(self):
+        self.id = 0
+        self.username = "guest"
+        self.display_name = "guest"
+        self.role = GuestRole()
+        self.is_guest = True
+
+    def __nonzero__(self):
+        '''Guest user objects evaluate to False so we can simply test the truth
+        of c.auth_user to see if the user is logged in.'''
+        return False
+
+    def can(self, permission):
+        return False
+
+    def preference(self, pref):
+        return self.preferences[pref]
 
 class User(object):
     def __init__(self, username, password):
@@ -258,6 +301,16 @@ class User(object):
             Role.permissions.any(name=permission)
         )
         return perm_q.count() > 0
+
+    def preference(self, pref):
+        try:
+            return self._preference_cache[pref]
+        except AttributeError:
+            self._preference_cache = dict()
+            self._preference_cache.update(GuestUser.preferences)
+            for row in self.preferences:
+                self._preference_cache[row.key] = row.value
+            return self._preference_cache[pref]
 
 class ImageMetadata(object):
     def __init__(self, hash, height, width, mimetype, count, disable=False ):
@@ -356,14 +409,17 @@ ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
     ),
 )
 
-user_mapper = mapper(User, user_table, properties = dict(
-    journals = relation(JournalEntry, backref='user'),
+user_mapper = mapper(User, user_table, properties=dict(
     role = relation(Role),
+    preferences = relation(UserPreference, backref='user'),
+    journals = relation(JournalEntry, backref='user'),
     user_submission = relation(UserSubmission, backref='user')
     ),
 )
 
-editlog_mapper = mapper(EditLog,editlog_table, properties=dict(
+user_preference_mapper = mapper(UserPreference, user_preference_table)
+
+editlog_mapper = mapper(EditLog, editlog_table, properties=dict(
     last_edited_by = relation(User)
     )
 )
@@ -374,14 +430,14 @@ editlog_entry_mapper = mapper(EditLogEntry, editlog_entry_table, properties=dict
     )
 )
         
-news_mapper = mapper(News, news_table, properties = dict(
+news_mapper = mapper(News, news_table, properties=dict(
     author = relation(User),
-    editlog = relation(EditLog)
+    editlog = relation(EditLog),
     )
 )
 
 user_submission_mapper = mapper(UserSubmission, user_submission_table, properties=dict(
-    submission = relation(Submission, backref='user_submission') #
+    submission = relation(Submission, backref='user_submission')
     )
 )
 

@@ -43,29 +43,6 @@ def check_perms(permissions):
             return render('/denied.mako')
     return check
 
-class GuestRole(object):
-    def __init__(self):
-        self.name = "Guest"
-        self.description = "Just a guest"
-        self.sigil = ""
-
-class GuestUser(object):
-    '''Dummy object for not-logged-in users'''
-    def __init__(self):
-        self.id = 0
-        self.username = "guest"
-        self.display_name = "guest"
-        self.role = GuestRole()
-        self.is_guest = True
-
-    def __nonzero__(self):
-        '''Guest user objects evaluate to False so we can simply test the truth
-        of c.auth_user to see if the user is logged in.'''
-        return False
-
-    def can(self, permission):
-        return False
-
 class BaseController(WSGIController):
 
     def __before__(self, action, **params):
@@ -98,7 +75,7 @@ class BaseController(WSGIController):
                 model.Session.save(model.IPLogEntry(user_id, ip_integer))
             model.Session.commit()
         else:
-            c.auth_user = GuestUser()
+            c.auth_user = model.GuestUser()
 
     def __call__(self, environ, start_response):
         """Invoke the Controller"""

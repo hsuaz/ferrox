@@ -52,6 +52,11 @@ def setup_config(command, filename, section, vars):
     u.display_name = 'Eevee'
     u.role = admin_role
     model.Session.save(u)
+
+    p = model.UserPreference(u, 'style_sheet', 'sufficiently-advanced')
+    model.Session.save(p)
+    p = model.UserPreference(u, 'style_color', 'light')
+    model.Session.save(p)
     
     u = model.User('net-cat', 'asdf')
     u.display_name = 'net-cat'

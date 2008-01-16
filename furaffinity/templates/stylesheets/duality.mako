@@ -2,10 +2,8 @@
 .thumbnail-grid { zoom: 1; }
 .entry .header * { zoom: 1; }
 
-a { font-weight: bold; text-decoration: none; color: ${c.colors['LIGHT_REPLACEME']}; }
+a { font-weight: bold; text-decoration: none; color: ${c.colors['text']}; }
 p { margin: 0.25em 0; line-height: 120%; }
-
-.xFINISHME { outline: 2px solid #ff8080; }
 
 body { background: ${c.colors['background']}; color: ${c.colors['text']}; font-family: Verdana, Helvetica, Bitstream Vera Sans, sans-serif; font-size: 10px /* blech */}
 
@@ -35,7 +33,7 @@ body { background: ${c.colors['background']}; color: ${c.colors['text']}; font-f
 #error,
 #content { position: relative; overflow: hidden /* new float clear context */; padding: 0.25em; }
 
-#footer { padding: 0.25em; clear: both; text-align: center; border-top: 0.25em double #919bad; }
+#footer { padding: 0.25em; clear: both; text-align: center; border-top: 0.25em double ${c.colors['border']}; }
 #shameless-whoring { position: absolute; left: 0.5em; }
 
 /*** front page ***/
@@ -45,23 +43,23 @@ body { background: ${c.colors['background']}; color: ${c.colors['text']}; font-f
 
 /*** widgets ***/
 
-.basic-box { border: 1px solid ${c.colors['MED_REPLACEME']}; padding: 0.25em; }
-.basic-box h2 { padding: 0.33em; margin-bottom: 0.25em; background: ${c.colors['MED_REPLACEME']}; color: white/*!*/; font-weight: bold; }
+.basic-box { border: 1px solid ${c.colors['border']}; padding: 0.25em; }
+.basic-box h2 { padding: 0.33em; margin-bottom: 0.25em; background: ${c.colors['border']}; color: ${c.colors['header_atop_border']}; font-weight: bold; }
 
 /* journal/news entries */
 .entry {}
-.basic-box .entry { border-top: 1px solid ${c.colors['MED_REPLACEME']}; }
+.basic-box .entry { border-top: 1px solid ${c.colors['border']}; }
 .entry .header .title { float: right; margin-top: 0.25em; margin-bottom: 22px; font-size: 12px; font-weight: bold; }
 .entry .header .avatar { float: left; margin-top: 14px; margin-left: 20px; border: solid ${c.colors['background']}; border-width: 0 2px; }
 .entry .header .avatar img { vertical-align: bottom; }
-.entry .header .author { clear: right; text-align: right; background: ${c.colors['MED_REPLACEME']}; color: white /*REPLACEME*/; }
-.entry .header .date { text-align: right; background: ${c.colors['MED_REPLACEME']}; color: white /*REPLACEME*/; }
-.entry .header .date:after { content: ''; display: block; clear: left; height: 0; background: ${c.colors['MED_REPLACEME']}; }
-.entry .edit-header { padding: 0.25em; background: ${c.colors['MED_REPLACEME']}; }
-.entry .edit-header .title { font-size: 12px; font-weight: bold; color: ${c.colors['LIGHT_REPLACEME']}; }
+.entry .header .author { clear: right; text-align: right; background: ${c.colors['border']}; color: ${c.colors['header_atop_border']}; }
+.entry .header .date { text-align: right; background: ${c.colors['border']}; color: ${c.colors['header_atop_border']}; }
+.entry .header .date:after { content: ''; display: block; clear: left; height: 0; background: ${c.colors['border']}; }
+.entry .edit-header { padding: 0.25em; background: ${c.colors['border']}; }
+.entry .edit-header .title { font-size: 12px; font-weight: bold; color: ${c.colors['header_atop_border']}; }
 .entry .content { clear: both; margin: 0.25em; }
 
 /* thumbnail grid */
-.thumbnail-grid .thumbnail { float: left; width: 120px; height: 120px; padding: 0.25em; margin: 1em; border: 1px solid ${c.colors['MED_REPLACEME']}; }
+.thumbnail-grid .thumbnail { float: left; width: 120px; height: 120px; padding: 0.25em; margin: 1em; border: 1px solid ${c.colors['border']}; }
 .thumbnail-grid:after { display: block; clear: both; visibility: hidden; content: 'vee was here'; height: 0; }
 

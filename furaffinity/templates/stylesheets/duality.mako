@@ -57,6 +57,8 @@ body { background: ${c.colors['background']}; color: ${c.colors['text']}; font-f
 .entry .header .author { clear: right; text-align: right; background: ${c.colors['MED_REPLACEME']}; color: white /*REPLACEME*/; }
 .entry .header .date { text-align: right; background: ${c.colors['MED_REPLACEME']}; color: white /*REPLACEME*/; }
 .entry .header .date:after { content: ''; display: block; clear: left; height: 0; background: ${c.colors['MED_REPLACEME']}; }
+.entry .edit-header { padding: 0.25em; background: ${c.colors['MED_REPLACEME']}; }
+.entry .edit-header .title { font-size: 12px; font-weight: bold; color: ${c.colors['LIGHT_REPLACEME']}; }
 .entry .content { clear: both; margin: 0.25em; }
 
 /* thumbnail grid */

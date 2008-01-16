@@ -335,11 +335,7 @@ class GalleryController(BaseController):
             # supply default thumbnail for type here
             c.submission_thumbnail = ''
         c.submission_file = h.url_for(controller='gallery', action='file', filename=filename, id=None)
-        c.submission_title = submission.title
-        c.submission_description = submission.description_parsed
-        c.submission_artist = submission.user_submission[0].user.display_name
-        c.submission_time = submission.time
-        c.submission_type = submission.type
+        c.submission = submission
         
         if ( submission.type == 'text' ):
             filedata = filestore.dump(filestore.get_submission_file(submission.metadata))

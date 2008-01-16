@@ -49,7 +49,7 @@
         </ul>
         % endif
     </div>
-    <h1 id="logo">${h.link_to(h.image_tag('/images/fa_2008dark.jpg', 'FurAffinity'), h.url(controller='index', action='index'))}</h1>
+    <h1 id="logo">${h.link_to(h.image_tag('/images/banner.jpg', 'FurAffinity'), h.url(controller='index', action='index'))}</h1>
 </div>
 <div id="navigation">
     <div class="basic-box" id="site-nav">

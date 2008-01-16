@@ -1,13 +1,16 @@
 <%namespace name="lib" file="/lib.mako"/>
 <%inherit file="base.mako" />
 
-<div id="news_page">
+<div class="basic-box xFINISHME">
     % if c.page_owner != None:
-        <span>Gallery for ${c.page_owner.display_name}</span>
+    <h2>Gallery for ${c.page_owner.display_name}</h2>
     % else:
-        <span>Browse Artwork</span>
+    <h2>Browse Artwork</h2>
     % endif
-    <div class="recent_news">
+
+    % if c.is_mine:
+    <p class="admin"> ${h.link_to('Submit Art', h.url(controller='gallery', action='submit', username=c.page_owner.username))} </p>
+    % endif
     % if c.submissions:
         % for item in c.submissions:
         <div class="submission">
@@ -24,18 +27,7 @@
         </div>
         % endfor
     % else:
-        <div class="submission">
-            <div class="submission_header">
-                <div class="submission_title">Error</div>
-            </div>
-            <div class="submission_info">
-                No submissions found for ${lib.user_link(c.page_owner)}.
-            </div>
-        </div>
-    % endif
-    </div>
-    % if c.is_mine:
-    <span>${h.link_to('Submit Art', h.url(controller='gallery', action='submit', username=c.page_owner.username))}</span>
+    <p> ${lib.user_link(c.page_owner)} has no submissions. </p>
     % endif
 </div>
 

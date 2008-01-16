@@ -1,30 +1,30 @@
+<%namespace name="lib" file="/lib.mako"/>
 <%inherit file="base.mako" />
 
-<big><big>${c.submission_title}</big></big><br>
-<big>by: ${c.submission_artist}</big><br>
-% if (c.submission_type == 'video'):
-${h.embed_flash(c.submission_file)}<br>
-% elif (c.submission_type == 'image'):
-${h.image_tag(c.submission_file,c.submission_title)}<br>
-% elif (c.submission_type == 'audio'):
-${h.embed_mp3(c.submission_file)} (Music Submission)<br>
-% elif (c.submission_type == 'text'):
-${h.link_to('Text Submission',c.submission_file)}, Text submission<br>
-<pre>
-${c.submission_content}
-</pre>
-% else:
-unknown submission type: ${c.submission_type}<br>
-% endif
-% if (c.submission_halfview):
-${h.image_tag(c.submission_halfview,"%s Half View"%c.submission_title)}<br>
-% endif
-% if (c.submission_thumbnail):
-${h.image_tag(c.submission_thumbnail,"%s Thumbnail"%c.submission_title)}<br>
-% endif
-Description: ${c.submission_description}<br>
-Submitted at: ${h.format_time(c.submission_time)}<br><br>
+<div class="basic-box xFINISHME">
+    <h2>${c.submission.title}</h2>
 
-${c.misc}
+    <div class="time">Submitted on ${h.format_time(c.submission.time)}</div>
+    <div class="artist xFINISHME">by ${lib.user_link(c.submission.primary_artist())}</div>
+    <div class="buttons xFINISHME">buttons here lol</div>
+    <div class="content">
+        % if (c.submission.type == 'video'):
+        ${h.embed_flash(c.submission.file)}<br>
+        % elif (c.submission.type == 'image'):
+        ${h.image_tag(c.submission_file, c.submission.title)}<br>
+        % elif (c.submission.type == 'audio'):
+        ${h.embed_mp3(c.submission_file)} (Music Submission)<br>
+        % elif (c.submission.type == 'text'):
+        ${h.link_to('Text Submission', c.submission_file)}, Text submission<br>
+        <pre>
+        ${c.submission.content_parsed}
+        </pre>
+        % else:
+        unknown submission type: ${c.submission_type}<br>
+        % endif
+    </div>
+    <div class="description">
+        ${c.submission.description}
+    </div>
+
 <%def name="title()">${c.submission_title} by ${c.submission_artist}</%def>
-

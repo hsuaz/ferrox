@@ -352,6 +352,7 @@ class IPLogEntry(object):
         self.ip = ip_integer
         self.start_time = datetime.now()
         self.end_time = datetime.now()
+
 class Submission(object):
     def __init__(self, title, description, description_parsed, type, discussion_id, status ):
         self.title = title
@@ -360,7 +361,10 @@ class Submission(object):
         self.type = type
         self.discussion_id = discussion_id
         self.status = status
-        
+
+    def primary_artist(self):
+        return self.user_submission[0].user
+
     def get_derived_index (self,types):
         for index in xrange(0,len(self.derived_submission)):
             for type in types:

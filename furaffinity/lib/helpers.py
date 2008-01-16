@@ -21,7 +21,7 @@ try:
 except ImportError:
     import mimetypes
     def get_mime_type(fileobject):
-        return mimetypes.guess_type(fileobject['filename'])
+        return mimetypes.guess_type(fileobject['filename'])[0]
         
 def normalize_newlines(string):
     """Adjust all line endings to be the Linux line break, \\x0a."""

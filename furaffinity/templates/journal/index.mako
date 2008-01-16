@@ -11,12 +11,7 @@
     ${lib.journal_entry(entry)}
     % endfor
     % else:
-        <div class="journal">
-            <div class="journal_header">
-                <div class="journal_title">Error</div>
-            </div>
-            <div class="journal_content">No journals found for user ${lib.user_link(c.page_owner)}.</div>
-        </div>
+    <p> Journal is empty. </p>
     % endif
     </div>
     <p> ${c.journal_nav} </p>

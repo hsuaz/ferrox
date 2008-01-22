@@ -1,4 +1,4 @@
-.xFINISHME { outline: 2px solid #ff8080; }
+.FINISHME { outline: 2px solid #ff8080; }
 
 /*** layout things that should never change ***/
 

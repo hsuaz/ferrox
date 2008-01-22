@@ -3,7 +3,7 @@ from __future__ import with_statement
 import logging
 
 from furaffinity.lib.base import *
-from furaffinity.lib import filestore
+from furaffinity.lib import filestore, tagging
 from furaffinity.lib.thumbnailer import Thumbnailer
 from pylons.decorators.secure import *
 
@@ -18,6 +18,7 @@ import pprint
 #from PIL import ImageFile
 from tempfile import TemporaryFile
 from sqlalchemy import or_,and_
+from sqlalchemy.orm import eagerload
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +37,9 @@ def get_submission(id):
         
     submission = None
     try:
-        submission = model.Session.query(model.Submission).filter(model.Submission.id==id).one()
+        #.eagerload('tag')
+        submission = model.Session.query(model.Submission).options(eagerload('tags')).filter(model.Submission.id==id).one()
+        c.tags = tagging.make_tags_into_string(submission.tags)
     except sqlalchemy.exceptions.InvalidRequestError:
         c.error_text = 'Requested submission was not found.'
         c.error_title = 'Not Found'
@@ -94,6 +97,7 @@ class GalleryController(BaseController):
         c.edit = False
         c.prefill['title'] = ''
         c.prefill['description'] = ''
+        c.prefill['tags'] = ''
         return render('/gallery/submit.mako')
 
     @check_perms(['submit_art','administrate'])
@@ -104,6 +108,7 @@ class GalleryController(BaseController):
         c.edit = True
         c.prefill['title'] = submission.title
         c.prefill['description'] = submission.description
+        c.prefill['tags'] = tagging.make_tags_into_string(submission.tags)
         return render('/gallery/submit.mako')
 
     @check_perms(['submit_art','administrate'])
@@ -199,6 +204,18 @@ class GalleryController(BaseController):
                 submission.derived_submission[hv_ind].metadata.count_dec()
                 submission.derived_submission[hv_ind].metadata = submission_data['halffile']['metadata']
 
+        # Tag shuffle
+        for tag in submission.tags:
+            if not (tag.text in submission_data['tags']):
+                submission.tags.remove(tag)
+            else:
+                submission_data['tags'].remove(tag.text)
+                
+        for tag in submission_data['tags']:
+            tag_object = tagging.get_by_text(tag, True)
+            submission.tags.append(tag_object)
+        model.Session.save(submission)
+            
         model.Session.commit()
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
         
@@ -289,6 +306,9 @@ class GalleryController(BaseController):
         model.Session.save(submission)
         submission_data['fullfile']['metadata'].count_inc()
         submission.metadata = submission_data['fullfile']['metadata']
+        for tag in submission_data['tags']:
+            tag_object = tagging.get_by_text(tag, True)
+            submission.tags.append(tag_object)
         model.Session.save(submission)
         user_submission = model.UserSubmission(
             user_id = session['user_id'],
@@ -309,6 +329,7 @@ class GalleryController(BaseController):
             thumbfile_derived_submission.metadata = submission_data['halffile']['metadata']
             submission.derived_submission.append(thumbfile_derived_submission)
             model.Session.save(submission)
+
         model.Session.commit()
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
             
@@ -528,5 +549,8 @@ class GalleryController(BaseController):
             submission_data['thumbfile']['hash'] = self.hash(submission_data['thumbfile']['content'])
                         
         submission_data['type'] = submission_type
+        
+        submission_data['tags'] = tagging.get_tags_from_string(submission_data['tags'])
+
         return submission_data
 

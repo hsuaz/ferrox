@@ -191,6 +191,21 @@ editlog_entry_table = Table('editlog_entry', metadata,
     mysql_engine='InnoDB'
 )
 
+# Tags
+
+tag_table = Table('tag', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('text', types.String(20), index=True, unique=True),
+    mysql_engine='InnoDB'
+)
+
+submission_tag_table = Table('submission_tag', metadata,
+    #Column('id', types.Integer, primary_key=True),
+    Column('submission_id', types.Integer, ForeignKey('submission.id'), primary_key=True),
+    Column('tag_id', types.Integer, ForeignKey('tag.id'), primary_key=True),
+    mysql_engine='InnoDB'
+)    
+
 # Mappers
 
 class JournalEntry(object):
@@ -408,6 +423,14 @@ class EditLogEntry(object):
         self.previous_text = previous_text
         self.previous_text_parsed = previous_text_parsed
 
+class SubmissionTag(object):
+    def __init__ (self, tag):
+        self.tag = tag
+
+class Tag(object):
+    def __init__ (self, text):
+        self.text = text
+
 ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
     user=relation(User, backref='ip_log')
     ),
@@ -467,5 +490,18 @@ role_mapper = mapper(Role, role_table, properties={
 
 journal_entry_mapper = mapper(JournalEntry, journal_entry_table, properties=dict(
     editlog = relation(EditLog)
+    )
+)
+
+'''
+submission_tag_mapper = mapper(SubmissionTag, submission_tag_table, properties=dict(
+    submission = relation(Submission, backref='submission_tags'),
+    tag = relation(Tag, backref='submission_tags')
+    )
+)
+'''
+
+tag_mapper = mapper(Tag, tag_table, properties=dict(
+    submissions = relation(Submission, backref='tags', secondary=submission_tag_table),
     )
 )

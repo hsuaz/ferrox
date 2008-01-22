@@ -34,6 +34,7 @@ class SubmitForm(formencode.Schema):
     halffile = FileUploadValidator()
     thumbfile = FileUploadValidator()
     title = formencode.validators.String(not_empty=True)
+    tags = formencode.validators.String(not_empty=True)
     description = formencode.validators.NotEmpty(not_empty=True)
     commit = formencode.validators.PlainText(not_empty=False)
 

@@ -104,3 +104,5 @@ h2 + .entry,
 .thumbnail-grid { margin: 0 auto; clear: both; }
 .thumbnail-grid .thumbnail { float: none; display: inline-block; padding: 1em; }
 
+/* standard tables */
+table.bare-table tbody tr:hover { outline: 1px solid ${c.colors['border']}; x-moz-outline-radius: 0.25em; outline-radius: 0.25em; background: white; }

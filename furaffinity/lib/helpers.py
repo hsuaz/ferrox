@@ -5,10 +5,11 @@ available to Controllers. This module is available to both as 'h'.
 """
 from webhelpers import *
 
+import os
 import re
-import time
 import struct
 import socket
+import time
 
 try:
     import magic
@@ -92,4 +93,29 @@ def ip_to_string(ip_integer):
 def format_time(datetime):
     """Format a datetime object standardly."""
     return datetime.strftime('%m/%d/%y %I:%M %p')
+
+def image_tag(source, alt=None, size=None, **options):
+    """
+    Copied from the default pylons webhelpers, to fix alt='' not working.
+
+    Also copies alt into title, if one isn't specified.
+    """
+
+    options['src'] = rails.asset_tag.compute_public_path(source, 'images')
+
+    if alt == None:
+        alt = os.path.splitext(os.path.basename(source))[0].title()
+    options['alt'] = alt
+
+    if not 'title' in options:
+        options['title'] = options['alt']
+
+    if size and re.match('^(\d+|)x(\d+|)$', size) and size != 'x':
+        width, height = size.split('x')
+        if width:
+            options['width'] = width
+        if height:
+            options['height'] = height
+
+    return tag('img', **options)
 

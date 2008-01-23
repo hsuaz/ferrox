@@ -13,7 +13,7 @@ from sqlalchemy import Column, MetaData, Table, ForeignKey, types
 from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.databases.mysql import MSInteger, MSEnum
-from furaffinity.model import form;
+from furaffinity.model import form
 #import furaffinity.lib.hashing as hashing
 
 from datetime import datetime
@@ -43,10 +43,11 @@ if re.match('^mysql', pylons.config['sqlalchemy.url']):
 else:
     ip_type = types.String(length=11)
 #hash_algorithm_type = Enum(['WHIRLPOOL','SHA512','SHA256','SHA1'], empty_to_none=True, strict=True)
-journal_status_type = Enum(['normal','under_review','removed_by_admin','deleted'], empty_to_none=True, strict=True )
+note_status_type = Enum(['unread','read'], empty_to_none=True, strict=True)
+journal_status_type = Enum(['normal','under_review','removed_by_admin','deleted'], empty_to_none=True, strict=True)
 submission_type_type = Enum(['image','video','audio','text'], empty_to_none=True, strict=True)
-submission_status_type = Enum(['normal','under_review','removed_by_admin','unlinked','deleted'], empty_to_none=True, strict=True )
-derived_submission_derivetype_type = Enum(['thumb','halfview'], empty_to_none=True, strict=True )
+submission_status_type = Enum(['normal','under_review','removed_by_admin','unlinked','deleted'], empty_to_none=True, strict=True)
+derived_submission_derivetype_type = Enum(['thumb','halfview'], empty_to_none=True, strict=True)
 user_submission_status_type = Enum(['primary','normal','deleted'], empty_to_none=True, strict=True)
 user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin'], empty_to_none=True, strict=True)
 
@@ -97,6 +98,21 @@ ip_log_table = Table('ip_log', metadata,
     Column('ip', ip_type, nullable=False),
     Column('start_time', types.DateTime, nullable=False, default=datetime.now),
     Column('end_time', types.DateTime, nullable=False, default=datetime.now),
+    mysql_engine='InnoDB'
+)
+
+# Notes
+
+note_table = Table('note', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('from_user_id', types.Integer, ForeignKey("user.id")),
+    Column('to_user_id', types.Integer, ForeignKey("user.id")),
+    Column('original_note_id', types.Integer, ForeignKey("note.id")),
+    Column('subject', types.Unicode, nullable=False),
+    Column('content', types.Unicode, nullable=False),
+    Column('content_parsed', types.Unicode, nullable=False),
+    Column('status', note_status_type, nullable=False),
+    Column('time', types.DateTime, nullable=False, default=datetime.now),
     mysql_engine='InnoDB'
 )
 
@@ -249,6 +265,12 @@ class GuestUser(object):
     def preference(self, pref):
         return self.preferences[pref]
 
+def retrieve_user(username):
+    try:
+        return Session.query(User).filter_by(username=username).one()
+    except sqlalchemy.exceptions.InvalidRequestError:
+        return None
+
 class User(object):
     def __init__(self, username, password):
         self.username = username
@@ -311,6 +333,25 @@ class User(object):
             for row in self.preferences:
                 self._preference_cache[row.key] = row.value
             return self._preference_cache[pref]
+
+    def recent_notes(self):
+        """Finds the most recent note in each of this user's conversations,
+        in order from newest to oldest.  Returns a query object that can be
+        paged however desired."""
+
+        # Making this select a group-wise maximum AND only pick notes sent to
+        # this user takes more SQL-fu than would ever be worth it, so just
+        # grab the original_note_ids and get the actual notes in a separate
+        # query
+
+        original_notes = Session.query(Note) \
+            .filter(Note.to_user_id == self.id) \
+            .group_by(Note.original_note_id) \
+            .all()
+
+        original_note_ids = map(lambda x: x.original_note_id, original_notes)
+        return Session.query(Note) \
+            .filter(Note.original_note_id.in_(*original_note_ids))
 
 class ImageMetadata(object):
     def __init__(self, hash, height, width, mimetype, count, disable=False ):
@@ -408,6 +449,10 @@ class EditLogEntry(object):
         self.previous_text = previous_text
         self.previous_text_parsed = previous_text_parsed
 
+class Note(object):
+    def __init__(self):
+        pass
+
 ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
     user=relation(User, backref='ip_log')
     ),
@@ -467,5 +512,11 @@ role_mapper = mapper(Role, role_table, properties={
 
 journal_entry_mapper = mapper(JournalEntry, journal_entry_table, properties=dict(
     editlog = relation(EditLog)
+    )
+)
+
+note_mapper = mapper(Note, note_table, properties=dict(
+    sender = relation(User, primaryjoin=note_table.c.from_user_id==user_table.c.id),
+    recipient = relation(User, primaryjoin=note_table.c.to_user_id==user_table.c.id),
     )
 )

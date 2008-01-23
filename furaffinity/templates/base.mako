@@ -43,9 +43,9 @@
         <p id="superpowers">${h.link_to("Activate Superpowers", h.url(controller='admin'), class_='admin')}</p>
         % endif
         <ul id="messages" class="FINISHME">
-            <li class="new"> ${h.link_to(h.image_tag('/images/icons/new-notes.png', '') + "1 new note", "")} </li>
-            <li class="new"> ${h.link_to(h.image_tag('/images/icons/new-feedback.png', '') + "5 new feedback", "")} </li>
-            <li> ${h.link_to(h.image_tag('/images/icons/new-watches.png', '') + "No new watches", "")} </li>
+            <li class="new"> ${h.link_to(h.image_tag('/images/icons/internet-mail.png', '') + "1 new note", h.url(controller='notes', action='user_index', username=c.auth_user.username))} </li>
+            <li class="new"> ${h.link_to(h.image_tag('/images/icons/internet-group-chat.png', '') + "5 new feedback", "")} </li>
+            <li> ${h.link_to(h.image_tag('/images/icons/internet-news-reader.png', '') + "No new watches", "")} </li>
         </ul>
         % endif
     </div>

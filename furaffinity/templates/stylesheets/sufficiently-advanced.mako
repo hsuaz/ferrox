@@ -98,8 +98,13 @@ h2 + .entry,
 .entry .header .avatar { float: right; }
 .entry .header .avatar img { max-height: 50px; width: 50px; }
 .entry .header .author { clear: left; }
-.entry .content { clear: both; }
+.entry .header:after { content: 'vee was here'; display: block; height: 0; visibility: hidden; clear: both; }
 .entry .admin { text-align: right; }
+
+.entry.collapsed { padding: 0 0.5em; }
+.entry.collapsed .header { padding: 0; }
+.entry.collapsed .header .title { float: none; font-size: 1.33em; }
+.entry.collapsed .header .title a { display: block; padding: 0.25em; }
 
 /* thumbnail grid */
 .thumbnail-grid { margin: 0 auto; clear: both; }

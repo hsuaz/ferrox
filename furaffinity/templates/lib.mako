@@ -72,22 +72,33 @@
 </div>
 </%def>
 
-<%def name="note_entry(note)">
+<%def name="note_entry(note, owner)">
 <div class="entry">
-    <div class="header">
 <%
     icon = ''
     if note.status == 'unread':
         icon = h.image_tag('/images/icons/mail-unread.png', 'Unread')
 %>
+    <div class="header">
         <div class="title">${note.subject}${icon}</div>
         <div class="avatar FINISHME"><img src="http://userpic.livejournal.com/41114350/600603" alt="avatar"/></div>
-        <div class="author">From: ${user_link(note.sender)}</div>
-        <div class="author">To: ${user_link(note.recipient)}</div>
+        % if note.sender == owner:
+        <div class="author">Sent to ${user_link(note.recipient)}</div>
+        % else:
+        <div class="author">Received from ${user_link(note.sender)}</div>
+        % endif
         <div class="date">Date: ${h.format_time(note.time)}</div>
     </div>
     <div class="content">
         ${note.content_parsed}
+    </div>
+</div>
+</%def>
+
+<%def name="note_collapsed_entry(note, owner)">
+<div class="entry collapsed">
+    <div class="header">
+        <div class="title">${h.link_to(note.subject, h.url(controller='notes', action='view', username=owner.username, id=note.id), class_='js-expand-note')}</div>
     </div>
 </div>
 </%def>

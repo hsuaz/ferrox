@@ -125,4 +125,9 @@
 
 <%def name="javascript_includes()">
     ${h.javascript_include_tag("jquery-1.2.1.pack.js")}
+    % if hasattr(c, 'javascripts'):
+    % for script in c.javascripts:
+    ${h.javascript_include_tag("%s.js" % script)}
+    % endfor
+    % endif
 </%def>

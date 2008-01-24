@@ -75,14 +75,19 @@
 <%def name="note_entry(note)">
 <div class="entry">
     <div class="header">
-        <div class="title">${note.subject}</div>
+<%
+    icon = ''
+    if note.status == 'unread':
+        icon = h.image_tag('/images/icons/mail-unread.png', 'Unread')
+%>
+        <div class="title">${note.subject}${icon}</div>
         <div class="avatar FINISHME"><img src="http://userpic.livejournal.com/41114350/600603" alt="avatar"/></div>
         <div class="author">From: ${user_link(note.sender)}</div>
         <div class="author">To: ${user_link(note.recipient)}</div>
         <div class="date">Date: ${h.format_time(note.time)}</div>
     </div>
     <div class="content">
-        ${note.content}
+        ${note.content_parsed}
     </div>
 </div>
 </%def>

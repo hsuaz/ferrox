@@ -9,7 +9,7 @@ import random
     
 import pylons
 
-from sqlalchemy import Column, MetaData, Table, ForeignKey, types
+from sqlalchemy import Column, MetaData, Table, ForeignKey, types, sql
 from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.databases.mysql import MSInteger, MSEnum
@@ -339,19 +339,36 @@ class User(object):
         in order from newest to oldest.  Returns a query object that can be
         paged however desired."""
 
-        # Making this select a group-wise maximum AND only pick notes sent to
-        # this user takes more SQL-fu than would ever be worth it, so just
-        # grab the original_note_ids and get the actual notes in a separate
-        # query
+        # Group-wise maximum, as inspired by the MySQL manual.  The only
+        # differences between this and the example in the manual are:
+        # 1. I also join to the table a third time to get a count of how many
+        #    notes are in the thread, total.
+        # 2. I add the receipient's user id to the ON clause, ensuring that rows
+        #    belonging to each user are clustered together, and then filter out
+        #    the desired user with a WHERE.
+        # I say "I" instead of "we" because this took me two days to figure out
+        # and I think it's pretty fucking cool -- enough that I am going to put
+        # my name on it.                                             -- Eevee
 
-        original_notes = Session.query(Note) \
+        older_note_a = note_table.alias()
+        note_count_a = note_table.alias()
+
+        note_q = Session.query(Note).select_from(note_table
+            .outerjoin(older_note_a,
+                sql.and_(
+                    note_table.c.original_note_id == older_note_a.c.original_note_id,
+                    note_table.c.to_user_id == older_note_a.c.to_user_id,
+                    note_table.c.time < older_note_a.c.time
+                    )
+                )
+            .join(note_count_a, note_table.c.original_note_id == note_count_a.c.original_note_id)
+            ) \
+            .filter(older_note_a.c.id == None) \
             .filter(Note.to_user_id == self.id) \
-            .group_by(Note.original_note_id) \
-            .all()
+            .group_by(Note.id) \
+            .order_by(Note.time.desc())
 
-        original_note_ids = map(lambda x: x.original_note_id, original_notes)
-        return Session.query(Note) \
-            .filter(Note.original_note_id.in_(*original_note_ids))
+        return note_q
 
 class ImageMetadata(object):
     def __init__(self, hash, height, width, mimetype, count, disable=False ):

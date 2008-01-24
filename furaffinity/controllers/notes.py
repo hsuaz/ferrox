@@ -1,6 +1,7 @@
 import logging
 import formencode
 import sqlalchemy
+from sqlalchemy import sql
 
 from furaffinity.lib.base import *
 import furaffinity.lib.paginate as paginate
@@ -29,5 +30,12 @@ class NotesController(BaseController):
 
         if c.note.recipient != c.page_owner:
             abort(404)
+
+        c.all_notes = note_q.filter_by(original_note_id=c.note.original_note_id) \
+            .filter(sql.or_(
+                model.Note.from_user_id == c.page_owner.id,
+                model.Note.to_user_id == c.page_owner.id
+                )) \
+            .order_by(model.Note.time.desc())
 
         return render('notes/view.mako')

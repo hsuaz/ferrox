@@ -5,7 +5,9 @@
 <div class="basic-box">
     <h2>Note</h2>
 
-    ${lib.note_entry(c.note)}
+    % for note in c.all_notes:
+    ${lib.note_entry(note)}
+    % endfor
 </div>
 
 <%def name="title()">${c.note.subject}</%def>

@@ -22,6 +22,8 @@ class StylesheetsController(BaseController):
     colorschemes = {
         'light': {
             'background': duality_light_back,
+            'background_alt': 'rgb(200, 207, 219)',
+            'background_hover': 'rgb(188, 195, 207)',
             'text': duality_light_fore,
             'link': '#5775ad',
             'link_visited': '#8257ad',

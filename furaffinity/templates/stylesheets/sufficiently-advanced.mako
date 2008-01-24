@@ -90,14 +90,15 @@ input[type='radio'] { cursor: pointer; }
 .basic-box h2 { font-size: 2em; letter-spacing: 0.125em; color: ${c.colors['header']}; border-bottom: 1px solid ${c.colors['border_strong']}; }
 
 /* journal/news entry */
-.entry { padding: 0.5em; border-top: 1px solid ${c.colors['border_strong']}; }
+.entry { padding: 0.5em; border-top: 1px solid ${c.colors['border']}; }
 h2 + .entry,
 .entry:first-child { border-top: none; }
+.entry .header { background: ${c.colors['background_hover']}; padding: 0.25em; }
 .entry .header .title { float: left; font-size: 1.67em; font-weight: bold; color: ${c.colors['header2']}; }
 .entry .header .avatar { float: right; }
 .entry .header .avatar img { max-height: 50px; width: 50px; }
 .entry .header .author { clear: left; }
-.entry .content { clear: both; margin-top: 0.25em; padding-top: 0.25em; border-top: 1px dotted ${c.colors['header2']}; }
+.entry .content { clear: both; }
 .entry .admin { text-align: right; }
 
 /* thumbnail grid */

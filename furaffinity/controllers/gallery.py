@@ -4,18 +4,15 @@ import logging
 
 from furaffinity.lib.base import *
 from furaffinity.lib import filestore, tagging
-from furaffinity.lib.thumbnailer import Thumbnailer
 from pylons.decorators.secure import *
+
+from furaffinity.lib.thumbnailer import Thumbnailer
 
 from chardet.universaldetector import UniversalDetector
 import codecs
 import os
 import md5
-#import mimetypes
 import sqlalchemy.exceptions
-import pprint
-#from PIL import Image
-#from PIL import ImageFile
 from tempfile import TemporaryFile
 from sqlalchemy import or_,and_
 from sqlalchemy.orm import eagerload
@@ -37,7 +34,6 @@ def get_submission(id):
         
     submission = None
     try:
-        #.eagerload('tag')
         submission = model.Session.query(model.Submission).options(eagerload('tags')).filter(model.Submission.id==id).one()
         c.tags = tagging.make_tags_into_string(submission.tags)
     except sqlalchemy.exceptions.InvalidRequestError:
@@ -50,6 +46,9 @@ def get_submission(id):
 
 class GalleryController(BaseController):
 
+    def index(self):
+        return render('/PLACEHOLDER.mako');
+        
     def user_index(self, username=None):
         c.page_owner = None
         if ( username != None ):
@@ -61,14 +60,10 @@ class GalleryController(BaseController):
                 c.error_title = 'User not found'
                 return render('/error.mako')
             
-        # I'm having to do WAY too much coding in templates, so...
         submission_q = model.Session.query(model.UserSubmission)
-        if ( c.page_owner != None ):
-            submissions = submission_q.filter(model.UserSubmission.status != 'deleted').filter_by(user_id = c.page_owner.id).all()
-        else:
-            submissions = submission_q.filter(model.UserSubmission.status != 'deleted').all()
-            
-        #[offset:offset+perpage]
+        submission_q = submission_q.filter(model.UserSubmission.status != 'deleted')
+        submission_q = submission_q.filter_by(user_id = c.page_owner.id)
+        submissions = submission_q.all()
         if submissions:
             c.submissions = []
             for item in submissions:
@@ -77,7 +72,7 @@ class GalleryController(BaseController):
                     thumbnail = filestore.get_submission_file(item.submission.derived_submission[tn_ind].metadata)
                 else:
                     thumbnail = None
-                template_item =  dict (
+                template_item = dict (
                     id = item.submission.id,
                     title = item.submission.title,
                     date = item.submission.time,
@@ -128,12 +123,10 @@ class GalleryController(BaseController):
         try:
             submission_data = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
-            pp = pprint.PrettyPrinter(indent=4)
             c.edit = True
             c.prefill = request.params
-            c.input_errors = "There were input errors: %s %s" % (error, pp.pformat(c.prefill))
+            c.input_errors = "There were input errors: %s %s" % (error, c.prefill)
             return render('/gallery/submit.mako')
-            #return self.submit()
             
         # -- get image from database, make sure user has permission --
         submission = get_submission(id)
@@ -223,14 +216,12 @@ class GalleryController(BaseController):
     @check_perms(['submit_art','administrate'])
     def delete_commit(self, id=None):
         # -- validate form input --
-        pp = pprint.PrettyPrinter(indent=4)
         validator = model.form.DeleteForm();
         delete_form_data = None
         try:
             delete_form_data = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
             return "There were input errors: %s" % (error)
-            #return self.delete(id)
         
         submission = get_submission(id)
         self.is_my_submission(submission,True)
@@ -239,7 +230,6 @@ class GalleryController(BaseController):
             # -- update submission in database --
             submission.status = 'deleted'
             submission.user_submission[0].status = 'deleted'
-            #model.Session.save()
             model.Session.commit()
             h.redirect_to(h.url_for(controller='gallery', action='index', username = submission.user_submission[0].user.username, id=None))
         else:
@@ -247,16 +237,12 @@ class GalleryController(BaseController):
 
     @check_perm('submit_art')
     def submit_upload(self):
-        pp = pprint.PrettyPrinter(indent=4)
-        # -- validate form input --
         validator = model.form.SubmitForm();
         submission_data = None
-        #input_failure = False
         error = None
         try:
             submission_data = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
-            #pp = pprint.PrettyPrinter(indent=4)
             pass
         
         if ( error != None or submission_data['fullfile'] == None ):
@@ -264,7 +250,7 @@ class GalleryController(BaseController):
                 error = 'No file supplied.'
             c.edit = False
             c.prefill = request.params
-            c.input_errors = "There were input errors: %s %s" % (error, pp.pformat(c.prefill))
+            c.input_errors = "There were input errors: %s %s" % (error, c.prefill)
             return render('/gallery/submit.mako')
         
         
@@ -281,7 +267,6 @@ class GalleryController(BaseController):
             submission_data['thumbfile']['metadata'] = filestore.store ( submission_data['thumbfile']['hash'], submission_data['thumbfile']['mimetype'], submission_data['thumbfile']['content'] )
             submission_data['thumbfile']['metadata'].height = submission_data['thumbfile']['height']
             submission_data['thumbfile']['metadata'].width = submission_data['thumbfile']['width']
-            #model.Session.save(thumbnail['metadata'])
         else:
             # FIXME: Default thumbnail?
             pass
@@ -291,10 +276,7 @@ class GalleryController(BaseController):
             submission_data['halffile']['metadata'] = filestore.store ( submission_data['halffile']['hash'], submission_data['halffile']['mimetype'], submission_data['halffile']['content'] )
             submission_data['halffile']['metadata'].height = submission_data['halffile']['height']
             submission_data['halffile']['metadata'].width = submission_data['halffile']['width']
-            #model.Session.save(thumbnail['metadata'])
             
-        #return "<html><body><pre>%s</pre></body></html>"%pp.pformat(submission_data)
-        #return "%s %s %s" % (submission_data['thumbfile']['metadata'].hash,submission_data['halffile']['metadata'].hash,submission_data['fullfile']['metadata'].hash)        # -- put submission in database --
         submission = model.Submission(
             title = submission_data['title'],
             description = submission_data['description'],
@@ -339,20 +321,16 @@ class GalleryController(BaseController):
         
         c.submission_thumbnail = submission.get_derived_index(['thumb'])
         if ( c.submission_thumbnail != None ):
-            #tn_filename= "%s%s"%(submission.derived_submission[0].hash,mimetypes.guess_extension(submission.derived_submission[0].mimetype))
             tn_filename=filestore.get_submission_file(submission.derived_submission[c.submission_thumbnail].metadata)
             c.submission_thumbnail = h.url_for(controller='gallery', action='file', filename=tn_filename, id=None)
         else:
-            #c.submission_thumbnail = h.url_for(controller='gallery', action='file', filename=tn_filename, id=None)
             # supply default thumbnail for type here
             c.submission_thumbnail = ''
         c.submission_halfview = submission.get_derived_index(['halfview'])
         if ( c.submission_halfview != None ):
-            #tn_filename= "%s%s"%(submission.derived_submission[0].hash,mimetypes.guess_extension(submission.derived_submission[0].mimetype))
             hv_filename=filestore.get_submission_file(submission.derived_submission[c.submission_halfview].metadata)
             c.submission_halfview = h.url_for(controller='gallery', action='file', filename=hv_filename, id=None)
         else:
-            #c.submission_thumbnail = h.url_for(controller='gallery', action='file', filename=tn_filename, id=None)
             # supply default thumbnail for type here
             c.submission_thumbnail = ''
         c.submission_file = h.url_for(controller='gallery', action='file', filename=filename, id=None)
@@ -362,8 +340,6 @@ class GalleryController(BaseController):
             filedata = filestore.dump(filestore.get_submission_file(submission.metadata))
             c.submission_content = filedata[0]
         
-        pp = pprint.PrettyPrinter (indent=4)
-        #c.misc = submission.derived_submission[0].metadata.mimetype
         return render('/gallery/view.mako');
         
     def file(self,filename=None):
@@ -432,7 +408,6 @@ class GalleryController(BaseController):
             # No, grab it out of current submission.
             submission_type = submission.type
             
-        
         # If it's not an image, there are no dimensions
         if ( submission_type != 'image' ):
             submission_data['fullfile']['height'] = 0
@@ -498,8 +473,6 @@ class GalleryController(BaseController):
                 submission_data['halffile'].clear()
                 submission_data['halffile'] = None
                 
-                
-        
         # Do any required image processing on the main image now. If it's an image.
         
         # Do we even need to generate new thumbnail/halfview?
@@ -509,6 +482,7 @@ class GalleryController(BaseController):
                     t.parse(submission_data['fullfile']['content'],submission_data['fullfile']['mimetype'])
                     submission_data['fullfile']['width'] = t.width
                     submission_data['fullfile']['height'] = t.height
+                    
                     # Do we need to make a thumbnail?
                     if ( submission_data['thumbfile'] == None ):
                         # Yes we do
@@ -526,6 +500,7 @@ class GalleryController(BaseController):
                         
                     # Is the submission itself too big?
                     toobig = t.generate(fullfile_size)
+                    print toobig
                     if ( toobig != None ):
                         # Yes it is
                         submission_data['fullfile'].update(toobig)
@@ -534,15 +509,13 @@ class GalleryController(BaseController):
                 if ( submission_data['fullfile']['mimetype'] == 'text/plain' or submission_data['fullfile']['mimetype'] == 'text/html' ):
                     detector = UniversalDetector()
                     detector.feed(submission_data['fullfile']['content'])
-                    #print detector.result['encoding']
                     detector.close()
-                    #print detector.result['encoding']
-                    #print codecs.getdecoder(detector.result['encoding'])
                     decoded = codecs.getdecoder(detector.result['encoding'])(submission_data['fullfile']['content'],'replace')[0]
                     submission_data['fullfile']['content'] = codecs.getencoder('utf_8')(h.escape_once(decoded),'replace')[0]
                     
                     
             submission_data['fullfile']['hash'] = self.hash(submission_data['fullfile']['content'])
+        
         if ( submission_data['halffile'] != None ):
             submission_data['halffile']['hash'] = self.hash(submission_data['halffile']['content'])
         if ( submission_data['thumbfile'] != None ):

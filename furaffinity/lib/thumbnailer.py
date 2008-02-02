@@ -44,7 +44,7 @@ class Thumbnailer:
     def parse(self,file_stream,mimetype):
         if use_c_lib:
             self.original = file_stream
-            (self.height, self.width) = imagemagick.get_size(file_stream)
+            (self.width, self.height) = imagemagick.get_size(file_stream)
         else:
             temporary_file = mkstemp()
             os.close(temporary_file[0])
@@ -75,6 +75,7 @@ class Thumbnailer:
         if ( do_generate ):
             if ( use_c_lib ):
                 aspect = float(self.width) / float(self.height)
+                print "%d %d %f"%(self.width,self.height,aspect)
                 if (aspect > 1.0):
                     #wide
                     width = int(linear_dimension)

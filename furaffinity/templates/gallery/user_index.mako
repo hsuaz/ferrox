@@ -2,10 +2,14 @@
 <%inherit file="base.mako" />
 
 <div class="basic-box xFINISHME">
+    % if c.page_owner != None:
+    <h2>Gallery for ${c.page_owner.display_name}</h2>
+    % else:
     <h2>Browse Artwork</h2>
+    % endif
 
     % if c.is_mine:
-    <p class="admin"> ${h.link_to('Submit Art', h.url(controller='gallery', action='submit', username=c.auth_user.username))} </p>
+    <p class="admin"> ${h.link_to('Submit Art', h.url(controller='gallery', action='submit', username=c.page_owner.username))} </p>
     % endif
     % if c.submissions:
         % for item in c.submissions:
@@ -23,10 +27,14 @@
         </div>
         % endfor
     % else:
-    <p> There are no submissions. </p>
+    <p> ${lib.user_link(c.page_owner)} has no submissions. </p>
     % endif
 </div>
 
-<%def name="title()">Browse Artwork</%def>
+% if c.page_owner != None:
+    <%def name="title()">Gallery for ${c.page_owner.display_name}</%def>
+% else:
+    <%def name="title()">Browse Artwork</%def>
+% endif
 
 

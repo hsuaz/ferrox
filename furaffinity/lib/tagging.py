@@ -14,7 +14,7 @@ def make_tags_into_string(tags):
     tagstring = ''
     for tag in tags:
         tagstring = "%s %s" % (tagstring, tag.text)
-    return tagstring
+    return tagstring.strip()
 
 def get_tags_from_string(tags_blob):
     tags = []

@@ -14,8 +14,10 @@ import os
 import md5
 import sqlalchemy.exceptions
 from tempfile import TemporaryFile
-from sqlalchemy import or_,and_
+from sqlalchemy import or_,and_,not_
 from sqlalchemy.orm import eagerload
+
+import xapian
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +49,26 @@ def get_submission(id):
 class GalleryController(BaseController):
 
     def index(self):
-        return render('/PLACEHOLDER.mako');
+        submission_q = model.Session.query(model.Submission)
+        submission_q = submission_q.options(eagerload('user_submission'))
+        submission_q = submission_q.options(eagerload('user_submission.user'))
+        submission_q = submission_q.options(eagerload('tags'))
+        submissions = submission_q.all()
+        if submissions:
+            c.submissions = []
+            for item in submissions:
+                tn_ind = item.get_derived_index(['thumb'])
+                if ( tn_ind != None ):
+                    thumbnail = filestore.get_submission_file(item.derived_submission[tn_ind].metadata)
+                else:
+                    thumbnail = None
+                template_item = h.to_dict ( item )
+                template_item.update({'thumbnail':thumbnail})
+                c.submissions.append ( template_item )
+        else:
+            c.submissions = None
+            
+        return render('/gallery/index.mako')
         
     def user_index(self, username=None):
         c.page_owner = None
@@ -59,10 +80,32 @@ class GalleryController(BaseController):
                 c.error_text = "User %s not found." % h.escape_once(username)
                 c.error_title = 'User not found'
                 return render('/error.mako')
-            
+        
         submission_q = model.Session.query(model.UserSubmission)
         submission_q = submission_q.filter(model.UserSubmission.status != 'deleted')
         submission_q = submission_q.filter_by(user_id = c.page_owner.id)
+        submission_q = submission_q.options(eagerload('user'))
+        submission_q = submission_q.options(eagerload('submission'))
+        submission_q = submission_q.options(eagerload('submission.tags'))
+        
+        '''
+        tags = []
+        tags = ['asdf','zxcv']
+        for tag_text in tags:
+            if tag_text[0] == '-':
+                tag = tagging.get_by_text(tag_text[1:])
+                negate = True
+                submission_q = submission_q.filter(not_(model.Submission.c.tags.has(tag)))
+            else:
+                tag = tagging.get_by_text(tag_text)
+                negate = False
+                submission_q = submission_q.filter(model.SubmissionTag.tag_id == tag.id)
+                
+        
+        submission_q = submission_q.filter(model.UserSubmission.status != 'deleted')
+        submission_q = submission_q.filter(model.UserSubmission.user_id == c.page_owner.id)
+        '''
+        
         submissions = submission_q.all()
         if submissions:
             c.submissions = []
@@ -78,14 +121,14 @@ class GalleryController(BaseController):
                     date = item.submission.time,
                     description = item.submission.description_parsed,
                     thumbnail = thumbnail,
-                    username = item.user.username
+                    username = item.user.display_name
                 )
                 c.submissions.append ( template_item )
         else:
             c.submissions = None
             
         c.is_mine = ( c.page_owner != None ) and (c.auth_user != None) and (c.page_owner.id == c.auth_user.id)
-        return render('/gallery/index.mako')
+        return render('/gallery/user_index.mako')
         
     @check_perm('submit_art')
     def submit(self):
@@ -198,11 +241,12 @@ class GalleryController(BaseController):
                 submission.derived_submission[hv_ind].metadata = submission_data['halffile']['metadata']
 
         # Tag shuffle
-        for tag in submission.tags:
-            if not (tag.text in submission_data['tags']):
-                submission.tags.remove(tag)
+        for tag_object in submission.tags:
+            if not (tag_object.text in submission_data['tags']):
+                submission.tags.remove(tag_object)
+                #model.Session.delete(submission_tag_object)
             else:
-                submission_data['tags'].remove(tag.text)
+                submission_data['tags'].remove(tag_object.text)
                 
         for tag in submission_data['tags']:
             tag_object = tagging.get_by_text(tag, True)
@@ -401,7 +445,6 @@ class GalleryController(BaseController):
             # Yes, find out what type of submission we're dealing with...
             submission_data['fullfile']['mimetype'] = h.get_mime_type(submission_data['fullfile'])
             submission_type = self.get_submission_type(submission_data['fullfile']['mimetype'])
-            #print "Mimetype: %s" % submission_data['fullfile']['mimetype']
             if ( submission_type == 'unknown' ):
                 abort(403)
         else:
@@ -500,7 +543,6 @@ class GalleryController(BaseController):
                         
                     # Is the submission itself too big?
                     toobig = t.generate(fullfile_size)
-                    print toobig
                     if ( toobig != None ):
                         # Yes it is
                         submission_data['fullfile'].update(toobig)

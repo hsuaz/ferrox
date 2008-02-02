@@ -13,7 +13,7 @@ from sqlalchemy import Column, MetaData, Table, ForeignKey, types
 from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.databases.mysql import MSInteger, MSEnum
-from furaffinity.model import form;
+from furaffinity.model import form
 #import furaffinity.lib.hashing as hashing
 
 from datetime import datetime
@@ -502,6 +502,6 @@ submission_tag_mapper = mapper(SubmissionTag, submission_tag_table, properties=d
 '''
 
 tag_mapper = mapper(Tag, tag_table, properties=dict(
-    submissions = relation(Submission, backref='tags', secondary=submission_tag_table),
+    submissions = relation(Submission, backref='tags', secondary=submission_tag_table, lazy=False)
     )
 )

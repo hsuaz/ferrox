@@ -17,7 +17,13 @@ from tempfile import TemporaryFile
 from sqlalchemy import or_,and_,not_
 from sqlalchemy.orm import eagerload
 
-import xapian
+import re
+
+search_enabled = True
+try:
+    import xapian
+except ImportError:
+    search_enabled = False
 
 log = logging.getLogger(__name__)
 
@@ -254,6 +260,12 @@ class GalleryController(BaseController):
         model.Session.save(submission)
             
         model.Session.commit()
+
+        if search_enabled:
+            xapian_database = xapian.WritableDatabase('fa.xapian', xapian.DB_OPEN)
+            xapian_document = submission_data_to_xapian(submission)
+            xapian_database.replace_document("Is%d"%submission.id,xapian_document)
+
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
         
         
@@ -275,6 +287,10 @@ class GalleryController(BaseController):
             submission.status = 'deleted'
             submission.user_submission[0].status = 'deleted'
             model.Session.commit()
+            
+            if search_enabled:
+                xapian_database = WritableDatabase('fa.xapian',DB_OPEN)
+                xapian_database.delete_document("Is%d"%submission.id);
             h.redirect_to(h.url_for(controller='gallery', action='index', username = submission.user_submission[0].user.username, id=None))
         else:
             h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
@@ -357,6 +373,13 @@ class GalleryController(BaseController):
             model.Session.save(submission)
 
         model.Session.commit()
+        
+        # update xapian
+        if search_enabled:
+            xapian_database = xapian.WritableDatabase('fa.xapian', xapian.DB_OPEN)
+            xapian_document = self.submission_data_to_xapian(submission)
+            xapian_database.add_document(xapian_document)
+        
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
             
     def view(self,id=None):
@@ -568,4 +591,34 @@ class GalleryController(BaseController):
         submission_data['tags'] = tagging.get_tags_from_string(submission_data['tags'])
 
         return submission_data
-
+    
+    def submission_data_to_xapian(self, submission):
+        xapian_document = xapian.Document()
+        xapian_document.add_term('Is')
+        xapian_document.add_term("Is%d"%submission.id)
+        xapian_document.add_value(0,"Is%d"%submission.id)
+        xapian_document.add_term("A%s"%submission.user_submission[0].user.id)
+        
+        # tags
+        for tag in submission.tags:
+            xapian_document.add_term("G%s"%tag.text)
+            
+        # title
+        words = []
+        rmex = re.compile(r'[^a-z0-9]')
+        for word in submission.title.lower().split(' '):
+            words.append(rmex.sub('',word))
+        words = set(words)
+        for word in words:
+            xapian_document.add_term("T%s"%word)
+            
+        # description
+        words = []
+        # FIX ME: needs bbcode parser. should be plain text representation.
+        for word in submission.description.lower().split(' '):
+            words.append(rmex.sub('',word))
+        words = set(words)
+        for word in words:
+            xapian_document.add_term("P%s"%word)
+        
+        return xapian_document

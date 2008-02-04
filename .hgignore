@@ -10,3 +10,5 @@ mydev.ini
 syntax: regexp
 ^build/
 ^dist/
+^fa.xapian/
+

@@ -9,6 +9,9 @@ from webhelpers.rails.urls import confirm_javascript_function
 from webhelpers.rails.tags import *
 from webhelpers.util import html_escape
 
+# TODO: groups, i.e. checkboxen, radio buttons, and selects
+# TODO: defaults for radio buttons and selects
+
 class FormGenerator(object):
     def __init__(self, error_class='form-error'):
         self.error_class = error_class
@@ -152,14 +155,18 @@ class FormGenerator(object):
 
         return content_tag("textarea", content, **o) + self.get_error(name)
 
-    def check_box(self, name, value="1", checked=False, **options):
+    def check_box(self, name, value='1', checked=None, **options):
         """
         Creates a check box.
         """
         o = {'type': 'checkbox', 'name_': name, 'value': value}
         o.update(options)
+
+        if checked == None and name in self.defaults:
+            checked = self.defaults[name]
         if checked:
-            o["checked"] = "checked"
+            o['checked'] = 'checked'
+
         return tag("input", **o) + self.get_error(name)
 
     def radio_button(self, name, value, checked=False, **options):

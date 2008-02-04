@@ -62,4 +62,3 @@ body { background: ${c.colors['background']}; color: ${c.colors['text']}; font-f
 /* thumbnail grid */
 .thumbnail-grid .thumbnail { float: left; width: 120px; height: 120px; padding: 0.25em; margin: 1em; border: 1px solid ${c.colors['border']}; }
 .thumbnail-grid:after { display: block; clear: both; visibility: hidden; content: 'vee was here'; height: 0; }
-

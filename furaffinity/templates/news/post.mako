@@ -3,23 +3,16 @@
 <div class="basic-box">
     <h2>Post News</h2>
 
-    ${h.form(h.url(controller='news', action='do_post'), method='post')}
+    ${c.form.start(h.url(controller='news', action='do_post'), method='post')}
     <dl class="standard-form">
         <dt>Headline</dt>
-        <dd>${h.text_field('title', value=c.form_defaults['title'] or '')}
-            % if 'title' in c.form_errors:
-            <span class="error">${c.form_errors['title']}</span>
-            % endif
-        </dd>
+        <dd>${c.form.text_field('title')}</dd>
         <dt>Anonymous</dt>
-        <dd>${h.check_box('is_anonymous')}</dd>
+        <dd>${c.form.check_box('is_anonymous')}</dd>
     </dl>
-    <p>${h.text_area('content', size="80x10", content=c.form_defaults['content'] or '')}</p>
-        % if 'content' in c.form_errors:
-        <p class="error">${c.form_errors['content']}</p>
-        % endif
+    <p>${c.form.text_area('content', size="80x10")}</p>
     <p>${h.submit('Post')}</p>
-    ${h.end_form()}
+    ${c.form.end()}
 </div>
 
 <%def name="title()">Post News</%def>

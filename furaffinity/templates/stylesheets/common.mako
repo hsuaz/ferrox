@@ -8,6 +8,9 @@
 
 input[type='submit'], input[type='reset'], input[type='button'],
 input[type='radio'], input[type='checkbox'] { cursor: pointer; }
+input { vertical-align: middle; }
+.form-error { margin: 0.1em 0 0.1em 2em; display: inline-block; color: #800000; font-weight: bold; vertical-align: top; }
+.form-error:before { content: '« '; }
 
 /*** widgets ***/
 

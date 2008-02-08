@@ -13,7 +13,6 @@ from sqlalchemy import Column, MetaData, Table, ForeignKey, types
 from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.databases.mysql import MSInteger, MSEnum
-from furaffinity.model import form;
 #import furaffinity.lib.hashing as hashing
 
 from datetime import datetime
@@ -55,11 +54,13 @@ user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin
 user_table = Table('user', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('username', types.String(32), nullable=False),
+    Column('email', types.String(256), nullable=False),
     Column('password', types.String(256), nullable=False),
     #Column('salt', types.String(5), nullable=False),
     #Column('hash_algorithm', hash_algorithm_type, nullable=False),
     Column('display_name', types.Unicode, nullable=False),
     Column('role_id', types.Integer, ForeignKey('role.id'), default=1),
+    Column('verified', types.Boolean, nullable=False, default=False),
     mysql_engine='InnoDB'
 )
 

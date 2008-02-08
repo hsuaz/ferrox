@@ -26,6 +26,7 @@ def make_map():
     map.connect('/logout', controller='index', action='logout', **require_post)
     map.connect('/register', controller='index', action='register')
     map.connect('/register_check', controller='index', action='register_check', **require_post)
+    map.connect('/verify', controller='index', action='verify')
     map.connect('/users/:username', controller='user', action='view')
     map.connect('/users/:username/settings', controller='user', action='settings')
 

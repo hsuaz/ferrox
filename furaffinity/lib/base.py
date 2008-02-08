@@ -14,6 +14,7 @@ from routes import request_config
 import furaffinity.lib.helpers as h
 import furaffinity.lib.hashing as hashing
 import furaffinity.model as model
+import furaffinity.model.form as form
 
 from decorator import decorator
 from datetime import datetime

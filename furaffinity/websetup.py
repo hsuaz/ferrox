@@ -45,12 +45,16 @@ def setup_config(command, filename, section, vars):
     print "Creating test data"
     u = model.User('fender', 'asdf')
     u.display_name = 'Fender'
+    u.email = 'nobody@furaffinity.net'
     u.role = admin_role
+    u.verified = True
     model.Session.save(u)
 
     u = model.User('eevee', 'pretzel')
     u.display_name = 'Eevee'
+    u.email = 'nobody@furaffinity.net'
     u.role = admin_role
+    u.verified = True
     model.Session.save(u)
 
     p = model.UserPreference(u, 'style_sheet', 'sufficiently-advanced')
@@ -60,12 +64,16 @@ def setup_config(command, filename, section, vars):
     
     u = model.User('net-cat', 'asdf')
     u.display_name = 'net-cat'
+    u.email = 'nobody@furaffinity.net'
     u.role = admin_role
+    u.verified = True
     model.Session.save(u)
     
     u = model.User('luser', 'asdf')
     u.display_name = 'Luser'
+    u.email = 'nobody@furaffinity.net'
     u.role = normal_role
+    u.verified = True
     model.Session.save(u)
 
     n = model.News('headline', 'news content', u)

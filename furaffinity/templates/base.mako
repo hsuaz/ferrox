@@ -42,10 +42,11 @@
         % if c.auth_user.can('administrate'):
         <p id="superpowers">${h.link_to("Activate Superpowers", h.url(controller='admin'), class_='admin')}</p>
         % endif
-        <ul id="messages" class="FINISHME">
-            <li class="new"> ${h.link_to(h.image_tag('/images/icons/internet-mail.png', '') + "1 new note", h.url(controller='notes', action='user_index', username=c.auth_user.username))} </li>
-            <li class="new"> ${h.link_to(h.image_tag('/images/icons/internet-group-chat.png', '') + "5 new feedback", "")} </li>
-            <li> ${h.link_to(h.image_tag('/images/icons/internet-news-reader.png', '') + "No new watches", "")} </li>
+        <ul id="messages">
+        <% note_count = c.auth_user.unread_note_count() %>
+            <li${' class="new"' if note_count else ''}> ${h.link_to("%s%d new note%s" % (h.image_tag('/images/icons/internet-mail.png', ''), note_count, 's' if note_count != 1 else ''), h.url(controller='notes', action='user_index', username=c.auth_user.username))} </li>
+            <li class="new FINISHME"> ${h.link_to(h.image_tag('/images/icons/internet-group-chat.png', '') + "5 new feedback", "")} </li>
+            <li class="FINISHME"> ${h.link_to(h.image_tag('/images/icons/internet-news-reader.png', '') + "No new watches", "")} </li>
         </ul>
         % endif
     </div>

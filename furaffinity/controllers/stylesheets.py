@@ -22,8 +22,8 @@ class StylesheetsController(BaseController):
     colorschemes = {
         'light': {
             'background': duality_light_back,
-            'background_alt': 'rgb(200, 207, 219)',
-            'background_hover': 'rgb(188, 195, 207)',
+            'background_alt': '#c8d2e2',
+            'background_hover': '#eef1f5',
             'text': duality_light_fore,
             'link': '#5775ad',
             'link_visited': '#8257ad',
@@ -37,6 +37,8 @@ class StylesheetsController(BaseController):
         },
         'dark': {
             'background': duality_dark_back,
+            'background_alt': '#303b3f',
+            'background_hover': '#252d30',
             'text': duality_dark_fore,
             'link': '#5775ad',
             'link_visited': '#8257ad',

@@ -334,10 +334,22 @@ class User(object):
                 self._preference_cache[row.key] = row.value
             return self._preference_cache[pref]
 
+    def unread_note_count(self):
+        """
+        Returns the number of unread notes this user has.
+        """
+
+        return Session.query(Note) \
+            .filter(Note.to_user_id == self.id) \
+            .filter(Note.status == 'unread') \
+            .count()
+
     def recent_notes(self):
-        """Finds the most recent note in each of this user's conversations,
-        in order from newest to oldest.  Returns a query object that can be
-        paged however desired."""
+        """
+        Finds the most recent note in each of this user's conversations, in
+        order from newest to oldest.  Returns a query object that can be paged
+        however desired.
+        """
 
         # Group-wise maximum, as inspired by the MySQL manual.  The only
         # differences between this and the example in the manual are:

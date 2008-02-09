@@ -93,7 +93,7 @@ input[type='radio'] { cursor: pointer; }
 .entry { padding: 0.5em; border-top: 1px solid ${c.colors['border']}; }
 h2 + .entry,
 .entry:first-child { border-top: none; }
-.entry .header { background: ${c.colors['background_hover']}; padding: 0.25em; }
+.entry .header { background: ${c.colors['background_alt']}; padding: 0.25em; }
 .entry .header .title { float: left; font-size: 1.67em; font-weight: bold; color: ${c.colors['header2']}; }
 .entry .header .avatar { float: right; }
 .entry .header .avatar img { max-height: 50px; width: 50px; }
@@ -111,4 +111,4 @@ h2 + .entry,
 .thumbnail-grid .thumbnail { float: none; display: inline-block; padding: 1em; }
 
 /* standard tables */
-table.bare-table tbody tr:hover { outline: 1px solid ${c.colors['border']}; x-moz-outline-radius: 0.25em; outline-radius: 0.25em; background: white; }
+table.bare-table tbody tr:hover { background: ${c.colors['background_hover']}; }

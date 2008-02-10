@@ -33,6 +33,10 @@ def make_map():
     map.connect('/news/:id/edit', controller='news', action='edit')
     map.connect('/news/:id/edit_commit', controller='news', action='edit_commit', **require_post)
 
+    map.connect('/users/:username/notes', controller='notes', action='user_index')
+    map.connect('/users/:username/notes/:id', controller='notes', action='view')
+    map.connect('/users/:username/notes/:id/ajax_expand', controller='notes', action='ajax_expand')
+
     map.connect('/users/:username/gallery', controller='gallery', action='user_index')
     map.connect('/users/:username/gallery/submit', controller='gallery', action='submit')
     map.connect('/users/:username/gallery/submit_upload', controller='gallery', action='submit_upload', **require_post)

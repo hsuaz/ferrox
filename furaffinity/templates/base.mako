@@ -42,10 +42,11 @@
         % if c.auth_user.can('administrate'):
         <p id="superpowers">${h.link_to("Activate Superpowers", h.url(controller='admin'), class_='admin')}</p>
         % endif
-        <ul id="messages" class="FINISHME">
-            <li class="new"> ${h.link_to(h.image_tag('/images/icons/new-notes.png', '') + "1 new note", "")} </li>
-            <li class="new"> ${h.link_to(h.image_tag('/images/icons/new-feedback.png', '') + "5 new feedback", "")} </li>
-            <li> ${h.link_to(h.image_tag('/images/icons/new-watches.png', '') + "No new watches", "")} </li>
+        <ul id="messages">
+        <% note_count = c.auth_user.unread_note_count() %>
+            <li${' class="new"' if note_count else ''}> ${h.link_to("%s%d new note%s" % (h.image_tag('/images/icons/internet-mail.png', ''), note_count, 's' if note_count != 1 else ''), h.url(controller='notes', action='user_index', username=c.auth_user.username))} </li>
+            <li class="new FINISHME"> ${h.link_to(h.image_tag('/images/icons/internet-group-chat.png', '') + "5 new feedback", "")} </li>
+            <li class="FINISHME"> ${h.link_to(h.image_tag('/images/icons/internet-news-reader.png', '') + "No new watches", "")} </li>
         </ul>
         % endif
     </div>
@@ -117,7 +118,6 @@
 </html>
 
 <%def name="css_links()">
-    ${h.stylesheet_link_tag('404site.css')}
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet='reset')}"/>
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet='common')}"/>
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet=c.auth_user.preference('style_sheet'), color=c.auth_user.preference('style_color'))}"/>
@@ -125,4 +125,9 @@
 
 <%def name="javascript_includes()">
     ${h.javascript_include_tag("jquery-1.2.1.pack.js")}
+    % if hasattr(c, 'javascripts'):
+    % for script in c.javascripts:
+    ${h.javascript_include_tag("%s.js" % script)}
+    % endfor
+    % endif
 </%def>

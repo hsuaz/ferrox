@@ -55,11 +55,41 @@ def get_submission(id):
 class GalleryController(BaseController):
 
     def index(self):
+        '''
         submission_q = model.Session.query(model.Submission)
-        submission_q = submission_q.options(eagerload('user_submission'))
-        submission_q = submission_q.options(eagerload('user_submission.user'))
+        #submission_q = submission_q.options(eagerload('user_submission'))
+        #submission_q = submission_q.options(eagerload('user_submission.user'))
         submission_q = submission_q.options(eagerload('tags'))
+
+        tags = []
+        tags = ['asdf','zxcv']
+        
+        if len(tags):
+            eval_query = 'or_('
+            first = True
+            for tag_text in tags:
+                if first:
+                    first = False
+                else:
+                    eval_query += ', '
+                    
+                if tag_text[0] == '-':
+                    #tag = tagging.get_by_text(tag_text[1:])
+                    negate = True
+                else:
+                    #tag = tagging.get_by_text(tag_text)
+                    negate = False
+                    
+                    eval_query += "model.Tag.text == '%s'"%tag_text
+            eval_query += ')'
+            # there has to be a better way to construct this
+            submission_q = submission_q.filter(eval(eval_query)).group_by(model.Submission.id).having(count(model.Submission.id) == 2)
+
+
+        model.Session.bind.echo = True
         submissions = submission_q.all()
+        model.Session.bind.echo = False
+        
         if submissions:
             c.submissions = []
             for item in submissions:
@@ -68,13 +98,17 @@ class GalleryController(BaseController):
                     thumbnail = filestore.get_submission_file(item.derived_submission[tn_ind].metadata)
                 else:
                     thumbnail = None
-                template_item = h.to_dict ( item )
-                template_item.update({'thumbnail':thumbnail})
-                c.submissions.append ( template_item )
+                #template_item = h.to_dict ( item )
+                #template_item.update({'thumbnail':thumbnail,'username':item.primary_artist()})
+                #c.submissions.append ( template_item )
+                print item.id
         else:
             c.submissions = None
             
+        c.submissions = None
         return render('/gallery/index.mako')
+        '''
+        return ''
         
     def user_index(self, username=None):
         c.page_owner = None
@@ -93,24 +127,8 @@ class GalleryController(BaseController):
         submission_q = submission_q.options(eagerload('user'))
         submission_q = submission_q.options(eagerload('submission'))
         submission_q = submission_q.options(eagerload('submission.tags'))
-        
-        '''
-        tags = []
-        tags = ['asdf','zxcv']
-        for tag_text in tags:
-            if tag_text[0] == '-':
-                tag = tagging.get_by_text(tag_text[1:])
-                negate = True
-                submission_q = submission_q.filter(not_(model.Submission.c.tags.has(tag)))
-            else:
-                tag = tagging.get_by_text(tag_text)
-                negate = False
-                submission_q = submission_q.filter(model.SubmissionTag.tag_id == tag.id)
-                
-        
         submission_q = submission_q.filter(model.UserSubmission.status != 'deleted')
         submission_q = submission_q.filter(model.UserSubmission.user_id == c.page_owner.id)
-        '''
         
         submissions = submission_q.all()
         if submissions:
@@ -262,9 +280,9 @@ class GalleryController(BaseController):
         model.Session.commit()
 
         if search_enabled:
-            xapian_database = xapian.WritableDatabase('fa.xapian', xapian.DB_OPEN)
+            xapian_database = xapian.WritableDatabase('submission.xapian', xapian.DB_OPEN)
             xapian_document = submission_data_to_xapian(submission)
-            xapian_database.replace_document("Is%d"%submission.id,xapian_document)
+            xapian_database.replace_document("I%d"%submission.id,xapian_document)
 
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
         
@@ -289,8 +307,8 @@ class GalleryController(BaseController):
             model.Session.commit()
             
             if search_enabled:
-                xapian_database = WritableDatabase('fa.xapian',DB_OPEN)
-                xapian_database.delete_document("Is%d"%submission.id);
+                xapian_database = WritableDatabase('submission.xapian',DB_OPEN)
+                xapian_database.delete_document("I%d"%submission.id);
             h.redirect_to(h.url_for(controller='gallery', action='index', username = submission.user_submission[0].user.username, id=None))
         else:
             h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
@@ -376,7 +394,7 @@ class GalleryController(BaseController):
         
         # update xapian
         if search_enabled:
-            xapian_database = xapian.WritableDatabase('fa.xapian', xapian.DB_OPEN)
+            xapian_database = xapian.WritableDatabase('submission.xapian', xapian.DB_OPEN)
             xapian_document = self.submission_data_to_xapian(submission)
             xapian_database.add_document(xapian_document)
         
@@ -594,9 +612,8 @@ class GalleryController(BaseController):
     
     def submission_data_to_xapian(self, submission):
         xapian_document = xapian.Document()
-        xapian_document.add_term('Is')
-        xapian_document.add_term("Is%d"%submission.id)
-        xapian_document.add_value(0,"Is%d"%submission.id)
+        xapian_document.add_term("I%d"%submission.id)
+        xapian_document.add_value(0,"I%d"%submission.id)
         xapian_document.add_term("A%s"%submission.user_submission[0].user.id)
         
         # tags

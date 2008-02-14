@@ -9,10 +9,11 @@ import random
     
 import pylons
 
-from sqlalchemy import Column, MetaData, Table, ForeignKey, types
+from sqlalchemy import Column, MetaData, Table, ForeignKey, types, sql
 from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.databases.mysql import MSInteger, MSEnum
+from sqlalchemy.exceptions import InvalidRequestError
 
 from datetime import datetime
 
@@ -45,10 +46,11 @@ if re.match('^mysql', pylons.config['sqlalchemy.url']):
 else:
     ip_type = types.String(length=11)
 #hash_algorithm_type = Enum(['WHIRLPOOL','SHA512','SHA256','SHA1'], empty_to_none=True, strict=True)
-journal_status_type = Enum(['normal','under_review','removed_by_admin','deleted'], empty_to_none=True, strict=True )
+note_status_type = Enum(['unread','read'], empty_to_none=True, strict=True)
+journal_status_type = Enum(['normal','under_review','removed_by_admin','deleted'], empty_to_none=True, strict=True)
 submission_type_type = Enum(['image','video','audio','text'], empty_to_none=True, strict=True)
-submission_status_type = Enum(['normal','under_review','removed_by_admin','unlinked','deleted'], empty_to_none=True, strict=True )
-derived_submission_derivetype_type = Enum(['thumb','halfview'], empty_to_none=True, strict=True )
+submission_status_type = Enum(['normal','under_review','removed_by_admin','unlinked','deleted'], empty_to_none=True, strict=True)
+derived_submission_derivetype_type = Enum(['thumb','halfview'], empty_to_none=True, strict=True)
 user_submission_status_type = Enum(['primary','normal','deleted'], empty_to_none=True, strict=True)
 user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin'], empty_to_none=True, strict=True)
 
@@ -101,6 +103,21 @@ ip_log_table = Table('ip_log', metadata,
     Column('ip', ip_type, nullable=False),
     Column('start_time', types.DateTime, nullable=False, default=datetime.now),
     Column('end_time', types.DateTime, nullable=False, default=datetime.now),
+    mysql_engine='InnoDB'
+)
+
+# Notes
+
+note_table = Table('note', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('from_user_id', types.Integer, ForeignKey("user.id")),
+    Column('to_user_id', types.Integer, ForeignKey("user.id")),
+    Column('original_note_id', types.Integer, ForeignKey("note.id")),
+    Column('subject', types.Unicode, nullable=False),
+    Column('content', types.Unicode, nullable=False),
+    Column('content_parsed', types.Unicode, nullable=False),
+    Column('status', note_status_type, nullable=False),
+    Column('time', types.DateTime, nullable=False, default=datetime.now),
     mysql_engine='InnoDB'
 )
 
@@ -268,6 +285,12 @@ class GuestUser(object):
     def preference(self, pref):
         return self.preferences[pref]
 
+def retrieve_user(username):
+    try:
+        return Session.query(User).filter_by(username=username).one()
+    except InvalidRequestError:
+        return None
+
 class User(object):
     def __init__(self, username, password):
         self.username = username
@@ -330,6 +353,49 @@ class User(object):
             for row in self.preferences:
                 self._preference_cache[row.key] = row.value
             return self._preference_cache[pref]
+
+    def unread_note_count(self):
+        """
+        Returns the number of unread notes this user has.
+        """
+
+        return Session.query(Note) \
+            .filter(Note.to_user_id == self.id) \
+            .filter(Note.status == 'unread') \
+            .count()
+
+    def recent_notes(self):
+        """
+        Finds the most recent note in each of this user's conversations, in
+        order from newest to oldest.  Returns a query object that can be paged
+        however desired.
+        """
+
+        # Group-wise maximum, as inspired by the MySQL manual.  The only
+        # difference between this and the example in the manual is that I add
+        # the receipient's user id to the ON clause, ensuring that rows
+        # belonging to each user are clustered together, and then filter out the
+        # desired user with a WHERE.
+        # I say "I" instead of "we" because this took me two days to figure out
+        # and I think it's pretty fucking cool -- enough that I am going to put
+        # my name on it.                                             -- Eevee
+
+        older_note_a = note_table.alias()
+
+        note_q = Session.query(Note).select_from(note_table
+            .outerjoin(older_note_a,
+                sql.and_(
+                    note_table.c.original_note_id == older_note_a.c.original_note_id,
+                    note_table.c.to_user_id == older_note_a.c.to_user_id,
+                    note_table.c.time < older_note_a.c.time
+                    )
+                )
+            ) \
+            .filter(older_note_a.c.id == None) \
+            .filter(Note.to_user_id == self.id) \
+            .order_by(Note.time.desc())
+
+        return note_q
 
 class ImageMetadata(object):
     def __init__(self, hash, height, width, mimetype, count, disable=False ):
@@ -456,6 +522,41 @@ class Tag(object):
         self.text = text
         self.id = crc32(text)
 
+class Note(object):
+    def __init__(self, from_user_id, to_user_id, subject, content, original_note_id=None):
+        self.from_user_id = from_user_id
+        self.to_user_id = to_user_id
+        self.subject = subject
+        self.content = content
+        self.content_parsed = content  # bbcode placeholder
+        self.original_note_id = original_note_id
+        self.status = 'unread'
+        self.time = datetime.now()
+
+    def latest_note(self, recipient):
+        """
+        Returns the latest note in this note's thread, preferring one that was
+        addressed to the provided recipient.
+        """
+        note_q = Session.query(Note).filter_by(original_note_id=self.original_note_id)
+        latest_note = note_q.filter_by(to_user_id=recipient.id) \
+            .order_by(Note.time.desc()) \
+            .first()
+
+        # TODO perf
+        if not latest_note:
+            # No note from this user on this thread
+            latest_note = note_q.order_by(Note.time.desc()) \
+                .first()
+
+        return latest_note
+
+    def base_subject(self):
+        """
+        Returns the subject without any prefixes attached.
+        """
+        return re.sub('^(Re: |Fwd: )+', '', self.subject)
+
 ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
     user=relation(User, backref='ip_log')
     ),
@@ -518,15 +619,13 @@ journal_entry_mapper = mapper(JournalEntry, journal_entry_table, properties=dict
     )
 )
 
-'''
-submission_tag_mapper = mapper(SubmissionTag, submission_tag_table, properties=dict(
-    submission = relation(Submission, backref='submission_tags'),
-    tag = relation(Tag, backref='submission_tags')
-    )
-)
-'''
-
 tag_mapper = mapper(Tag, tag_table, properties=dict(
     submissions = relation(Submission, backref='tags', secondary=submission_tag_table)
+    )
+)
+
+note_mapper = mapper(Note, note_table, properties=dict(
+    sender = relation(User, primaryjoin=note_table.c.from_user_id==user_table.c.id),
+    recipient = relation(User, primaryjoin=note_table.c.to_user_id==user_table.c.id),
     )
 )

@@ -1,7 +1,10 @@
 <%namespace name="lib" file="/lib.mako"/>
 <%inherit file="base.mako" />
 
-<div class="basic-box xFINISHME">
+<div class="basic-box FINISHME">
+    % if c.page_owner != None:
+    <h2>Gallery for ${c.page_owner.display_name}</h2>
+    % else:
     <h2>Browse Artwork</h2>
 
     % if c.is_mine:

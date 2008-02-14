@@ -2,11 +2,13 @@
 <%inherit file="base.mako" />
 
 <div class="basic-box FINISHME">
-    % if c.page_owner != None:
-    <h2>Gallery for ${c.page_owner.display_name}</h2>
-    % else:
     <h2>Browse Artwork</h2>
-
+    <h2>
+        ${h.form(h.url(), method='get')}
+        Filter: ${h.text_field('tags',value=c.prefill['tags'])}${h.submit('Filter')}
+        ${h.end_form()}
+    </h2>
+    
     % if c.is_mine:
     <p class="admin"> ${h.link_to('Submit Art', h.url(controller='gallery', action='submit', username=c.auth_user.username))} </p>
     % endif

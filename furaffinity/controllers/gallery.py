@@ -33,7 +33,7 @@ thumbnail_size = 120
 halfview_size = 300
 
 
-def get_submission(id):
+def get_submission(id,eagerloads=[]):
     try:
         id = int(id)
     except ValueError:
@@ -43,7 +43,10 @@ def get_submission(id):
         
     submission = None
     try:
-        submission = model.Session.query(model.Submission).options(eagerload('tags')).filter(model.Submission.id==id).one()
+        submission = model.Session.query(model.Submission)
+        for el in eagerloads:
+            submission = submission.options(eagerload(el))
+        submission = submission.filter(model.Submission.id==id).one()
         c.tags = tagging.make_tags_into_string(submission.tags)
     except sqlalchemy.exceptions.InvalidRequestError:
         c.error_text = 'Requested submission was not found.'
@@ -55,10 +58,19 @@ def get_submission(id):
 
 class GalleryController(BaseController):
 
-    def index(self):
-        positive_tags = ['a']
-        negative_tags = ['b']
-        all_tags = list(set(negative_tags+positive_tags))
+    def index(self, username = None):
+        validator = model.form.TagFilterForm();
+        submission_data = None
+        error = None
+        try:
+            submission_data = validator.to_python(request.params);
+        except model.form.formencode.Invalid, error:
+            return error
+    
+        (positive_tags,negative_tags) = tagging.get_neg_and_pos_tags_from_string(submission_data['tags'])
+        c.prefill['tags'] = tagging.recreate_tag_string(positive_tags,negative_tags)
+        
+        all_tags = negative_tags+positive_tags
         fetched = tagging.cache_by_list(all_tags)
         
         submission_q = model.Session.query(model.Submission)
@@ -106,7 +118,7 @@ class GalleryController(BaseController):
         
         
     def user_index(self, username=None):
-        c.page_owner = model.User.retrieve(username)
+        c.page_owner = model.retrieve_user(username)
         if c.page_owner == None:
             abort(404)
             
@@ -154,7 +166,7 @@ class GalleryController(BaseController):
 
     @check_perms(['submit_art','administrate'])
     def edit(self, id=None):
-        submission = get_submission(id)
+        submission = get_submission(id,['tags'])
         self.is_my_submission(submission, True)
         c.submission = submission
         c.edit = True
@@ -186,7 +198,16 @@ class GalleryController(BaseController):
             return render('/gallery/submit.mako')
             
         # -- get image from database, make sure user has permission --
-        submission = get_submission(id)
+        submission = get_submission(id,[
+            'tags',
+            'user_submission',
+            'user_submission.user',
+            'derived_submission',
+            'derived_submission.metadata',
+            'metadata',
+            'editlog',
+            'editlog.editlog_entries'
+        ])
         self.is_my_submission(submission,True)
         
         # -- get relevant information from submission_data --
@@ -266,13 +287,13 @@ class GalleryController(BaseController):
         for tag in submission_data['tags']:
             tag_object = tagging.get_by_text(tag, True)
             submission.tags.append(tag_object)
-        model.Session.save(submission)
+        #model.Session.save(submission)
             
         model.Session.commit()
 
         if search_enabled:
             xapian_database = xapian.WritableDatabase('submission.xapian', xapian.DB_OPEN)
-            xapian_document = submission_data_to_xapian(submission)
+            xapian_document = self.submission_data_to_xapian(submission)
             xapian_database.replace_document("I%d"%submission.id,xapian_document)
 
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
@@ -354,7 +375,7 @@ class GalleryController(BaseController):
             discussion_id = 0,
             status = 'normal'
         )
-        model.Session.save(submission)
+        #model.Session.save(submission)
         submission_data['fullfile']['metadata'].count_inc()
         submission.metadata = submission_data['fullfile']['metadata']
         
@@ -391,8 +412,12 @@ class GalleryController(BaseController):
             xapian_document = self.submission_data_to_xapian(submission)
             xapian_database.add_document(xapian_document)
         
-        h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
+        h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id, username=c.auth_user.username))
             
+    def forward_to_user(self,id,username):
+        c.page_owner = model.retrieve_user(username)
+        h.redirect_to(h.url_for(controller='gallery', action='view', id = id, username=c.page_owner.username))
+        
     def view(self,id=None):
         submission = get_submission(id)
         filename=filestore.get_submission_file(submission.metadata)

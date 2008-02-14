@@ -52,7 +52,7 @@ def make_map():
     map.connect('/users/:username/gallery/:id/editlog', controller='editlog', action='submission')
 
     map.connect('/gallery', controller='gallery', action='index')
-    map.connect('/view/:filename', controller='gallery', action='file')
+    map.connect('/download/:filename', controller='gallery', action='file')
 
     map.connect('/users/:username/journals', controller='journal', action='index')
     map.connect('/users/:username/journals/post', controller='journal', action='post')
@@ -63,6 +63,8 @@ def make_map():
     map.connect('/users/:username/journals/:id/delete', controller='journal', action='delete')
     map.connect('/users/:username/journals/:id/delete_commit', controller='journal', action='delete_commit', **require_post)
     map.connect('/users/:username/journals/:id/editlog', controller='editlog', action='journal')
+    
+    map.connect('/view/:id', controller='gallery', action='forward_to_user')
     #map.connect('/journal', controller='journal', action='index')
 
     map.connect('/stylesheets/:sheet/:color', controller='stylesheets', action='index', color=None)

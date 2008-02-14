@@ -12,18 +12,54 @@ class TagNotFound(TagException):
 
 cache_by_text = {}
 
+# for Tag objects
 def make_tags_into_string(tags):
     tagstring = ''
     for tag in tags:
         tagstring = "%s %s" % (tagstring, tag.text)
     return tagstring.strip()
 
+# returns array of strings
 def get_tags_from_string(tags_blob):
     tags = []
     rmex = re.compile(r'[^a-z0-9]')
     for tag in tags_blob.lower().split(' '):
         tags.append(rmex.sub('',tag))
-    return set(tags)
+    return list(set(tags))
+
+# returns two arrays of strings
+def get_neg_and_pos_tags_from_string(tags_blob, positive_tags = [], negative_tags = []):
+    rmex = re.compile(r'[^a-z0-9]')
+    for tag in tags_blob.lower().split(' '):
+        sanitized_tag = rmex.sub('',tag)
+        if len(sanitized_tag)>0:
+            if len(tag)>1 and tag[0] == '-':
+                negative_tags.append(sanitized_tag)
+            elif len(tag)>0:
+                positive_tags.append(sanitized_tag)
+            
+    positive_tags = list(set(positive_tags))
+    negative_tags = list(set(negative_tags))
+    
+    for tag in positive_tags:
+        try:
+            negative_tags.remove(tag)
+        except ValueError:
+            pass
+    
+    positive_tags.sort()
+    negative_tags.sort()
+    return (positive_tags,negative_tags)
+
+# for array of tags
+def recreate_tag_string(positive_tags,negative_tags):
+    tagstring = ''
+    for tag in positive_tags:
+        tagstring = "%s %s" % (tagstring, tag)
+    for tag in negative_tags:
+        tagstring = "%s -%s" % (tagstring, tag)
+    return tagstring.strip()
+    
 
 def get_id_by_text(text):
     return crc32(text)

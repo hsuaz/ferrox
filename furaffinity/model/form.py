@@ -117,6 +117,10 @@ class SearchForm(formencode.Schema):
     search_description = formencode.validators.Bool()
     commit = formencode.validators.PlainText(not_empty=False)
 
+class TagFilterForm(formencode.Schema):
+    tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
+    commit = formencode.validators.PlainText(not_empty=False, if_missing=None)
+
 class ReplyValidator(validators.FormValidator):
     validate_partial_form = True
 

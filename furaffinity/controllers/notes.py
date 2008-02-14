@@ -5,8 +5,8 @@ from sqlalchemy import sql
 
 from furaffinity.lib.base import *
 import furaffinity.lib.paginate as paginate
-
 from furaffinity.model import form
+from furaffinity.lib.formgen import FormGenerator
 
 log = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ class NotesController(BaseController):
         if c.note.recipient != c.page_owner and c.note.sender != c.page_owner:
             abort(404)
 
+
     def view(self, username, id):
         self._note_setup(username, id)
         c.javascripts = ['notes']
@@ -45,10 +46,7 @@ class NotesController(BaseController):
                 )) \
             .order_by(model.Note.time.asc())
 
-        c.latest_note = note_q.filter_by(original_note_id=note_thread_id) \
-            .filter_by(to_user_id=c.page_owner.id) \
-            .order_by(model.Note.time.desc()) \
-            .first()
+        c.latest_note = c.note.latest_note(c.page_owner)
 
         rendered = render('notes/view.mako')
 
@@ -62,10 +60,77 @@ class NotesController(BaseController):
                 .all()
             for note in unread_notes:
                 note.status = 'read'
-            model.Session.flush()
+            model.Session.commit()
 
         return rendered
 
     def ajax_expand(self, username, id):
         self._note_setup(username, id)
         return render('notes/ajax_expand.mako')
+
+    def write(self, username):
+        c.form = FormGenerator()
+        return render('notes/send.mako')
+
+    def reply(self, username, id):
+        self._note_setup(username, id)
+        c.reply_to_note = c.note.latest_note(c.page_owner)
+        c.form = FormGenerator()
+        c.form.defaults['subject'] = 'Re: ' + c.note.base_subject()
+        c.form.defaults['content'] = "[quote=%s]%s[/quote]\n" % \
+            (c.note.sender.username, c.note.content)
+
+        if c.reply_to_note.recipient == c.page_owner:
+            c.recipient = c.reply_to_note.sender
+        else:
+            c.recipient = c.reply_to_note.recipient
+        c.form.defaults['reply_to_note'] = c.reply_to_note.id
+
+        return render('notes/send.mako')
+
+    def forward(self, username, id):
+        self._note_setup(username, id)
+        c.form = FormGenerator()
+        c.form.defaults['subject'] = 'Fwd: ' + c.note.base_subject()
+        c.form.defaults['content'] = "[quote=%s]%s[/quote]\n" % \
+            (c.note.sender.username, c.note.content)
+
+        return render('notes/send.mako')
+
+    def write_send(self, username):
+        validator = model.form.SendNoteForm()
+        try:
+            form_data = validator.to_python(request.params)
+        except model.form.formencode.Invalid, error:
+            c.form = FormGenerator(form_error=error)
+            return render('notes/send.mako')
+
+        original_note_id = None
+        to_user_id = None
+        if 'reply_to_note' in form_data:
+            original_note_id = form_data['reply_to_note'].original_note_id
+
+            if form_data['reply_to_note'].recipient == c.auth_user:
+                to_user_id = form_data['reply_to_note'].sender.id
+            elif form_data['reply_to_note'].sender == c.auth_user:
+                to_user_id = form_data['reply_to_note'].recipient.id
+            else:
+                # Shouldn't be replying to a note that you can't see
+                abort(403)
+        else:
+            to_user_id = form_data['recipient'].id
+
+        note = model.Note(
+            from_user_id = c.auth_user.id,
+            to_user_id = to_user_id,
+            subject = h.escape_once(form_data['subject']),
+            content = h.escape_once(form_data['content']),
+            original_note_id = original_note_id,
+        )
+        model.Session.save(note)
+        model.Session.commit()
+        if note.original_note_id == None:
+            note.original_note_id = note.id  # TODO perf
+        model.Session.commit()
+        h.redirect_to(h.url_for(controller='notes', action='view', username=c.auth_user.username, id=note.latest_note(c.auth_user).id))
+

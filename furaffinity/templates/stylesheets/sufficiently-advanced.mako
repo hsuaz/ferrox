@@ -112,3 +112,18 @@ h2 + .entry,
 
 /* standard tables */
 table.bare-table tbody tr:hover { background: ${c.colors['background_hover']}; }
+
+/* sub-link-bar */
+.mini-linkbar { display: inline-block; border: 1px solid ${c.colors['border']}; }
+.mini-linkbar li { display: inline-block; }
+.mini-linkbar li a { display: block; text-align: center; padding: 0.5em; }
+.mini-linkbar li img { display: block; margin: 0 auto; }
+.mini-linkbar li:hover { background: ${c.colors['background_hover']}; }
+
+/* basic-box linkbar, all in a row */
+.micro-linkbar { background: ${c.colors['background_alt']}; border-top: 1px dotted ${c.colors['border']}; }
+.micro-linkbar li { display: inline-block; margin: 0 0.5em; }
+.micro-linkbar li a { display: block; padding: 0.25em 0.5em; vertical-align: middle; }
+.micro-linkbar li img { vertical-align: middle; }
+.micro-linkbar li:hover { background: ${c.colors['background_hover']}; }
+

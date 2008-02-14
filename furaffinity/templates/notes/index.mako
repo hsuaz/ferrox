@@ -1,6 +1,10 @@
 <%namespace name="lib" file="/lib.mako"/>
 <%inherit file="base.mako" />
 
+<ul class="mini-linkbar">
+    <li>${h.link_to("%s Write" % h.image_tag('/images/icons/mail-message-new-32.png', ''), h.url(controller='notes', action='write', username=c.route['username']))}</li>
+</ul>
+
 <div class="basic-box">
     <h2>Inbox</h2>
 

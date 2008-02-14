@@ -83,12 +83,16 @@
         <div class="title">${note.subject}${icon}</div>
         <div class="avatar FINISHME"><img src="http://userpic.livejournal.com/41114350/600603" alt="avatar"/></div>
         % if note.sender == owner:
-        <div class="author">Sent to ${user_link(note.recipient)}</div>
+        <div class="author">${h.image_tag('/images/icons/go-next.png', 'Sent to')} ${user_link(note.recipient)}</div>
         % else:
-        <div class="author">Received from ${user_link(note.sender)}</div>
+        <div class="author">${h.image_tag('/images/icons/go-previous.png', 'Received from')} ${user_link(note.sender)}</div>
         % endif
         <div class="date">Date: ${h.format_time(note.time)}</div>
     </div>
+    <ul class="micro-linkbar">
+        <li>${h.link_to("%s Reply" % h.image_tag('/images/icons/mail-reply-sender.png', ''), h.url(controller='notes', action='reply', username=c.route['username'], id=note.id))}</li>
+        <li>${h.link_to("%s Forward" % h.image_tag('/images/icons/mail-forward.png', ''), h.url(controller='notes', action='forward', username=c.route['username'], id=note.id))}</li>
+    </ul>
     <div class="content">
         ${note.content_parsed}
     </div>

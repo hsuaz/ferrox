@@ -13,6 +13,7 @@ from sqlalchemy import Column, MetaData, Table, ForeignKey, types, sql
 from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.databases.mysql import MSInteger, MSEnum
+from sqlalchemy.exceptions import InvalidRequestError
 #import furaffinity.lib.hashing as hashing
 
 from datetime import datetime
@@ -269,7 +270,7 @@ class GuestUser(object):
 def retrieve_user(username):
     try:
         return Session.query(User).filter_by(username=username).one()
-    except sqlalchemy.exceptions.InvalidRequestError:
+    except InvalidRequestError:
         return None
 
 class User(object):
@@ -480,8 +481,39 @@ class EditLogEntry(object):
         self.previous_text_parsed = previous_text_parsed
 
 class Note(object):
-    def __init__(self):
-        pass
+    def __init__(self, from_user_id, to_user_id, subject, content, original_note_id=None):
+        self.from_user_id = from_user_id
+        self.to_user_id = to_user_id
+        self.subject = subject
+        self.content = content
+        self.content_parsed = content  # bbcode placeholder
+        self.original_note_id = original_note_id
+        self.status = 'unread'
+        self.time = datetime.now()
+
+    def latest_note(self, recipient):
+        """
+        Returns the latest note in this note's thread, preferring one that was
+        addressed to the provided recipient.
+        """
+        note_q = Session.query(Note).filter_by(original_note_id=self.original_note_id)
+        latest_note = note_q.filter_by(to_user_id=recipient.id) \
+            .order_by(Note.time.desc()) \
+            .first()
+
+        # TODO perf
+        if not latest_note:
+            # No note from this user on this thread
+            latest_note = note_q.order_by(Note.time.desc()) \
+                .first()
+
+        return latest_note
+
+    def base_subject(self):
+        """
+        Returns the subject without any prefixes attached.
+        """
+        return re.sub('^(Re: |Fwd: )+', '', self.subject)
 
 ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
     user=relation(User, backref='ip_log')

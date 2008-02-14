@@ -68,9 +68,7 @@ class JournalController(BaseController):
             journal_data = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
             c.is_edit = False
-            c.form = FormGenerator()
-            c.form.defaults = error.value
-            c.form.errors = error.error_dict
+            c.form = FormGenerator(form_error=error)
             return render('/journal/post.mako')
         
         # -- put journal in database --
@@ -103,9 +101,7 @@ class JournalController(BaseController):
             journal_data = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
             c.is_edit = True
-            c.form = FormGenerator()
-            c.form.defaults = error.value
-            c.form.errors = error.error_dict
+            c.form = FormGenerator(form_error=error)
             return render('/journal/post.mako')
         
         journal_entry = get_journal(id)
@@ -135,7 +131,6 @@ class JournalController(BaseController):
     @check_perms(['post_journal','administrate'])
     def delete_commit(self, id=None):
         # -- validate form input --
-        pp = pprint.PrettyPrinter(indent=4)
         validator = model.form.DeleteForm();
         delete_form_data = None
         try:

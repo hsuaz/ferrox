@@ -4,6 +4,7 @@ Form tag helpers
 Originally stolen and stripped down from the Pylons webhelpers module.
 """
 
+import formencode
 import re
 from webhelpers.rails.urls import confirm_javascript_function
 from webhelpers.rails.tags import *
@@ -13,10 +14,17 @@ from webhelpers.util import html_escape
 # TODO: defaults for radio buttons and selects
 
 class FormGenerator(object):
-    def __init__(self, error_class='form-error'):
+    def __init__(self, error_class='form-error', form_error=None):
         self.error_class = error_class
-        self.errors = dict()
-        self.defaults = dict()
+        if form_error:
+            if form_error.value and not form_error.error_dict:
+                # Something actually went wrong beyond form validation
+                raise form_error
+            self.errors = form_error.error_dict
+            self.defaults = form_error.value
+        else:
+            self.errors = dict()
+            self.defaults = dict()
 
     def get_error(self, name):
         if not name in self.errors:
@@ -105,7 +113,7 @@ class FormGenerator(object):
         
         Takes the same options as text_field
         """
-        return text_field(name, value, type="hidden", **options)
+        return self.text_field(name, value, type="hidden", **options)
 
     def file_field(self, name, value=None, **options):
         """
@@ -183,7 +191,7 @@ class FormGenerator(object):
             html_options["checked"] = "checked"
         return tag("input", **html_options) + self.get_error(name)
 
-    def submit(self, value="Save changes", name='commit', confirm=None, disable_with=None, **options):
+    def submit(self, value="Save changes", name=None, confirm=None, disable_with=None, **options):
         """Creates a submit button with the text ``value`` as the caption.
 
         Options:
@@ -198,9 +206,12 @@ class FormGenerator(object):
                 onclick += ';'
             options['onclick'] = "%sreturn %s;" % (onclick, confirm_javascript_function(confirm))
 
+        if name:
+            options['name_'] = name
+
         if disable_with:
             options["onclick"] = "this.disabled=true;this.value='%s';this.form.submit();%s" % (disable_with, options.get("onclick", ''))
-        o = {'type': 'submit', 'name_': name, 'value': value }
+        o = {'type': 'submit', 'value': value }
         o.update(options)
         return tag("input", **o)
 

@@ -72,6 +72,41 @@
 </div>
 </%def>
 
+<%def name="note_entry(note, owner)">
+<div class="entry">
+<%
+    icon = ''
+    if note.status == 'unread':
+        icon = h.image_tag('/images/icons/mail-unread.png', 'Unread')
+%>
+    <div class="header">
+        <div class="title">${note.subject}${icon}</div>
+        <div class="avatar FINISHME"><img src="http://userpic.livejournal.com/41114350/600603" alt="avatar"/></div>
+        % if note.sender == owner:
+        <div class="author">${h.image_tag('/images/icons/go-next.png', 'Sent to')} ${user_link(note.recipient)}</div>
+        % else:
+        <div class="author">${h.image_tag('/images/icons/go-previous.png', 'Received from')} ${user_link(note.sender)}</div>
+        % endif
+        <div class="date">Date: ${h.format_time(note.time)}</div>
+    </div>
+    <ul class="micro-linkbar">
+        <li>${h.link_to("%s Reply" % h.image_tag('/images/icons/mail-reply-sender.png', ''), h.url(controller='notes', action='reply', username=c.route['username'], id=note.id))}</li>
+        <li>${h.link_to("%s Forward" % h.image_tag('/images/icons/mail-forward.png', ''), h.url(controller='notes', action='forward', username=c.route['username'], id=note.id))}</li>
+    </ul>
+    <div class="content">
+        ${note.content_parsed}
+    </div>
+</div>
+</%def>
+
+<%def name="note_collapsed_entry(note, owner)">
+<div class="entry collapsed">
+    <div class="header">
+        <div class="title">${h.link_to(note.subject, h.url(controller='notes', action='view', username=owner.username, id=note.id), class_='js-expand-note')}</div>
+    </div>
+</div>
+</%def>
+
 <%def name="user_link(user)">
     <span class="userlink">
         <a href="${h.url_for(controller='user', action='view', username=user.username)}"><img src="/images/foxy.gif" alt="[user]"/></a>

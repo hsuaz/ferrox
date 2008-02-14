@@ -49,8 +49,9 @@ body { background: ${c.colors['background']}; color: ${c.colors['text']}; font-f
 /* journal/news entries */
 .entry {}
 .basic-box .entry { border-top: 1px solid ${c.colors['border']}; }
+.entry .header { ~zoom: 1; }
 .entry .header .title { float: right; margin-top: 0.25em; margin-bottom: 22px; font-size: 12px; font-weight: bold; }
-.entry .header .avatar { float: left; margin-top: 14px; margin-left: 20px; border: solid ${c.colors['background']}; border-width: 0 2px; }
+.entry .header .avatar { float: left; margin-top: 14px; margin-left: 20px; border: solid ${c.colors['background']}; border-width: 2px; }
 .entry .header .avatar img { vertical-align: bottom; }
 .entry .header .author { clear: right; text-align: right; background: ${c.colors['border']}; color: ${c.colors['header_atop_border']}; }
 .entry .header .date { text-align: right; background: ${c.colors['border']}; color: ${c.colors['header_atop_border']}; }
@@ -59,7 +60,27 @@ body { background: ${c.colors['background']}; color: ${c.colors['text']}; font-f
 .entry .edit-header .title { font-size: 12px; font-weight: bold; color: ${c.colors['header_atop_border']}; }
 .entry .content { clear: both; margin: 0.25em; }
 
+.entry.collapsed { padding: 0 0.5em; }
+.entry.collapsed .header { padding: 0; }
+.entry.collapsed .header .title { float: none; font-size: 1.33em; margin: 0; }
+.entry.collapsed .header .title a { display: block; padding: 0.25em; }
+
 /* thumbnail grid */
 .thumbnail-grid .thumbnail { float: left; width: 120px; height: 120px; padding: 0.25em; margin: 1em; border: 1px solid ${c.colors['border']}; }
 .thumbnail-grid:after { display: block; clear: both; visibility: hidden; content: 'vee was here'; height: 0; }
+
+/* sub-link-bar */
+.mini-linkbar { display: inline; margin-bottom: 0.5em; border: 1px solid ${c.colors['border']}; background: ${c.colors['border']}; ~zoom: 1; }
+.mini-linkbar li { display: inline; }
+.mini-linkbar li a { text-align: center; padding: 0.5em; }
+.mini-linkbar li img { margin: 0 auto; vertical-align: middle; }
+.mini-linkbar li:hover { background: ${c.colors['background_hover']}; }
+
+/* basic-box linkbar, all in a row */
+.micro-linkbar { background: ${c.colors['border']}; border-top: 1px dotted ${c.colors['border']}; zoom: 1; }
+.micro-linkbar li { float: left; margin: 0 0.5em; }
+.micro-linkbar li a { display: block; padding: 0.25em 0.5em; vertical-align: middle; line-height: 100%; }
+.micro-linkbar li img { vertical-align: middle; }
+.micro-linkbar li:hover { background: ${c.colors['background_hover']}; }
+.micro-linkbar:after { display: block; clear: both; visibility: hidden; content: 'vee was here'; height: 0; }
 

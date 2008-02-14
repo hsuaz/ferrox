@@ -1,4 +1,4 @@
-.xFINISHME { outline: 2px solid #ff8080; }
+.FINISHME { outline: 2px solid #ff8080; }
 
 /*** layout things that should never change ***/
 
@@ -8,6 +8,9 @@
 
 input[type='submit'], input[type='reset'], input[type='button'],
 input[type='radio'], input[type='checkbox'] { cursor: pointer; }
+input { vertical-align: middle; }
+.form-error { margin: 0.1em 0 0.1em 2em; display: inline-block; color: #800000; font-weight: bold; vertical-align: top; }
+.form-error:before { content: '« '; }
 
 /*** widgets ***/
 
@@ -45,6 +48,18 @@ dl.standard-form dd { position: relative; z-index: 1; padding: 0.25em 0 0.25em 1
 /* IE has a horrible float model */
 /* See http://www.howtocreate.co.uk/wrongWithIE/?chapter=Float+Model */
 dl.standard-form dd { ~padding-left: 0.25em; }
+
+/* standard table fields */
+table.bare-table,
+table.standard-table { width: 100%; }
+table.bare-table th,
+table.bare-table td,
+table.standard-table th,
+table.standard-table td { padding: 0.1em 0.33em; vertical-align: middle; }
+col.status-icon { width: 16px; }
+col.time { width: 12em; }
+col.user { width: 12em; }
+col.subject { width: auto; }
 
 /* remove before release */
 #PLACEHOLDER { border: 3px double #c04040; color: #c04040; font-weight: bold; font-size: 1.67em; padding: 0.5em; text-align: center; }

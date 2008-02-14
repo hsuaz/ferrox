@@ -118,6 +118,8 @@ class Page(list):
             self.first_page = 0
             self.page_count = ((self.item_count - 1) / self.items_per_page) + 1
             self.last_page = self.first_page + self.page_count - 1
+            import sys
+            sys.stderr.write("{%d}" % self.item_count)
 
             # Make sure that the requested page number is valid
             if self.page_nr > self.last_page:

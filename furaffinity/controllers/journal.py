@@ -11,6 +11,7 @@ import sqlalchemy.exceptions
 import pprint
 import StringIO
 import furaffinity.lib.paginate as paginate
+from furaffinity.lib.formgen import FormGenerator
 from tempfile import TemporaryFile
 
 log = logging.getLogger(__name__)
@@ -55,24 +56,20 @@ class JournalController(BaseController):
         
     @check_perm('post_journal')
     def post(self):
-        c.edit = False;
-        c.prefill['title'] = ''
-        c.prefill['content'] = ''
+        c.form = FormGenerator()
+        c.is_edit = False
         return render('/journal/post.mako')
 
     @check_perm('post_journal')
     def post_commit(self):
         # -- validate form input --
-        validator = model.form.JournalForm();
-        journal_data = None
+        validator = model.form.JournalForm()
         try:
             journal_data = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
-            pp = pprint.PrettyPrinter(indent=4)
-            c.edit = False;
-            c.prefill = request.params
-            c.input_errors = "There were input errors: %s<br><pre>%s</pre>" % (error, pp.pformat(c.prefill))
-            return render('/gallery/submit.mako')
+            c.is_edit = False
+            c.form = FormGenerator(form_error=error)
+            return render('/journal/post.mako')
         
         # -- put journal in database --
         journal_entry = model.JournalEntry(
@@ -89,24 +86,23 @@ class JournalController(BaseController):
     def edit(self,id=None):
         journal_entry = get_journal(id)
         self.is_my_journal(journal_entry,True)
-        c.edit = True;
-        c.prefill['title'] = journal_entry.title
-        c.prefill['content'] = journal_entry.content_parsed
+
+        c.is_edit = True
+        c.form = FormGenerator()
+        c.form.defaults['title'] = journal_entry.title
+        c.form.defaults['content'] = journal_entry.content_parsed
         return render('/journal/post.mako')
 
     @check_perms(['post_journal','administrate'])
     def edit_commit(self, id=None):
         # -- validate form input --
-        validator = model.form.JournalForm();
-        journal_data = None
+        validator = model.form.JournalForm()
         try:
             journal_data = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
-            pp = pprint.PrettyPrinter(indent=4)
-            c.edit = True;
-            c.prefill = request.params
-            c.input_errors = "There were input errors: %s<br><pre>%s</pre>" % (error, pp.pformat(c.prefill))
-            return render('/gallery/submit.mako')
+            c.is_edit = True
+            c.form = FormGenerator(form_error=error)
+            return render('/journal/post.mako')
         
         journal_entry = get_journal(id)
         self.is_my_journal(journal_entry,True)
@@ -135,7 +131,6 @@ class JournalController(BaseController):
     @check_perms(['post_journal','administrate'])
     def delete_commit(self, id=None):
         # -- validate form input --
-        pp = pprint.PrettyPrinter(indent=4)
         validator = model.form.DeleteForm();
         delete_form_data = None
         try:

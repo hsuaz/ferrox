@@ -106,16 +106,11 @@ class GalleryController(BaseController):
         
         
     def user_index(self, username=None):
-        c.page_owner = None
-        if ( username != None ):
-            user_q = model.Session.query(model.User)
-            try:
-                c.page_owner = user_q.filter_by(username = username).one()
-            except sqlalchemy.exceptions.InvalidRequestError:
-                c.error_text = "User %s not found." % h.escape_once(username)
-                c.error_title = 'User not found'
-                return render('/error.mako')
-        
+        c.page_owner = model.User.retrieve(username)
+        if c.page_owner == None:
+            abort(404)
+            
+        # I'm having to do WAY too much coding in templates, so...
         submission_q = model.Session.query(model.UserSubmission)
         submission_q = submission_q.filter(model.UserSubmission.status != 'deleted')
         submission_q = submission_q.filter_by(user_id = c.page_owner.id)

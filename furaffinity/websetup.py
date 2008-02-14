@@ -44,12 +44,12 @@ def setup_config(command, filename, section, vars):
 
     print "Creating test data"
     u = model.User('fender', 'asdf')
-    u.display_name = 'Fender'
+    u.display_name = u'Fender'
     u.role = admin_role
     model.Session.save(u)
 
     u = model.User('eevee', 'pretzel')
-    u.display_name = 'Eevee'
+    u.display_name = u'Eevee'
     u.role = admin_role
     model.Session.save(u)
 
@@ -59,16 +59,16 @@ def setup_config(command, filename, section, vars):
     model.Session.save(p)
     
     u = model.User('net-cat', 'asdf')
-    u.display_name = 'net-cat'
+    u.display_name = u'net-cat'
     u.role = admin_role
     model.Session.save(u)
     
     u = model.User('luser', 'asdf')
-    u.display_name = 'Luser'
+    u.display_name = u'Luser'
     u.role = normal_role
     model.Session.save(u)
 
-    n = model.News('headline', 'news content', u)
+    n = model.News(u'headline', u'news content', u)
     model.Session.save(n)
 
     model.Session.commit()

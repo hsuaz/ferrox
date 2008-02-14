@@ -16,6 +16,7 @@ import sqlalchemy.exceptions
 from tempfile import TemporaryFile
 from sqlalchemy import or_,and_,not_
 from sqlalchemy.orm import eagerload
+from sqlalchemy import sql
 
 import re
 
@@ -55,60 +56,58 @@ def get_submission(id):
 class GalleryController(BaseController):
 
     def index(self):
-        '''
+        positive_tags = ['a']
+        negative_tags = ['b']
+        all_tags = list(set(negative_tags+positive_tags))
+        fetched = tagging.cache_by_list(all_tags)
+        
         submission_q = model.Session.query(model.Submission)
-        #submission_q = submission_q.options(eagerload('user_submission'))
-        #submission_q = submission_q.options(eagerload('user_submission.user'))
-        submission_q = submission_q.options(eagerload('tags'))
-
-        tags = []
-        tags = ['asdf','zxcv']
         
-        if len(tags):
-            eval_query = 'or_('
-            first = True
-            for tag_text in tags:
-                if first:
-                    first = False
-                else:
-                    eval_query += ', '
-                    
-                if tag_text[0] == '-':
-                    #tag = tagging.get_by_text(tag_text[1:])
-                    negate = True
-                else:
-                    #tag = tagging.get_by_text(tag_text)
-                    negate = False
-                    
-                    eval_query += "model.Tag.text == '%s'"%tag_text
-            eval_query += ')'
-            # there has to be a better way to construct this
-            submission_q = submission_q.filter(eval(eval_query)).group_by(model.Submission.id).having(count(model.Submission.id) == 2)
-
-
+        select_from_object = model.submission_table
+        
+        for tag_text in positive_tags:
+            tag_id = tagging.get_id_by_text(tag_text)
+            alias = model.submission_tag_table.alias()
+            select_from_object = select_from_object.join(
+                alias, 
+                and_( 
+                    model.submission_table.c.id == alias.c.submission_id,
+                    alias.c.tag_id == tag_id
+                    )
+            )
+                
+                
+        negative_aliases = []
+        for tag_text in negative_tags:
+            tag_id = tagging.get_id_by_text(tag_text)
+            negative_aliases.append(model.submission_tag_table.alias())
+            select_from_object = select_from_object.outerjoin(
+                negative_aliases[-1],
+                and_( 
+                    model.submission_table.c.id == negative_aliases[-1].c.submission_id,
+                    negative_aliases[-1].c.tag_id == tag_id
+                    )
+                )
+                
+        submission_q = submission_q.select_from(select_from_object)
+        submission_q = submission_q.options(eagerload('user_submission'))
+        submission_q = submission_q.options(eagerload('user_submission.user'))
+        #submission_q = submission_q.options(eagerload('metadata'))
+        submission_q = submission_q.options(eagerload('derived_submission'))
+        submission_q = submission_q.options(eagerload('derived_submission.metadata'))
+        #submission_q = submission_q.options(eagerload('tags'))
+        
+        for alias in negative_aliases:
+            submission_q = submission_q.filter(alias.c.tag_id == None)
+        
         model.Session.bind.echo = True
-        submissions = submission_q.all()
+        c.submissions = submission_q.all()
         model.Session.bind.echo = False
-        
-        if submissions:
-            c.submissions = []
-            for item in submissions:
-                tn_ind = item.get_derived_index(['thumb'])
-                if ( tn_ind != None ):
-                    thumbnail = filestore.get_submission_file(item.derived_submission[tn_ind].metadata)
-                else:
-                    thumbnail = None
-                #template_item = h.to_dict ( item )
-                #template_item.update({'thumbnail':thumbnail,'username':item.primary_artist()})
-                #c.submissions.append ( template_item )
-                print item.id
-        else:
-            c.submissions = None
-            
-        c.submissions = None
+        #item.get_users_by_relationship('primary')[0].display_name
         return render('/gallery/index.mako')
-        '''
-        return ''
+        #return render('/PLACEHOLDER.mako')
+
+        
         
     def user_index(self, username=None):
         c.page_owner = None
@@ -271,7 +270,8 @@ class GalleryController(BaseController):
                 #model.Session.delete(submission_tag_object)
             else:
                 submission_data['tags'].remove(tag_object.text)
-                
+        
+        tagging.cache_by_list(submission_data['tags'])
         for tag in submission_data['tags']:
             tag_object = tagging.get_by_text(tag, True)
             submission.tags.append(tag_object)
@@ -366,29 +366,31 @@ class GalleryController(BaseController):
         model.Session.save(submission)
         submission_data['fullfile']['metadata'].count_inc()
         submission.metadata = submission_data['fullfile']['metadata']
+        
+        tagging.cache_by_list(submission_data['tags'])
         for tag in submission_data['tags']:
             tag_object = tagging.get_by_text(tag, True)
             submission.tags.append(tag_object)
-        model.Session.save(submission)
+        #model.Session.save(submission)
         user_submission = model.UserSubmission(
             user_id = session['user_id'],
             relationship = 'artist',
             status = 'primary'
         )
         submission.user_submission.append(user_submission)
-        model.Session.save(submission)
+        #model.Session.save(submission)
         if ( submission_data['thumbfile'] != None ):
             thumbfile_derived_submission = model.DerivedSubmission(derivetype = 'thumb')
             submission_data['thumbfile']['metadata'].count_inc()
             thumbfile_derived_submission.metadata = submission_data['thumbfile']['metadata']
             submission.derived_submission.append(thumbfile_derived_submission)
-            model.Session.save(submission)
+            #model.Session.save(submission)
         if ( submission_data['halffile'] != None ):
             thumbfile_derived_submission = model.DerivedSubmission(derivetype = 'halfview')
             submission_data['halffile']['metadata'].count_inc()
             thumbfile_derived_submission.metadata = submission_data['halffile']['metadata']
             submission.derived_submission.append(thumbfile_derived_submission)
-            model.Session.save(submission)
+            #model.Session.save(submission)
 
         model.Session.commit()
         

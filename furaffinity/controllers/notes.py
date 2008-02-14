@@ -7,18 +7,18 @@ from furaffinity.lib.base import *
 import furaffinity.lib.paginate as paginate
 from furaffinity.model import form
 from furaffinity.lib.formgen import FormGenerator
-
+import webhelpers
 log = logging.getLogger(__name__)
 
 class NotesController(BaseController):
 
-    def user_index(self, username):
-        page = request.params.get('page', 0)
-        c.page_owner = model.retrieve_user(username)
-        note_q = c.page_owner.recent_notes()
-        c.notes_page = paginate.Page(note_q, page_nr=page, items_per_page=20)
-        c.notes_nav = c.notes_page.navigator(link_var='page')
-        return render('notes/index.mako')
+    def _enforce_ownership(self, note):
+        """
+        Causes an instant 403 if the logged-in user is neither the sender nor
+        the recipient of the given note.
+        """
+        if note.recipient != c.auth_user and note.sender != c.auth_user:
+            abort(403)
 
     def _note_setup(self, username, id):
         c.page_owner = model.retrieve_user(username)
@@ -31,6 +31,19 @@ class NotesController(BaseController):
         if c.note.recipient != c.page_owner and c.note.sender != c.page_owner:
             abort(404)
 
+        self._enforce_ownership(c.note)
+
+
+    def user_index(self, username):
+        c.page_owner = model.retrieve_user(username)
+        if c.page_owner != c.auth_user:
+            abort(403)
+
+        page = request.params.get('page', 0)
+        note_q = c.page_owner.recent_notes()
+        c.notes_page = paginate.Page(note_q, page_nr=page, items_per_page=20)
+        c.notes_nav = c.notes_page.navigator(link_var='page')
+        return render('notes/index.mako')
 
     def view(self, username, id):
         self._note_setup(username, id)
@@ -108,15 +121,14 @@ class NotesController(BaseController):
         original_note_id = None
         to_user_id = None
         if 'reply_to_note' in form_data:
-            original_note_id = form_data['reply_to_note'].original_note_id
+            reply_to_note = form_data['reply_to_note']
+            self._enforce_ownership(reply_to_note)
+            original_note_id = reply_to_note.original_note_id
 
-            if form_data['reply_to_note'].recipient == c.auth_user:
-                to_user_id = form_data['reply_to_note'].sender.id
-            elif form_data['reply_to_note'].sender == c.auth_user:
-                to_user_id = form_data['reply_to_note'].recipient.id
-            else:
-                # Shouldn't be replying to a note that you can't see
-                abort(403)
+            if reply_to_note.recipient == c.auth_user:
+                to_user_id = reply_to_note.sender.id
+            elif reply_to_note.sender == c.auth_user:
+                to_user_id = reply_to_note.recipient.id
         else:
             to_user_id = form_data['recipient'].id
 

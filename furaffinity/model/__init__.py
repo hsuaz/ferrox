@@ -354,18 +354,15 @@ class User(object):
         """
 
         # Group-wise maximum, as inspired by the MySQL manual.  The only
-        # differences between this and the example in the manual are:
-        # 1. I also join to the table a third time to get a count of how many
-        #    notes are in the thread, total.
-        # 2. I add the receipient's user id to the ON clause, ensuring that rows
-        #    belonging to each user are clustered together, and then filter out
-        #    the desired user with a WHERE.
+        # difference between this and the example in the manual is that I add
+        # the receipient's user id to the ON clause, ensuring that rows
+        # belonging to each user are clustered together, and then filter out the
+        # desired user with a WHERE.
         # I say "I" instead of "we" because this took me two days to figure out
         # and I think it's pretty fucking cool -- enough that I am going to put
         # my name on it.                                             -- Eevee
 
         older_note_a = note_table.alias()
-        note_count_a = note_table.alias()
 
         note_q = Session.query(Note).select_from(note_table
             .outerjoin(older_note_a,
@@ -375,11 +372,9 @@ class User(object):
                     note_table.c.time < older_note_a.c.time
                     )
                 )
-            .join(note_count_a, note_table.c.original_note_id == note_count_a.c.original_note_id)
             ) \
             .filter(older_note_a.c.id == None) \
             .filter(Note.to_user_id == self.id) \
-            .group_by(Note.id) \
             .order_by(Note.time.desc())
 
         return note_q

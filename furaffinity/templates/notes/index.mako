@@ -26,6 +26,8 @@
     </tr>
     % endfor
     </table>
+
+    <p> ${c.notes_nav} </p>
 </div>
 
 <%def name="title()">Inbox</%def>

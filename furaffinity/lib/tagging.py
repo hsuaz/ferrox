@@ -28,28 +28,32 @@ def get_tags_from_string(tags_blob):
     return list(set(tags))
 
 # returns two arrays of strings
-def get_neg_and_pos_tags_from_string(tags_blob, positive_tags = [], negative_tags = []):
+def get_neg_and_pos_tags_from_string(tags_blob):
+    pos_tags = []
+    neg_tags = []
+    #print "tagging %s %s"%(pos_tags,neg_tags)
     rmex = re.compile(r'[^a-z0-9]')
-    for tag in tags_blob.lower().split(' '):
-        sanitized_tag = rmex.sub('',tag)
-        if len(sanitized_tag)>0:
-            if len(tag)>1 and tag[0] == '-':
-                negative_tags.append(sanitized_tag)
-            elif len(tag)>0:
-                positive_tags.append(sanitized_tag)
+    if tags_blob != None:
+        for tag in tags_blob.lower().split(' '):
+            sanitized_tag = rmex.sub('',tag)
+            if len(sanitized_tag)>0:
+                if len(tag)>1 and tag[0] == '-':
+                    neg_tags.append(sanitized_tag)
+                elif len(tag)>0:
+                    pos_tags.append(sanitized_tag)
             
-    positive_tags = list(set(positive_tags))
-    negative_tags = list(set(negative_tags))
+    pos_tags = list(set(pos_tags))
+    neg_tags = list(set(neg_tags))
     
-    for tag in positive_tags:
+    for tag in pos_tags:
         try:
-            negative_tags.remove(tag)
+            neg_tags.remove(tag)
         except ValueError:
             pass
     
-    positive_tags.sort()
-    negative_tags.sort()
-    return (positive_tags,negative_tags)
+    pos_tags.sort()
+    neg_tags.sort()
+    return (pos_tags,neg_tags)
 
 # for array of tags
 def recreate_tag_string(positive_tags,negative_tags):

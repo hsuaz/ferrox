@@ -18,9 +18,9 @@
     </dl>
     <dl class="standard-form">
         <dt>Search For:</dt>
-        <dd>${h.check_box('search_submissions', checked=True)} Submissions 
-        ${h.check_box('search_journals', checked=False)} Journals
-        ${h.check_box('search_news', checked=False)} News</dd>
+        <dd>${h.radio_button('search_for', value='submissions')} Submissions 
+        ${h.radio_button('search_for', value='journals')} Journals
+        ${h.radio_button('search_for', value='news')} News</dd>
     </dl>
     <dl class="standard-form">
         <dt>Tags:</dt>

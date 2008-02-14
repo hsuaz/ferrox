@@ -19,6 +19,7 @@ from sqlalchemy.orm import eagerload
 from sqlalchemy import sql
 
 import re
+import time
 
 search_enabled = True
 try:
@@ -59,6 +60,11 @@ def get_submission(id,eagerloads=[]):
 class GalleryController(BaseController):
 
     def index(self, username = None):
+        if username != None:
+            c.page_owner = model.retrieve_user(username)
+        else:
+            c.page_owner = None
+    
         validator = model.form.TagFilterForm();
         submission_data = None
         error = None
@@ -69,6 +75,10 @@ class GalleryController(BaseController):
     
         (positive_tags,negative_tags) = tagging.get_neg_and_pos_tags_from_string(submission_data['tags'])
         c.prefill['tags'] = tagging.recreate_tag_string(positive_tags,negative_tags)
+        
+        print submission_data
+        print positive_tags
+        print negative_tags
         
         all_tags = negative_tags+positive_tags
         fetched = tagging.cache_by_list(all_tags)
@@ -100,7 +110,7 @@ class GalleryController(BaseController):
                     negative_aliases[-1].c.tag_id == tag_id
                     )
                 )
-                
+
         submission_q = submission_q.select_from(select_from_object)
         submission_q = submission_q.options(eagerload('user_submission'))
         submission_q = submission_q.options(eagerload('user_submission.user'))
@@ -111,12 +121,15 @@ class GalleryController(BaseController):
         
         for alias in negative_aliases:
             submission_q = submission_q.filter(alias.c.tag_id == None)
+        if c.page_owner != None:
+            submission_q = submission_q.filter(model.UserSubmission.c.user_id == c.page_owner.id)
         
         c.submissions = submission_q.all()
         return render('/gallery/index.mako')
 
-        
-        
+       
+    # We really don't need this anymore...
+    '''    
     def user_index(self, username=None):
         c.page_owner = model.retrieve_user(username)
         if c.page_owner == None:
@@ -155,6 +168,7 @@ class GalleryController(BaseController):
             
         c.is_mine = ( c.page_owner != None ) and (c.auth_user != None) and (c.page_owner.id == c.auth_user.id)
         return render('/gallery/user_index.mako')
+    '''
         
     @check_perm('submit_art')
     def submit(self):

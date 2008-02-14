@@ -2,9 +2,9 @@
 <%inherit file="base.mako" />
 
 <div class="basic-box FINISHME">
-    <h2>Browse Artwork</h2>
+    <h2>${title()}</h2>
     <h2>
-        ${h.form(h.url(), method='get')}
+        ${h.form(h.url(tags=None, commit=None), method='get')}
         Filter: ${h.text_field('tags',value=c.prefill['tags'])}${h.submit('Filter')}
         ${h.end_form()}
     </h2>
@@ -32,6 +32,10 @@
     % endif
 </div>
 
-<%def name="title()">Browse Artwork</%def>
-
-
+<%def name="title()">
+% if c.page_owner == None:
+Browse Artwork
+% else:
+Browsing Gallery for ${c.page_owner.display_name}
+% endif
+</%def>

@@ -33,7 +33,7 @@
         <ul class="inline">
             <li>${h.link_to("Profile", h.url(controller='user', action='view', username=c.auth_user.username))}</li>
             <li>${h.link_to("Journal", h.url(controller='journal', action='index', username=c.auth_user.username))}</li>
-            <li>${h.link_to("Gallery", h.url(controller='gallery', action='user_index', username=c.auth_user.username))}</li>
+            <li>${h.link_to("Gallery", h.url(controller='gallery', action='index', username=c.auth_user.username))}</li>
         </ul>
         <ul class="inline">
             <li>${h.link_to("Settings", h.url(controller='user', action='settings', username=c.auth_user.username))}</li>

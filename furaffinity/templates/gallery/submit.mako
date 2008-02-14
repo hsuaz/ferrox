@@ -22,6 +22,8 @@
         <dd>${h.file_field('thumbfile')}</dd>
         <dt>Title</dt>
         <dd>${h.text_field('title', value=c.prefill['title'])}</dd>
+        <dt>Tags</dt>
+        <dd>${h.text_field('tags', value=c.prefill['tags'])}</dd>
     </dl>
     <p> Description: </p>
     <p> ${h.text_area('description', size="80x10", content=c.prefill['description'])} </p>

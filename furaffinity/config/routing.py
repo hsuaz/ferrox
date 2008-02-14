@@ -44,7 +44,7 @@ def make_map():
     map.connect('/users/:username/gallery/:id/editlog', controller='editlog', action='submission')
 
     map.connect('/gallery', controller='gallery', action='index')
-    map.connect('/gallery/images/:filename', controller='gallery', action='file')
+    map.connect('/view/:filename', controller='gallery', action='file')
 
     map.connect('/users/:username/journals', controller='journal', action='index')
     map.connect('/users/:username/journals/post', controller='journal', action='post')

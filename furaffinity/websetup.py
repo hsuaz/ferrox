@@ -44,15 +44,15 @@ def setup_config(command, filename, section, vars):
 
     print "Creating test data"
     u = model.User('fender', 'asdf')
-    u.display_name = 'Fender'
-    u.email = 'nobody@furaffinity.net'
+    u.display_name = u'Fender'
+    u.email = u'nobody@furaffinity.net'
     u.role = admin_role
     u.verified = True
     model.Session.save(u)
 
     u = model.User('eevee', 'pretzel')
-    u.display_name = 'Eevee'
-    u.email = 'nobody@furaffinity.net'
+    u.display_name = u'Eevee'
+    u.email = u'nobody@furaffinity.net'
     u.role = admin_role
     u.verified = True
     model.Session.save(u)
@@ -63,20 +63,20 @@ def setup_config(command, filename, section, vars):
     model.Session.save(p)
     
     u = model.User('net-cat', 'asdf')
-    u.display_name = 'net-cat'
-    u.email = 'nobody@furaffinity.net'
+    u.display_name = u'net-cat'
+    u.email = u'nobody@furaffinity.net'
     u.role = admin_role
     u.verified = True
     model.Session.save(u)
     
     u = model.User('luser', 'asdf')
-    u.display_name = 'Luser'
-    u.email = 'nobody@furaffinity.net'
+    u.display_name = u'Luser'
+    u.email = u'nobody@furaffinity.net'
     u.role = normal_role
     u.verified = True
     model.Session.save(u)
 
-    n = model.News('headline', 'news content', u)
+    n = model.News(u'headline', u'news content', u)
     model.Session.save(n)
 
     model.Session.commit()
@@ -85,4 +85,12 @@ def setup_config(command, filename, section, vars):
         import magic
     except ImportError:
         print 'WARNING: mimetypes will be detected by filename instead of magic. In FreeBSD, install "devel/py-magic" from ports.'
+        
+    try:
+        import xapian
+        xapian.WritableDatabase('submission.xapian',xapian.DB_CREATE_OR_OVERWRITE)
+        xapian.WritableDatabase('journal.xapian',xapian.DB_CREATE_OR_OVERWRITE)
+        xapian.WritableDatabase('news.xapian',xapian.DB_CREATE_OR_OVERWRITE)
+    except ImportError:
+        print 'WARNING: Unable to load Xapian bindings. Search disabled.'
     

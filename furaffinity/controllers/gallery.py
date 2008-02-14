@@ -3,21 +3,28 @@ from __future__ import with_statement
 import logging
 
 from furaffinity.lib.base import *
-from furaffinity.lib import filestore
-from furaffinity.lib.thumbnailer import Thumbnailer
+from furaffinity.lib import filestore, tagging
 from pylons.decorators.secure import *
+
+from furaffinity.lib.thumbnailer import Thumbnailer
 
 from chardet.universaldetector import UniversalDetector
 import codecs
 import os
 import md5
-#import mimetypes
 import sqlalchemy.exceptions
-import pprint
-#from PIL import Image
-#from PIL import ImageFile
 from tempfile import TemporaryFile
-from sqlalchemy import or_,and_
+from sqlalchemy import or_,and_,not_
+from sqlalchemy.orm import eagerload
+from sqlalchemy import sql
+
+import re
+
+search_enabled = True
+try:
+    import xapian
+except ImportError:
+    search_enabled = False
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +43,8 @@ def get_submission(id):
         
     submission = None
     try:
-        submission = model.Session.query(model.Submission).filter(model.Submission.id==id).one()
+        submission = model.Session.query(model.Submission).options(eagerload('tags')).filter(model.Submission.id==id).one()
+        c.tags = tagging.make_tags_into_string(submission.tags)
     except sqlalchemy.exceptions.InvalidRequestError:
         c.error_text = 'Requested submission was not found.'
         c.error_title = 'Not Found'
@@ -47,6 +55,56 @@ def get_submission(id):
 
 class GalleryController(BaseController):
 
+    def index(self):
+        positive_tags = ['a']
+        negative_tags = ['b']
+        all_tags = list(set(negative_tags+positive_tags))
+        fetched = tagging.cache_by_list(all_tags)
+        
+        submission_q = model.Session.query(model.Submission)
+        
+        select_from_object = model.submission_table
+        
+        for tag_text in positive_tags:
+            tag_id = tagging.get_id_by_text(tag_text)
+            alias = model.submission_tag_table.alias()
+            select_from_object = select_from_object.join(
+                alias, 
+                and_( 
+                    model.submission_table.c.id == alias.c.submission_id,
+                    alias.c.tag_id == tag_id
+                    )
+            )
+                
+                
+        negative_aliases = []
+        for tag_text in negative_tags:
+            tag_id = tagging.get_id_by_text(tag_text)
+            negative_aliases.append(model.submission_tag_table.alias())
+            select_from_object = select_from_object.outerjoin(
+                negative_aliases[-1],
+                and_( 
+                    model.submission_table.c.id == negative_aliases[-1].c.submission_id,
+                    negative_aliases[-1].c.tag_id == tag_id
+                    )
+                )
+                
+        submission_q = submission_q.select_from(select_from_object)
+        submission_q = submission_q.options(eagerload('user_submission'))
+        submission_q = submission_q.options(eagerload('user_submission.user'))
+        #submission_q = submission_q.options(eagerload('metadata'))
+        submission_q = submission_q.options(eagerload('derived_submission'))
+        submission_q = submission_q.options(eagerload('derived_submission.metadata'))
+        #submission_q = submission_q.options(eagerload('tags'))
+        
+        for alias in negative_aliases:
+            submission_q = submission_q.filter(alias.c.tag_id == None)
+        
+        c.submissions = submission_q.all()
+        return render('/gallery/index.mako')
+
+        
+        
     def user_index(self, username=None):
         c.page_owner = None
         if ( username != None ):
@@ -57,15 +115,17 @@ class GalleryController(BaseController):
                 c.error_text = "User %s not found." % h.escape_once(username)
                 c.error_title = 'User not found'
                 return render('/error.mako')
-            
-        # I'm having to do WAY too much coding in templates, so...
+        
         submission_q = model.Session.query(model.UserSubmission)
-        if ( c.page_owner != None ):
-            submissions = submission_q.filter(model.UserSubmission.status != 'deleted').filter_by(user_id = c.page_owner.id).all()
-        else:
-            submissions = submission_q.filter(model.UserSubmission.status != 'deleted').all()
-            
-        #[offset:offset+perpage]
+        submission_q = submission_q.filter(model.UserSubmission.status != 'deleted')
+        submission_q = submission_q.filter_by(user_id = c.page_owner.id)
+        submission_q = submission_q.options(eagerload('user'))
+        submission_q = submission_q.options(eagerload('submission'))
+        submission_q = submission_q.options(eagerload('submission.tags'))
+        submission_q = submission_q.filter(model.UserSubmission.status != 'deleted')
+        submission_q = submission_q.filter(model.UserSubmission.user_id == c.page_owner.id)
+        
+        submissions = submission_q.all()
         if submissions:
             c.submissions = []
             for item in submissions:
@@ -74,26 +134,27 @@ class GalleryController(BaseController):
                     thumbnail = filestore.get_submission_file(item.submission.derived_submission[tn_ind].metadata)
                 else:
                     thumbnail = None
-                template_item =  dict (
+                template_item = dict (
                     id = item.submission.id,
                     title = item.submission.title,
                     date = item.submission.time,
                     description = item.submission.description_parsed,
                     thumbnail = thumbnail,
-                    username = item.user.username
+                    username = item.user.display_name
                 )
                 c.submissions.append ( template_item )
         else:
             c.submissions = None
             
         c.is_mine = ( c.page_owner != None ) and (c.auth_user != None) and (c.page_owner.id == c.auth_user.id)
-        return render('/gallery/index.mako')
+        return render('/gallery/user_index.mako')
         
     @check_perm('submit_art')
     def submit(self):
         c.edit = False
         c.prefill['title'] = ''
         c.prefill['description'] = ''
+        c.prefill['tags'] = ''
         return render('/gallery/submit.mako')
 
     @check_perms(['submit_art','administrate'])
@@ -104,6 +165,7 @@ class GalleryController(BaseController):
         c.edit = True
         c.prefill['title'] = submission.title
         c.prefill['description'] = submission.description
+        c.prefill['tags'] = tagging.make_tags_into_string(submission.tags)
         return render('/gallery/submit.mako')
 
     @check_perms(['submit_art','administrate'])
@@ -123,12 +185,10 @@ class GalleryController(BaseController):
         try:
             submission_data = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
-            pp = pprint.PrettyPrinter(indent=4)
             c.edit = True
             c.prefill = request.params
-            c.input_errors = "There were input errors: %s %s" % (error, pp.pformat(c.prefill))
+            c.input_errors = "There were input errors: %s %s" % (error, c.prefill)
             return render('/gallery/submit.mako')
-            #return self.submit()
             
         # -- get image from database, make sure user has permission --
         submission = get_submission(id)
@@ -199,21 +259,39 @@ class GalleryController(BaseController):
                 submission.derived_submission[hv_ind].metadata.count_dec()
                 submission.derived_submission[hv_ind].metadata = submission_data['halffile']['metadata']
 
+        # Tag shuffle
+        for tag_object in submission.tags:
+            if not (tag_object.text in submission_data['tags']):
+                submission.tags.remove(tag_object)
+                #model.Session.delete(submission_tag_object)
+            else:
+                submission_data['tags'].remove(tag_object.text)
+        
+        tagging.cache_by_list(submission_data['tags'])
+        for tag in submission_data['tags']:
+            tag_object = tagging.get_by_text(tag, True)
+            submission.tags.append(tag_object)
+        model.Session.save(submission)
+            
         model.Session.commit()
+
+        if search_enabled:
+            xapian_database = xapian.WritableDatabase('submission.xapian', xapian.DB_OPEN)
+            xapian_document = submission_data_to_xapian(submission)
+            xapian_database.replace_document("I%d"%submission.id,xapian_document)
+
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
         
         
     @check_perms(['submit_art','administrate'])
     def delete_commit(self, id=None):
         # -- validate form input --
-        pp = pprint.PrettyPrinter(indent=4)
         validator = model.form.DeleteForm();
         delete_form_data = None
         try:
             delete_form_data = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
             return "There were input errors: %s" % (error)
-            #return self.delete(id)
         
         submission = get_submission(id)
         self.is_my_submission(submission,True)
@@ -222,24 +300,23 @@ class GalleryController(BaseController):
             # -- update submission in database --
             submission.status = 'deleted'
             submission.user_submission[0].status = 'deleted'
-            #model.Session.save()
             model.Session.commit()
+            
+            if search_enabled:
+                xapian_database = WritableDatabase('submission.xapian',DB_OPEN)
+                xapian_database.delete_document("I%d"%submission.id);
             h.redirect_to(h.url_for(controller='gallery', action='index', username = submission.user_submission[0].user.username, id=None))
         else:
             h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
 
     @check_perm('submit_art')
     def submit_upload(self):
-        pp = pprint.PrettyPrinter(indent=4)
-        # -- validate form input --
         validator = model.form.SubmitForm();
         submission_data = None
-        #input_failure = False
         error = None
         try:
             submission_data = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
-            #pp = pprint.PrettyPrinter(indent=4)
             pass
         
         if ( error != None or submission_data['fullfile'] == None ):
@@ -247,7 +324,7 @@ class GalleryController(BaseController):
                 error = 'No file supplied.'
             c.edit = False
             c.prefill = request.params
-            c.input_errors = "There were input errors: %s %s" % (error, pp.pformat(c.prefill))
+            c.input_errors = "There were input errors: %s %s" % (error, c.prefill)
             return render('/gallery/submit.mako')
         
         
@@ -264,7 +341,6 @@ class GalleryController(BaseController):
             submission_data['thumbfile']['metadata'] = filestore.store ( submission_data['thumbfile']['hash'], submission_data['thumbfile']['mimetype'], submission_data['thumbfile']['content'] )
             submission_data['thumbfile']['metadata'].height = submission_data['thumbfile']['height']
             submission_data['thumbfile']['metadata'].width = submission_data['thumbfile']['width']
-            #model.Session.save(thumbnail['metadata'])
         else:
             # FIXME: Default thumbnail?
             pass
@@ -274,10 +350,7 @@ class GalleryController(BaseController):
             submission_data['halffile']['metadata'] = filestore.store ( submission_data['halffile']['hash'], submission_data['halffile']['mimetype'], submission_data['halffile']['content'] )
             submission_data['halffile']['metadata'].height = submission_data['halffile']['height']
             submission_data['halffile']['metadata'].width = submission_data['halffile']['width']
-            #model.Session.save(thumbnail['metadata'])
             
-        #return "<html><body><pre>%s</pre></body></html>"%pp.pformat(submission_data)
-        #return "%s %s %s" % (submission_data['thumbfile']['metadata'].hash,submission_data['halffile']['metadata'].hash,submission_data['fullfile']['metadata'].hash)        # -- put submission in database --
         submission = model.Submission(
             title = submission_data['title'],
             description = submission_data['description'],
@@ -289,27 +362,40 @@ class GalleryController(BaseController):
         model.Session.save(submission)
         submission_data['fullfile']['metadata'].count_inc()
         submission.metadata = submission_data['fullfile']['metadata']
-        model.Session.save(submission)
+        
+        tagging.cache_by_list(submission_data['tags'])
+        for tag in submission_data['tags']:
+            tag_object = tagging.get_by_text(tag, True)
+            submission.tags.append(tag_object)
+        #model.Session.save(submission)
         user_submission = model.UserSubmission(
             user_id = session['user_id'],
             relationship = 'artist',
             status = 'primary'
         )
         submission.user_submission.append(user_submission)
-        model.Session.save(submission)
+        #model.Session.save(submission)
         if ( submission_data['thumbfile'] != None ):
             thumbfile_derived_submission = model.DerivedSubmission(derivetype = 'thumb')
             submission_data['thumbfile']['metadata'].count_inc()
             thumbfile_derived_submission.metadata = submission_data['thumbfile']['metadata']
             submission.derived_submission.append(thumbfile_derived_submission)
-            model.Session.save(submission)
+            #model.Session.save(submission)
         if ( submission_data['halffile'] != None ):
             thumbfile_derived_submission = model.DerivedSubmission(derivetype = 'halfview')
             submission_data['halffile']['metadata'].count_inc()
             thumbfile_derived_submission.metadata = submission_data['halffile']['metadata']
             submission.derived_submission.append(thumbfile_derived_submission)
-            model.Session.save(submission)
+            #model.Session.save(submission)
+
         model.Session.commit()
+        
+        # update xapian
+        if search_enabled:
+            xapian_database = xapian.WritableDatabase('submission.xapian', xapian.DB_OPEN)
+            xapian_document = self.submission_data_to_xapian(submission)
+            xapian_database.add_document(xapian_document)
+        
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
             
     def view(self,id=None):
@@ -318,20 +404,16 @@ class GalleryController(BaseController):
         
         c.submission_thumbnail = submission.get_derived_index(['thumb'])
         if ( c.submission_thumbnail != None ):
-            #tn_filename= "%s%s"%(submission.derived_submission[0].hash,mimetypes.guess_extension(submission.derived_submission[0].mimetype))
             tn_filename=filestore.get_submission_file(submission.derived_submission[c.submission_thumbnail].metadata)
             c.submission_thumbnail = h.url_for(controller='gallery', action='file', filename=tn_filename, id=None)
         else:
-            #c.submission_thumbnail = h.url_for(controller='gallery', action='file', filename=tn_filename, id=None)
             # supply default thumbnail for type here
             c.submission_thumbnail = ''
         c.submission_halfview = submission.get_derived_index(['halfview'])
         if ( c.submission_halfview != None ):
-            #tn_filename= "%s%s"%(submission.derived_submission[0].hash,mimetypes.guess_extension(submission.derived_submission[0].mimetype))
             hv_filename=filestore.get_submission_file(submission.derived_submission[c.submission_halfview].metadata)
             c.submission_halfview = h.url_for(controller='gallery', action='file', filename=hv_filename, id=None)
         else:
-            #c.submission_thumbnail = h.url_for(controller='gallery', action='file', filename=tn_filename, id=None)
             # supply default thumbnail for type here
             c.submission_thumbnail = ''
         c.submission_file = h.url_for(controller='gallery', action='file', filename=filename, id=None)
@@ -341,8 +423,6 @@ class GalleryController(BaseController):
             filedata = filestore.dump(filestore.get_submission_file(submission.metadata))
             c.submission_content = filedata[0]
         
-        pp = pprint.PrettyPrinter (indent=4)
-        #c.misc = submission.derived_submission[0].metadata.mimetype
         return render('/gallery/view.mako');
         
     def file(self,filename=None):
@@ -404,14 +484,12 @@ class GalleryController(BaseController):
             # Yes, find out what type of submission we're dealing with...
             submission_data['fullfile']['mimetype'] = h.get_mime_type(submission_data['fullfile'])
             submission_type = self.get_submission_type(submission_data['fullfile']['mimetype'])
-            #print "Mimetype: %s" % submission_data['fullfile']['mimetype']
             if ( submission_type == 'unknown' ):
                 abort(403)
         else:
             # No, grab it out of current submission.
             submission_type = submission.type
             
-        
         # If it's not an image, there are no dimensions
         if ( submission_type != 'image' ):
             submission_data['fullfile']['height'] = 0
@@ -477,8 +555,6 @@ class GalleryController(BaseController):
                 submission_data['halffile'].clear()
                 submission_data['halffile'] = None
                 
-                
-        
         # Do any required image processing on the main image now. If it's an image.
         
         # Do we even need to generate new thumbnail/halfview?
@@ -488,6 +564,7 @@ class GalleryController(BaseController):
                     t.parse(submission_data['fullfile']['content'],submission_data['fullfile']['mimetype'])
                     submission_data['fullfile']['width'] = t.width
                     submission_data['fullfile']['height'] = t.height
+                    
                     # Do we need to make a thumbnail?
                     if ( submission_data['thumbfile'] == None ):
                         # Yes we do
@@ -513,20 +590,50 @@ class GalleryController(BaseController):
                 if ( submission_data['fullfile']['mimetype'] == 'text/plain' or submission_data['fullfile']['mimetype'] == 'text/html' ):
                     detector = UniversalDetector()
                     detector.feed(submission_data['fullfile']['content'])
-                    #print detector.result['encoding']
                     detector.close()
-                    #print detector.result['encoding']
-                    #print codecs.getdecoder(detector.result['encoding'])
                     decoded = codecs.getdecoder(detector.result['encoding'])(submission_data['fullfile']['content'],'replace')[0]
                     submission_data['fullfile']['content'] = codecs.getencoder('utf_8')(h.escape_once(decoded),'replace')[0]
                     
                     
             submission_data['fullfile']['hash'] = self.hash(submission_data['fullfile']['content'])
+        
         if ( submission_data['halffile'] != None ):
             submission_data['halffile']['hash'] = self.hash(submission_data['halffile']['content'])
         if ( submission_data['thumbfile'] != None ):
             submission_data['thumbfile']['hash'] = self.hash(submission_data['thumbfile']['content'])
                         
         submission_data['type'] = submission_type
-        return submission_data
+        
+        submission_data['tags'] = tagging.get_tags_from_string(submission_data['tags'])
 
+        return submission_data
+    
+    def submission_data_to_xapian(self, submission):
+        xapian_document = xapian.Document()
+        xapian_document.add_term("I%d"%submission.id)
+        xapian_document.add_value(0,"I%d"%submission.id)
+        xapian_document.add_term("A%s"%submission.user_submission[0].user.id)
+        
+        # tags
+        for tag in submission.tags:
+            xapian_document.add_term("G%s"%tag.text)
+            
+        # title
+        words = []
+        rmex = re.compile(r'[^a-z0-9]')
+        for word in submission.title.lower().split(' '):
+            words.append(rmex.sub('',word))
+        words = set(words)
+        for word in words:
+            xapian_document.add_term("T%s"%word)
+            
+        # description
+        words = []
+        # FIX ME: needs bbcode parser. should be plain text representation.
+        for word in submission.description.lower().split(' '):
+            words.append(rmex.sub('',word))
+        words = set(words)
+        for word in words:
+            xapian_document.add_term("P%s"%word)
+        
+        return xapian_document

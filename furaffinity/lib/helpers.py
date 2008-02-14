@@ -92,4 +92,3 @@ def ip_to_string(ip_integer):
 def format_time(datetime):
     """Format a datetime object standardly."""
     return datetime.strftime('%m/%d/%y %I:%M %p')
-

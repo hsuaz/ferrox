@@ -3,9 +3,9 @@
 #
 #   with Thumbnailer() as t:
 #
-# Feed the contents of an image file into the parser.
+# Feed the contents of an image file and its mimetype into the parser.
 #
-#       t.parse(submission_data['content'])
+#       t.parse(submission_data['content'],submission_data['mimetype'])
 #
 # Generate a thumbnail with the generate() method.
 # linear_dimension is the target width or height.
@@ -17,16 +17,18 @@
 #       t.generate(120) # generates a thumbnail of size 120 if submission_data['content'] contained an image larger than that.
 #
 #
-# This version is based on PIL. It uses ImageMagick's 'mogrify' to deinterlace PNG files.
-# It still has bugs and is not well tested. Don't use it.
+# This version of this class works by piping the appropriate ImageMagick commands.
 
 from __future__ import with_statement
 import os
 from tempfile import *
-#from PILworkaround import ImageFromString
-from PIL import Image
-from PIL import ImageFile
-import cStringIO 
+
+try:
+    import imagemagick
+    use_c_lib = True
+except ImportError:
+    use_c_lib = False
+    print 'Warning: Build the module in contrib to get better performance.'
 
 class Thumbnailer:
     def __enter__(self):
@@ -34,17 +36,16 @@ class Thumbnailer:
     
     def __init__(self):
         self.temporary_files = []
-        self.type = None;
+        self.original = None;
+        #self.type = None;
         self.height = 0;
         self.width = 0;
-        self.image = None
         
     def parse(self,file_stream,mimetype):
-        mogrify_interlaced_png = True
-    
-        # Can I do this with ImageFile?
-        if ( mimetype == 'image/png' ):
-            # No.
+        if use_c_lib:
+            self.original = file_stream
+            (self.width, self.height) = imagemagick.get_size(file_stream)
+        else:
             temporary_file = mkstemp()
             os.close(temporary_file[0])
             self.temporary_files.append(temporary_file)
@@ -53,27 +54,16 @@ class Thumbnailer:
             f.seek(0)
             f.write(file_stream)
             f.close()
-
-            try:
-                self.image = Image.open(temporary_file[1])
-                self.image.load()
-            except IOError, (err):
-                if ( str(err) == 'cannot read interlaced PNG files' ):
-                    if ( mogrify_interlaced_png ):
-                        os.system ( "mogrify -interlace none %s" % temporary_file[1] )
-                        self.image = Image.open(temporary_file[1])
-                        self.image.load()
-                    else:
-                        raise
-        else:
-            # Probably
-            p = ImageFile.Parser()
-            p.feed(file_stream)
-            self.image = p.close()
             
-        self.type = self.image.format
-        self.width = self.image.size[0]
-        self.height = self.image.size[1]
+            self.original = temporary_file
+            
+            #print("idenitify -format \"%%m %%w %%h\" %s"%temporary_file[1])
+            imagedata = os.popen("identify -format \"%%m %%w %%h \" %s"%temporary_file[1])
+            information = imagedata.read().split(' ')
+            imagedata.close()
+            #self.type = information[0]
+            self.width = int(information[1])
+            self.height = int(information[2])
         
     def generate(self, linear_dimension, sizedown = True, sizeup = False):
         do_generate = False
@@ -83,32 +73,49 @@ class Thumbnailer:
             do_generate = True
             
         if ( do_generate ):
-            aspect = float(self.image.size[0]) / float(self.image.size[1])
-            if (aspect > 1.0):
-                #wide
-                width = int(linear_dimension)
-                height = int(linear_dimension / aspect)
+            if ( use_c_lib ):
+                aspect = float(self.width) / float(self.height)
+                print "%d %d %f"%(self.width,self.height,aspect)
+                if (aspect > 1.0):
+                    #wide
+                    width = int(linear_dimension)
+                    height = int(linear_dimension / aspect)
+                else:
+                    #tall
+                    width = int(linear_dimension * aspect)
+                    height  = int(linear_dimension)
+                    
+                return dict (
+                    content = imagemagick.resize(self.original, width, height),
+                    width = width,
+                    height = height
+                )
+                
             else:
-                #tall
-                width = int(linear_dimension * aspect)
-                height  = int(linear_dimension)
-            i = self.image.resize((width, height), Image.ANTIALIAS)
-            stringbuff = cStringIO.StringIO()
-            i.save(stringbuff, self.type)
-            data = stringbuff.getvalue()
-            stringbuff.close()
-            return dict (
-                content = data,
-                width = i.size[0],
-                height = i.size[1]
-            )
+                temporary_file = mkstemp()
+                os.close(temporary_file[0])
+                self.temporary_files.append(temporary_file)
+                
+                os.system("convert %s -resize %dx%d %s"%(self.original[1],linear_dimension,linear_dimension,temporary_file[1]))
+                imagedata = os.popen("identify -format \"%%m %%w %%h \" %s"%temporary_file[1])
+                information = imagedata.read().split(' ')
+                imagedata.close()
+                width = int(information[1])
+                height = int(information[2])
+                
+                f = open(temporary_file[1],'rb')
+                data = f.read()
+                f.close()
+                return dict (
+                    content = data,
+                    width = int(information[1]),
+                    height = int(information[2])
+                )
         
     def __exit__(self, type, value, tb):
-        # This still causes locking errors with certain filetypes.
-        # I can't figure out how to make PIL close a file...
         if ( tb == None ):
             for temporary_file in self.temporary_files:
                 if ( os.path.exists(temporary_file[1]) ):
                     os.unlink(temporary_file[1])
-        pass;    
+            
 

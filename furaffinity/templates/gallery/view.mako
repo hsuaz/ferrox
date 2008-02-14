@@ -7,6 +7,7 @@
     <div class="time">Submitted on ${h.format_time(c.submission.time)}</div>
     <div class="artist xFINISHME">by ${lib.user_link(c.submission.primary_artist())}</div>
     <div class="buttons xFINISHME">buttons here lol</div>
+    <div class="tags xFINISHME">${c.tags}</div>
     <div class="content">
         % if (c.submission.type == 'video'):
         ${h.embed_flash(c.submission.file)}<br>
@@ -27,4 +28,4 @@
         ${c.submission.description}
     </div>
 
-<%def name="title()">${c.submission_title} by ${c.submission_artist}</%def>
+<%def name="title()">${c.submission.title} by ${c.submission.user_submission[0].user.display_name}</%def>

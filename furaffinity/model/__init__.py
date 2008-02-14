@@ -13,7 +13,6 @@ from sqlalchemy import Column, MetaData, Table, ForeignKey, types
 from sqlalchemy.orm import mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.databases.mysql import MSInteger, MSEnum
-#import furaffinity.lib.hashing as hashing
 
 from datetime import datetime
 
@@ -22,6 +21,10 @@ from enum import *
 import re
 
 import sys
+from binascii import crc32
+
+#This plays hell with websetup, so only use where needed.
+#from furaffinity.lib import filestore
 
 Session = scoped_session(sessionmaker(autoflush=True, transactional=True,
     bind=pylons.config['pylons.g'].sa_engine))
@@ -66,16 +69,16 @@ user_table = Table('user', metadata,
 
 user_preference_table = Table('user_preference', metadata,
     Column('user_id', types.Integer, ForeignKey('user.id'), primary_key=True),
-    Column('key', types.String(32), primary_key=True),
-    Column('value', types.String(256), nullable=False),
+    Column('key', types.String(length=32), primary_key=True),
+    Column('value', types.String(length=256), nullable=False),
     mysql_engine='InnoDB'
 )
 
 role_table = Table('role', metadata,
     Column('id', types.Integer, primary_key=True),
-    Column('name', types.String(32), nullable=False),
-    Column('sigil', types.String(1), nullable=False),
-    Column('description', types.String(256), nullable=False),
+    Column('name', types.String(length=32), nullable=False),
+    Column('sigil', types.String(length=1), nullable=False),
+    Column('description', types.String(length=256), nullable=False),
     mysql_engine='InnoDB'
 )
 
@@ -87,8 +90,8 @@ role_permission_table = Table('role_permission', metadata,
 
 permission_table = Table('permission', metadata,
     Column('id', types.Integer, primary_key=True),
-    Column('name', types.String(32), nullable=False),
-    Column('description', types.String(256), nullable=False),
+    Column('name', types.String(length=32), nullable=False),
+    Column('description', types.String(length=256), nullable=False),
     mysql_engine='InnoDB'
 )
 
@@ -134,10 +137,10 @@ news_table = Table('news', metadata,
 
 image_metadata_table = Table('image_metadata', metadata,
     Column('id', types.Integer, primary_key=True, autoincrement=True),
-    Column('hash', types.String(64), nullable=False, unique=True, index=True),
+    Column('hash', types.String(length=64), nullable=False, unique=True, index=True),
     Column('height', types.Integer, nullable=False),
     Column('width', types.Integer, nullable=False),
-    Column('mimetype', types.String(35), nullable=False),
+    Column('mimetype', types.String(length=35), nullable=False),
     Column('submission_count', types.Integer, nullable=False),
     mysql_engine='InnoDB'
 )
@@ -145,9 +148,9 @@ image_metadata_table = Table('image_metadata', metadata,
 submission_table = Table('submission', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
-    Column('title', types.String(128), nullable=False),
-    Column('description', types.String, nullable=False),
-    Column('description_parsed', types.String, nullable=False),
+    Column('title', types.String(length=128), nullable=False),
+    Column('description', types.Text, nullable=False),
+    Column('description_parsed', types.Text, nullable=False),
     Column('type', submission_type_type, nullable=False),
     Column('discussion_id', types.Integer, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
@@ -185,12 +188,27 @@ editlog_entry_table = Table('editlog_entry', metadata,
     Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
     Column('edited_at', types.DateTime, nullable=False, default=datetime.now),
     Column('edited_by_id', types.Integer, ForeignKey('user.id')),
-    Column('reason', types.String(250)),
-    Column('previous_title', types.String, nullable=False),
-    Column('previous_text', types.String, nullable=False),
-    Column('previous_text_parsed', types.String, nullable=False),
+    Column('reason', types.String(length=250)),
+    Column('previous_title', types.Text, nullable=False),
+    Column('previous_text', types.Text, nullable=False),
+    Column('previous_text_parsed', types.Text, nullable=False),
     mysql_engine='InnoDB'
 )
+
+# Tags
+
+tag_table = Table('tag', metadata,
+    Column('id', types.Integer, primary_key=True, autoincrement=False),
+    Column('text', types.String(length=20), index=True, unique=True),
+    mysql_engine='InnoDB'
+)
+
+submission_tag_table = Table('submission_tag', metadata,
+    #Column('id', types.Integer, primary_key=True),
+    Column('submission_id', types.Integer, ForeignKey('submission.id'), primary_key=True, autoincrement=False),
+    Column('tag_id', types.Integer, ForeignKey('tag.id'), primary_key=True, autoincrement=False),
+    mysql_engine='InnoDB'
+)    
 
 # Mappers
 
@@ -345,6 +363,10 @@ class ImageMetadata(object):
     def is_enabled(self):
         return ( self.submission_count > 0 )
         
+    def get_filename(self):
+        from furaffinity.lib import filestore
+        return filestore.get_submission_file(self)
+        
         
 
 class IPLogEntry(object):
@@ -364,16 +386,32 @@ class Submission(object):
         self.status = status
 
     def primary_artist(self):
-        return self.user_submission[0].user
-
+        #return self.user_submission[0].user
+        for index in xrange(0,len(self.user_submission)):
+            if self.user_submission[index].status == 'primary':
+                return self.user_submission[index].user
+        
+    # Deprecated. Use get_derived_by_type instead.
     def get_derived_index (self,types):
         for index in xrange(0,len(self.derived_submission)):
             for type in types:
-                #print "%d lf:%s ch:%s" % (index, self.derived_submission[index].derivetype, type)
                 if (self.derived_submission[index].derivetype == type):
                     return index
         return None
-        
+
+    def get_derived_by_type (self, type):
+        for index in xrange(0,len(self.user_submission)):
+            if self.derived_submission[index].derivetype == type:
+                return self.derived_submission[index]
+        return None
+    
+    def get_users_by_relationship (self, relationship):
+        users = []
+        for index in xrange(0,len(self.user_submission)):
+            if self.user_submission[index].relationship == relationship:
+                users.append( self.user_submission[index].user )
+        return users
+    
 class UserSubmission(object):
     def __init__(self, user_id, relationship, status ):
         self.user_id = user_id
@@ -408,6 +446,15 @@ class EditLogEntry(object):
         self.previous_title = previous_title
         self.previous_text = previous_text
         self.previous_text_parsed = previous_text_parsed
+
+class SubmissionTag(object):
+    def __init__ (self, tag):
+        self.tag = tag
+
+class Tag(object):
+    def __init__ (self, text):
+        self.text = text
+        self.id = crc32(text)
 
 ip_log_mapper = mapper(IPLogEntry, ip_log_table, properties=dict(
     user=relation(User, backref='ip_log')
@@ -468,5 +515,18 @@ role_mapper = mapper(Role, role_table, properties={
 
 journal_entry_mapper = mapper(JournalEntry, journal_entry_table, properties=dict(
     editlog = relation(EditLog)
+    )
+)
+
+'''
+submission_tag_mapper = mapper(SubmissionTag, submission_tag_table, properties=dict(
+    submission = relation(Submission, backref='submission_tags'),
+    tag = relation(Tag, backref='submission_tags')
+    )
+)
+'''
+
+tag_mapper = mapper(Tag, tag_table, properties=dict(
+    submissions = relation(Submission, backref='tags', secondary=submission_tag_table)
     )
 )

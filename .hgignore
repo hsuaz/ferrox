@@ -10,3 +10,6 @@ mydev.ini
 syntax: regexp
 ^build/
 ^dist/
+.xapian/
+Thumbs.db
+

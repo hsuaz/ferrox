@@ -75,6 +75,7 @@ class SubmitForm(formencode.Schema):
     halffile = FileUploadValidator()
     thumbfile = FileUploadValidator()
     title = formencode.validators.String(not_empty=True)
+    tags = formencode.validators.String(not_empty=True)
     description = formencode.validators.NotEmpty(not_empty=True)
     commit = formencode.validators.PlainText(not_empty=False)
 
@@ -87,3 +88,14 @@ class JournalForm(formencode.Schema):
 class DeleteForm(formencode.Schema):
     confirm = formencode.validators.PlainText(not_empty=False, if_missing=None)
     cancel = formencode.validators.PlainText(not_empty=False, if_missing=None)
+
+class SearchForm(formencode.Schema):
+    query_tags = formencode.validators.NotEmpty(not_empty=False)
+    query_main = formencode.validators.NotEmpty(not_empty=True)
+    query_author = formencode.validators.PlainText(not_empty=False)
+    search_submissions = formencode.validators.Bool()
+    search_journals = formencode.validators.Bool()
+    search_news = formencode.validators.Bool()
+    search_title = formencode.validators.Bool()
+    search_description = formencode.validators.Bool()
+    commit = formencode.validators.PlainText(not_empty=False)

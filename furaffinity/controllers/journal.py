@@ -13,6 +13,7 @@ import StringIO
 import furaffinity.lib.paginate as paginate
 from furaffinity.lib.formgen import FormGenerator
 from tempfile import TemporaryFile
+from sqlalchemy.orm import eagerload
 
 search_enabled = True
 try:
@@ -23,7 +24,7 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-def get_journal(id=None):
+def get_journal(id=None, eagerloads=[]):
     try:
         id = int(id)
     except ValueError:
@@ -33,7 +34,10 @@ def get_journal(id=None):
 
     journal_entry = None
     try:
-        journal_entry = model.Session.query(model.JournalEntry).filter(model.JournalEntry.id==id).one()
+        journal_entry = model.Session.query(model.JournalEntry).filter(model.JournalEntry.id==id)
+        for el in eagerloads:
+            journal_entry = journal_entry.options(eagerload(el))
+        journal_entry = journal_entry.one()
     except sqlalchemy.exceptions.InvalidRequestError:
         c.error_text = 'Requested journal entry was not found.'
         c.error_title = 'Not Found'

@@ -96,7 +96,7 @@ class SearchController(BaseController):
             c.submissions = database_q.all()
             return render('/gallery/index.mako')
         elif c.search_terms['search_for'] == 'journals':
-            c.journals = database_q.all()
+            c.journal_page = database_q.all()
             return render('/journal/index.mako')
         elif c.search_terms['search_for'] == 'news':
             return render('/PLACEHOLDER.mako')

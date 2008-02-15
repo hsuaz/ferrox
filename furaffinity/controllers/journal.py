@@ -14,6 +14,13 @@ import furaffinity.lib.paginate as paginate
 from furaffinity.lib.formgen import FormGenerator
 from tempfile import TemporaryFile
 
+search_enabled = True
+try:
+    import xapian
+except ImportError:
+    search_enabled = False
+
+
 log = logging.getLogger(__name__)
 
 def get_journal(id=None):
@@ -80,6 +87,12 @@ class JournalController(BaseController):
         )
         model.Session.save(journal_entry)
         model.Session.commit()
+        
+        if search_enabled:
+            xapian_database = xapian.WritableDatabase('journal.xapian', xapian.DB_OPEN)
+            xapian_document = journal_entry.to_xapian()
+            xapian_database.add_document(xapian_document)
+        
         h.redirect_to(h.url_for(controller='journal', action='view', username=c.auth_user.username, id=journal_entry.id))
             
     @check_perms(['post_journal','administrate'])
@@ -117,6 +130,12 @@ class JournalController(BaseController):
             journal_entry.content = journal_data['content']
             journal_entry.content_parsed = journal_data['content'] # placeholder for bbcode parser
         model.Session.commit()
+        
+        if search_enabled:
+            xapian_database = xapian.WritableDatabase('journal.xapian', xapian.DB_OPEN)
+            xapian_document = journal_entry.to_xapian()
+            xapian_database.replace_document("I%d"%submission.id,xapian_document)
+        
         h.redirect_to(h.url_for(controller='journal', action='view', id = journal_entry.id))
 
     @check_perms(['post_journal','administrate'])
@@ -146,6 +165,11 @@ class JournalController(BaseController):
             # -- update journal in database --
             journal_entry.status = 'deleted'
             model.Session.commit()
+            
+            if search_enabled:
+                xapian_database = WritableDatabase('journal.xapian',DB_OPEN)
+                xapian_database.delete_document("I%d"%journal_entry.id);
+                
             h.redirect_to(h.url_for(controller='journal', action='index', username = journal_entry.user.username))
         else:
             h.redirect_to(h.url_for(controller='journal', action='view', id = journal_entry.id))

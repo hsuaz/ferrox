@@ -24,6 +24,12 @@ import re
 import sys
 from binascii import crc32
 
+search_enabled = True
+try:
+    import xapian
+except ImportError:
+    search_enabled = False
+
 #This plays hell with websetup, so only use where needed.
 #from furaffinity.lib import filestore
 
@@ -237,6 +243,35 @@ class JournalEntry(object):
         self.content = content
         self.content_parsed = content_parsed
         self.status = 'normal'
+
+    def to_xapian(self):
+        if search_enabled:
+            xapian_document = xapian.Document()
+            xapian_document.add_term("I%d"%self.id)
+            xapian_document.add_value(0,"I%d"%self.id)
+            xapian_document.add_term("A%s"%self.user.id)
+            
+            # title
+            words = []
+            rmex = re.compile(r'[^a-z0-9-]')
+            for word in self.title.lower().split(' '):
+                words.append(rmex.sub('',word))
+            words = set(words)
+            for word in words:
+                xapian_document.add_term("T%s"%word)
+                
+            # description
+            words = []
+            # FIX ME: needs bbcode parser. should be plain text representation.
+            for word in self.content.lower().split(' '):
+                words.append(rmex.sub('',word))
+            words = set(words)
+            for word in words:
+                xapian_document.add_term("P%s"%word)
+
+            return xapian_document
+        else:
+            return None
 
 class Permission(object):
     def __init__(self, name, description):
@@ -477,6 +512,39 @@ class Submission(object):
             if self.user_submission[index].relationship == relationship:
                 users.append( self.user_submission[index].user )
         return users
+        
+    def to_xapian(self):
+        if search_enabled:
+            xapian_document = xapian.Document()
+            xapian_document.add_term("I%d"%self.id)
+            xapian_document.add_value(0,"I%d"%self.id)
+            xapian_document.add_term("A%s"%self.primary_artist().id)
+            
+            # tags
+            for tag in self.tags:
+                xapian_document.add_term("G%s"%tag.text)
+                
+            # title
+            words = []
+            rmex = re.compile(r'[^a-z0-9-]')
+            for word in self.title.lower().split(' '):
+                words.append(rmex.sub('',word))
+            words = set(words)
+            for word in words:
+                xapian_document.add_term("T%s"%word)
+                
+            # description
+            words = []
+            # FIX ME: needs bbcode parser. should be plain text representation.
+            for word in self.description.lower().split(' '):
+                words.append(rmex.sub('',word))
+            words = set(words)
+            for word in words:
+                xapian_document.add_term("P%s"%word)
+
+            return xapian_document
+        else:
+            return None
     
 class UserSubmission(object):
     def __init__(self, user_id, relationship, status ):

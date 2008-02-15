@@ -18,7 +18,7 @@
         % elif (c.submission.type == 'text'):
         ${h.link_to('Text Submission', c.submission_file)}, Text submission<br>
         <pre>
-        ${c.submission.content_parsed}
+        ${c.submission.description_parsed}
         </pre>
         % else:
         unknown submission type: ${c.submission_type}<br>

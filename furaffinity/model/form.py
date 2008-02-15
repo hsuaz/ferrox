@@ -100,7 +100,7 @@ class SubmitForm(formencode.Schema):
 class JournalForm(formencode.Schema):
     title = validators.String(not_empty=True)
     content = validators.NotEmpty(not_empty=True)
-    commit = validators.PlainText(not_empty=False)
+    commit = validators.PlainText(not_empty=False, if_missing=None)
 
 class DeleteForm(formencode.Schema):
     confirm = formencode.validators.PlainText(not_empty=False, if_missing=None)
@@ -110,9 +110,7 @@ class SearchForm(formencode.Schema):
     query_tags = formencode.validators.NotEmpty(not_empty=False)
     query_main = formencode.validators.NotEmpty(not_empty=True)
     query_author = formencode.validators.PlainText(not_empty=False)
-    search_submissions = formencode.validators.Bool()
-    search_journals = formencode.validators.Bool()
-    search_news = formencode.validators.Bool()
+    search_for = formencode.validators.PlainText()
     search_title = formencode.validators.Bool()
     search_description = formencode.validators.Bool()
     commit = formencode.validators.PlainText(not_empty=False)

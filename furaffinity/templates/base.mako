@@ -72,9 +72,14 @@
     </div>
     <div class="basic-box" id="search">
         <h2>Search gallery</h2>
-        ${h.form(h.url(controller='search', action='search'), method='post')}
+        ${h.form(h.url(controller='search', action='do'), method='post')}
         <p>
-            ${h.text_field('search')}
+            ${h.text_field('query_main')}<br>
+            ${h.check_box('search_title', checked=True)} Title 
+            ${h.check_box('search_description', checked=True)} Description
+            ${h.hidden_field('search_for', value='submissions')}
+            ${h.hidden_field('query_author', value='')}
+            ${h.hidden_field('query_tags', value='')}
             ${h.submit('Search')}
         </p>
         ${h.end_form()}

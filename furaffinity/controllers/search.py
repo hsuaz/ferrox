@@ -1,6 +1,7 @@
 from furaffinity.lib.base import *
 from furaffinity.lib import filestore, tagging
 from pylons.decorators.secure import *
+from sqlalchemy import or_,and_,not_
 
 import xapian
 import re
@@ -12,9 +13,9 @@ class SearchController(BaseController):
         #return render('/PLACEHOLDER.mako')
     def do(self):
         validator = model.form.SearchForm();
-        submission_data = None
+        c.search_terms = None
         try:
-            submission_data = validator.to_python(request.params);
+            c.search_terms = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
             return error
 
@@ -23,61 +24,38 @@ class SearchController(BaseController):
         
         query_flags = xapian.QueryParser.FLAG_BOOLEAN|xapian.QueryParser.FLAG_LOVEHATE|xapian.QueryParser.FLAG_WILDCARD|xapian.QueryParser.FLAG_PURE_NOT;
         
-        if submission_data['query_tags']:
-            tag_query = query_parser.parse_query(submission_data['query_tags'],query_flags,'G')
+        if c.search_terms['query_tags']:
+            tag_query = query_parser.parse_query(c.search_terms['query_tags'],query_flags,'G')
         else:
             tag_query = None
             
-        if submission_data['query_author']:
-            user_q = model.Session.query(model.User)
-            try:
-                author_object = user_q.filter_by(username = submission_data['query_author'].strip()).one()
-            except sqlalchemy.exceptions.InvalidRequestError:
-                c.error_text = "User %s not found." % h.escape_once(submission_data['query_author'])
-                c.error_title = 'User not found'
-                return render('/error.mako')
-            
+        if c.search_terms['query_author']:
+            author_object = model.retrieve_user(c.search_terms['query_author'].strip())
             author_query = query_parser.parse_query(str(author_object.id),query_flags,'A')
         else:
             author_query = None
         
-        type_string = ''
-        if submission_data['search_submissions']:
-            type_string += 's '
-        if submission_data['search_journals']:
-            type_string += 'j '
-        if submission_data['search_news']:
-            type_string += 'n '
-        if type_string == '':
-            abort(400)
-            
-        query = query_parser.parse_query(type_string.strip(),xapian.QueryParser.FLAG_WILDCARD,'I')
-
-        
-        if tag_query != None:
-            query = xapian.Query(xapian.Query.OP_AND,query,tag_query)
-        if author_query != None:
-            query = xapian.Query(xapian.Query.OP_AND,query,author_query)
-            
         #These had better be here...
-        title_query = query_parser.parse_query(submission_data['query_main'],query_flags,'T')
-        post_query = query_parser.parse_query(submission_data['query_main'],query_flags,'P')
+        title_query = query_parser.parse_query(c.search_terms['query_main'],query_flags,'T')
+        post_query = query_parser.parse_query(c.search_terms['query_main'],query_flags,'P')
 
-        if submission_data['search_title']:
-            if submission_data['search_description']:
+        if c.search_terms['search_title']:
+            if c.search_terms['search_description']:
                 main_query = xapian.Query(xapian.Query.OP_OR,title_query,post_query)
             else:
                 main_query = title_query
-        elif submission_data['search_description']:
+        elif c.search_terms['search_description']:
             main_query = post_query
         else:
             abort(400)
 
-        if query == None:
-            query = main_query
-        else:
-            query = xapian.Query(xapian.Query.OP_AND,query,main_query)
         
+        if tag_query != None:
+            main_query = xapian.Query(xapian.Query.OP_AND,main_query,tag_query)
+        if author_query != None:
+            main_query = xapian.Query(xapian.Query.OP_AND,main_query,author_query)
+            
+
         '''
         out = ''
         it = query.get_terms_begin()
@@ -87,14 +65,43 @@ class SearchController(BaseController):
         return out.strip()
 
         '''
-        xapian_database = xapian.Database('fa.xapian')
+        xapian_database = None
+        if c.search_terms['search_for'] == 'submissions':
+            xapian_database = xapian.Database('submission.xapian')
+            table_class = model.Submission
+        elif c.search_terms['search_for'] == 'journals':
+            xapian_database = xapian.Database('journal.xapian')
+            table_class = model.JournalEntry
+        elif c.search_terms['search_for'] == 'news':
+            xapian_database = xapian.Database('news.xapian')
+            table_class = model.News
+        else:
+            abort(400)
+            
         enquire = xapian.Enquire(xapian_database)
-        enquire.set_query(query)
+        enquire.set_query(main_query)
         results = enquire.get_mset(0,10)
         
-        out = "<html>\n<body>\n<pre>\n"
-        for r in results:
-            out = "%s%s\n"%(out, r.document.get_value(0))
+        database_q = model.Session.query(table_class)
         
-        return out+"</pre>\n</body>\n</html>\n"
+        limit = len(results)
+        filter_eval = 'or_('
+        for r in results:
+            filter_eval = "%stable_class.c.id == %d, " % (filter_eval, int(r.document.get_value(0)[1:]))
+        filter_eval += 'False)'
+        database_q = database_q.filter(eval(filter_eval)).limit(limit)
+        
+        c.page_owner = 'search';
+        if c.search_terms['search_for'] == 'submissions':
+            c.submissions = database_q.all()
+            return render('/gallery/index.mako')
+        elif c.search_terms['search_for'] == 'journals':
+            c.journals = database_q.all()
+            return render('/journal/index.mako')
+        elif c.search_terms['search_for'] == 'news':
+            return render('/PLACEHOLDER.mako')
+        
+        return render(result_template)
+        #return "<html>\n<body>\n<pre>%s</pre>\n</body>\n</html>\n"%str(database_q)
+        
         

@@ -2,12 +2,18 @@
 <%inherit file="base.mako" />
 
 <div class="basic-box FINISHME">
-    <h2>${title()}</h2>
+    <h2>${title()}
+    % if c.page_owner == 'search' and c.search_terms['query_tags'] != None:
+    (With tags: ${h.escape_once(c.search_terms['query_tags'])})
+    % endif
+    </h2>
+    % if c.page_owner != 'search':
     <h2>
         ${h.form(h.url(tags=None, commit=None), method='get')}
         Filter: ${h.text_field('tags',value=c.prefill['tags'])}${h.submit('Filter')}
         ${h.end_form()}
     </h2>
+    % endif
     
     % if c.is_mine:
     <p class="admin"> ${h.link_to('Submit Art', h.url(controller='gallery', action='submit', username=c.auth_user.username))} </p>
@@ -35,6 +41,8 @@
 <%def name="title()">
 % if c.page_owner == None:
 Browse Artwork
+% elif c.page_owner == 'search':
+Search Results for &quot;${h.escape_once(c.search_terms['query_main'])}&quot;
 % else:
 Browsing Gallery for ${c.page_owner.display_name}
 % endif

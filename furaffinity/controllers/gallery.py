@@ -307,7 +307,7 @@ class GalleryController(BaseController):
 
         if search_enabled:
             xapian_database = xapian.WritableDatabase('submission.xapian', xapian.DB_OPEN)
-            xapian_document = self.submission_data_to_xapian(submission)
+            xapian_document = submission.to_xapian()
             xapian_database.replace_document("I%d"%submission.id,xapian_document)
 
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
@@ -423,7 +423,7 @@ class GalleryController(BaseController):
         # update xapian
         if search_enabled:
             xapian_database = xapian.WritableDatabase('submission.xapian', xapian.DB_OPEN)
-            xapian_document = self.submission_data_to_xapian(submission)
+            xapian_document = submission.to_xapian()
             xapian_database.add_document(xapian_document)
         
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id, username=c.auth_user.username))
@@ -642,32 +642,3 @@ class GalleryController(BaseController):
 
         return submission_data
     
-    def submission_data_to_xapian(self, submission):
-        xapian_document = xapian.Document()
-        xapian_document.add_term("I%d"%submission.id)
-        xapian_document.add_value(0,"I%d"%submission.id)
-        xapian_document.add_term("A%s"%submission.user_submission[0].user.id)
-        
-        # tags
-        for tag in submission.tags:
-            xapian_document.add_term("G%s"%tag.text)
-            
-        # title
-        words = []
-        rmex = re.compile(r'[^a-z0-9]')
-        for word in submission.title.lower().split(' '):
-            words.append(rmex.sub('',word))
-        words = set(words)
-        for word in words:
-            xapian_document.add_term("T%s"%word)
-            
-        # description
-        words = []
-        # FIX ME: needs bbcode parser. should be plain text representation.
-        for word in submission.description.lower().split(' '):
-            words.append(rmex.sub('',word))
-        words = set(words)
-        for word in words:
-            xapian_document.add_term("P%s"%word)
-        
-        return xapian_document

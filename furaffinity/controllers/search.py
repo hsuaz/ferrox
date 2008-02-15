@@ -72,9 +72,6 @@ class SearchController(BaseController):
         elif c.search_terms['search_for'] == 'journals':
             xapian_database = xapian.Database('journal.xapian')
             table_class = model.JournalEntry
-        elif c.search_terms['search_for'] == 'news':
-            xapian_database = xapian.Database('news.xapian')
-            table_class = model.News
         else:
             abort(400)
             
@@ -85,11 +82,13 @@ class SearchController(BaseController):
         database_q = model.Session.query(table_class)
         
         limit = len(results)
-        filter_eval = 'or_('
-        for r in results:
-            filter_eval = "%stable_class.c.id == %d, " % (filter_eval, int(r.document.get_value(0)[1:]))
-        filter_eval += 'False)'
-        database_q = database_q.filter(eval(filter_eval)).limit(limit)
+        if limit>0:
+            filter_eval = 'or_('
+            for r in results:
+                filter_eval = "%stable_class.c.id == %d, " % (filter_eval, int(r.document.get_value(0)[1:]))
+            filter_eval += 'False)'
+            database_q = database_q.filter(eval(filter_eval))
+        database_q = database_q.limit(limit)
         
         c.page_owner = 'search';
         if c.search_terms['search_for'] == 'submissions':
@@ -98,8 +97,6 @@ class SearchController(BaseController):
         elif c.search_terms['search_for'] == 'journals':
             c.journal_page = database_q.all()
             return render('/journal/index.mako')
-        elif c.search_terms['search_for'] == 'news':
-            return render('/PLACEHOLDER.mako')
         
         return render(result_template)
         #return "<html>\n<body>\n<pre>%s</pre>\n</body>\n</html>\n"%str(database_q)

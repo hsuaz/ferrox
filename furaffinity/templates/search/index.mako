@@ -20,7 +20,6 @@
         <dt>Search For:</dt>
         <dd>${h.radio_button('search_for', value='submissions', checked='checked')} Submissions 
         ${h.radio_button('search_for', value='journals')} Journals
-        ${h.radio_button('search_for', value='news')} News</dd>
     </dl>
     <dl class="standard-form">
         <dt>Tags:</dt>

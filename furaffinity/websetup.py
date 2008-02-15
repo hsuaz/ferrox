@@ -90,7 +90,6 @@ def setup_config(command, filename, section, vars):
         import xapian
         xapian.WritableDatabase('submission.xapian',xapian.DB_CREATE_OR_OVERWRITE)
         xapian.WritableDatabase('journal.xapian',xapian.DB_CREATE_OR_OVERWRITE)
-        xapian.WritableDatabase('news.xapian',xapian.DB_CREATE_OR_OVERWRITE)
     except ImportError:
         print 'WARNING: Unable to load Xapian bindings. Search disabled.'
     

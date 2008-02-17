@@ -111,7 +111,13 @@ class Thumbnailer:
                     width = int(information[1]),
                     height = int(information[2])
                 )
-        
+    
+    def get_metadata (self):
+        if use_c_lib:
+            return imagemagick.get_metadata(self.original)
+        else:
+            return {}
+    
     def __exit__(self, type, value, tb):
         if ( tb == None ):
             for temporary_file in self.temporary_files:

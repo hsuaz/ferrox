@@ -1,6 +1,7 @@
 import logging
 
 from furaffinity.lib.base import *
+from furaffinity.lib.formgen import FormGenerator
 
 from pylons.decorators.secure import *
 
@@ -19,7 +20,8 @@ class IndexController(BaseController):
         return render('/index.mako')
 
     def register(self):
-        c.form_defaults = {'username': '', 
+        c.form = FormGenerator()
+        c.form.defaults = {'username': '', 
                            'email': '',
                            'email_confirm': '',
                            'password': '',
@@ -29,41 +31,40 @@ class IndexController(BaseController):
     def register_check(self):
         schema = model.form.RegisterForm(foo = 'bar')
         try:
-            form_result = schema.to_python(request.params)
+            form_data = schema.to_python(request.params)
         except formencode.Invalid, error:
-            c.form_defaults = error.value
-            c.form_errors = error.error_dict or {}
-            return render('/register.mako')            
-        else:
-            username = form_result['username']
-            email = form_result['email']
-            password = form_result['password']
-            user = model.User(username, password) 
-            user.email = email
-            model.Session.save(user)
-            model.Session.commit()
-            hasher = hashlib.md5()
-            hasher.update(user.username)
-            hasher.update(str(user.id))
-            hash = hasher.hexdigest()
-            c.verify_link = h.link_to('Verify', url=h.url_for(controller = 'index', 
-                                                              action = 'verify', 
-                                                              username = username, 
-                                                              code = hash))
-            return render('/regsuccess.mako')
+            c.form = FormGenerator(form_error=error)
+            import sys
+            sys.stderr.write(str(c.form.errors))
+            return render('/register.mako')
+
+        username = form_data['username']
+        email = form_data['email']
+        password = form_data['password']
+        user = model.User(username, password)
+        user.email = email
+        model.Session.save(user)
+        model.Session.commit()
+        hasher = hashlib.md5()
+        hasher.update(user.username)
+        hasher.update(str(user.id))
+        hash = hasher.hexdigest()
+        c.verify_link = h.link_to('Verify', url=h.url_for(controller = 'index', 
+                                                          action = 'verify', 
+                                                          username = username, 
+                                                          code = hash))
+        return render('/register_success.mako')
 
     def verify(self):
         username = request.params['username']
         code = request.params['code']
-        user_q = model.Session.query(model.User)
-        user = user_q.filter_by(username = username).first()
+        user = model.retrieve_user(username)
         hasher = hashlib.md5()
         hasher.update(user.username)
         hasher.update(str(user.id))
         hash = hasher.hexdigest()
         if hash == code:
-            user.verified = True
-            model.Session.save(user)
+            user.role = model.retrieve_role('Member')
             model.Session.commit()
         c.verified = (hash == code)
         return render('/verify.mako')
@@ -80,7 +81,7 @@ class IndexController(BaseController):
         user_q = model.Session.query(model.User)
         user = user_q.filter_by(username = username).first()
         if user and user.check_password(request.params.get('password')):
-            if not user.verified:
+            if not user.can('log_in'):
                 c.error_msgs.append("This account (%s) still needs to be verified. " \
                                     "Please check the email address provided for the " \
                                     "verification code." % h.escape_once(username))

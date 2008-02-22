@@ -1,37 +1,19 @@
 <%inherit file="base.mako" />
-${h.form(h.url(controller='index', action='register_check'), method='post')}
-${h.hidden_field('remote_addr', value=c.environ['REMOTE_ADDR'])}
+
+${c.form.start(h.url(controller='index', action='register_check'), method='post')}
+${c.form.hidden_field('remote_addr', value=c.environ['REMOTE_ADDR'])}
 <dl class="standard-form">
     <dt>Username</dt>
-    <dd>
-        ${h.text_field('username', value=c.form_defaults['username'] or '')}
-        % if 'username' in c.form_errors:
-            <span class="error">${c.form_errors['username']}</span>
-        % endif
-    </dd>
+    <dd>${c.form.text_field('username')}</dd>
     <dt>Email</dt>
     <dd>
-        ${h.text_field('email', value=c.form_defaults['email'] or '')} 
-        % if 'email' in c.form_errors:
-            <span class="error">${c.form_errors['email']}</span>
-        % endif
-        <br/>
-        ${h.text_field('email_confirm', value=c.form_defaults['email_confirm'] or '')}
-        % if 'email_confirm' in c.form_errors:
-            <span class="error">${c.form_errors['email_confirm']}</span>
-        % endif
+        ${c.form.text_field('email')} <br/>
+        ${c.form.text_field('email_confirm')}
     </dd>
     <dt>Password</dt>
     <dd>
-        ${h.password_field('password')} 
-        % if 'password' in c.form_errors:
-            <span class="error">${c.form_errors['password']}</span>
-        % endif
-        <br/>
-        ${h.password_field('password_confirm')}
-        % if 'password_confirm' in c.form_errors:
-            <span class="error">${c.form_errors['password_confirm']}</span>
-        % endif
+        ${c.form.password_field('password')} <br/>
+        ${c.form.password_field('password_confirm')}
     </dd>
 </dl>
 
@@ -48,17 +30,13 @@ ${h.hidden_field('remote_addr', value=c.environ['REMOTE_ADDR'])}
        value="manual_challenge">
 </noscript>
 
-% if 'recaptcha' in c.form_errors:
-    <p><span class="error">${c.form_errors['recaptcha']}</span></p>
+% if 'recaptcha' in c.form.errors:
+<p>${c.form.error('Captcha invalid.')}</p>
 % endif
 
-<p>${h.check_box('TOS_accept')} I have read and agree to the Terms of Service</p>
-% if 'TOS_accept' in c.form_errors:
-    <span class="error">You must accept the Terms of Service to register.</span>
-% endif
+<p>${c.form.check_box('TOS_accept', label='I have read and agree to the Terms of Service')}</p>
 
-<p>${h.submit('Register')}</p>
-${h.end_form()}
+<p>${c.form.submit('Register')}</p>
+${c.form.end()}
 
 <%def name="title()">Register</%def>
-

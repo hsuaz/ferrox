@@ -26,11 +26,14 @@ class FormGenerator(object):
             self.errors = dict()
             self.defaults = dict()
 
+    def error(self, text):
+        return content_tag('span', text, class_=self.error_class)
+
     def get_error(self, name):
         if not name in self.errors:
             return ''
 
-        return content_tag('span', self.errors[name], class_=self.error_class)
+        return self.error(self.errors[name])
 
     def start(self, url, method="POST", multipart=False, **options):
         """
@@ -67,7 +70,7 @@ class FormGenerator(object):
         """
         return "</form>"
 
-    def select(self, name, option_tags='', **options):
+    def select(self, name, option_tags='', show_errors=True, **options):
         """
         Creates a dropdown selection box
         
@@ -83,9 +86,13 @@ class FormGenerator(object):
         """
         o = {'name_': name}
         o.update(options)
-        return content_tag("select", option_tags, **o) + self.get_error(name)
 
-    def text_field(self, name, value=None, **options):
+        ret = content_tag("select", option_tags, **o)
+        if show_errors:
+            ret += self.get_error(name)
+        return ret
+
+    def text_field(self, name, value=None, show_errors=True, **options):
         """
         Creates a standard text field.
         
@@ -105,7 +112,10 @@ class FormGenerator(object):
         if o['value'] == None and name in self.defaults:
             o['value'] = self.defaults[name]
 
-        return tag("input", **o) + self.get_error(name)
+        ret = tag("input", **o)
+        if show_errors:
+            ret += self.get_error(name)
+        return ret
 
     def hidden_field(self, name, value=None, **options):
         """
@@ -126,7 +136,7 @@ class FormGenerator(object):
             >>> file_field('myfile')
             '<input id="myfile" name="myfile" type="file" />'
         """
-        return text_field(name, value=value, type="file", **options)
+        return self.text_field(name, value=value, type="file", **options)
 
     def password_field(self, name="password", value=None, **options):
         """
@@ -134,9 +144,9 @@ class FormGenerator(object):
         
         Takes the same options as text_field
         """
-        return text_field(name, value, type="password", **options)
+        return self.text_field(name, value, type="password", **options)
 
-    def text_area(self, name, content=None, **options):
+    def text_area(self, name, content=None, show_errors=True, **options):
         """
         Creates a text input area.
         
@@ -161,9 +171,13 @@ class FormGenerator(object):
             else:
                 content = ''
 
-        return content_tag("textarea", content, **o) + self.get_error(name)
+        ret = content_tag("textarea", content, **o)
+        if show_errors:
+            ret += self.get_error(name)
+        return ret
 
-    def check_box(self, name, value='1', checked=None, **options):
+    def check_box(self, name, value='1', checked=None, label='',
+                  show_errors=True, **options):
         """
         Creates a check box.
         """
@@ -175,9 +189,14 @@ class FormGenerator(object):
         if checked:
             o['checked'] = 'checked'
 
-        return tag("input", **o) + self.get_error(name)
+        ret = tag("input", **o)
+        if label:
+            ret += ' ' + label
+        if show_errors:
+            ret += self.get_error(name)
+        return ret
 
-    def radio_button(self, name, value, checked=False, **options):
+    def radio_button(self, name, value, checked=False, show_errors=True, **options):
         """Creates a radio button.
         
         The id of the radio button will be set to the name + value with a _ in
@@ -189,7 +208,11 @@ class FormGenerator(object):
         html_options.update(options)
         if checked:
             html_options["checked"] = "checked"
-        return tag("input", **html_options) + self.get_error(name)
+
+        ret = tag("input", **html_options)
+        if show_errors:
+            self.get_error(name)
+        return ret
 
     def submit(self, value="Save changes", name=None, confirm=None, disable_with=None, **options):
         """Creates a submit button with the text ``value`` as the caption.

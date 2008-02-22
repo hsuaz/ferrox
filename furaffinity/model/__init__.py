@@ -71,7 +71,6 @@ user_table = Table('user', metadata,
     #Column('hash_algorithm', hash_algorithm_type, nullable=False),
     Column('display_name', types.Unicode, nullable=False),
     Column('role_id', types.Integer, ForeignKey('role.id'), default=1),
-    Column('verified', types.Boolean, nullable=False, default=False),
     mysql_engine='InnoDB'
 )
 
@@ -278,6 +277,12 @@ class Permission(object):
         self.name = name
         self.description = description
 
+def retrieve_role(name):
+    try:
+        return Session.query(Role).filter_by(name=name).one()
+    except InvalidRequestError:
+        return None
+
 class Role(object):
     def __init__(self, name, description=''):
         self.name = name
@@ -331,6 +336,7 @@ class User(object):
         self.username = username
         self.set_password(password)
         self.display_name = username
+        self.role = retrieve_role('Unverified')
 
     def set_password(self, password):
         if use_hashlib: 

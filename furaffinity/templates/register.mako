@@ -26,7 +26,7 @@ ${c.form.hidden_field('remote_addr', value=c.environ['REMOTE_ADDR'])}
        height="300" width="500" frameborder="0"></iframe><br>
    <textarea name="recaptcha_challenge_field" rows="3" cols="40">
    </textarea>
-   <input type="hidden" name="recaptcha_response_field" 
+   <input type="hidden" name="recaptcha_response_field"
        value="manual_challenge">
 </noscript>
 

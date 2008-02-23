@@ -23,11 +23,11 @@ except ImportError:
     import mimetypes
     def get_mime_type(fileobject):
         return mimetypes.guess_type(fileobject['filename'])[0]
-        
+
 def normalize_newlines(string):
     """Adjust all line endings to be the Linux line break, \\x0a."""
     return re.compile("\x0d\x0a|\x0d").sub("\x0a", string)
-    
+
 def to_dict(model):
     '''Convert a SQLAlchemy model instance into a dictionary'''
     model_dict = {}
@@ -47,14 +47,14 @@ def embed_flash(url,dims=None):
     <param name="quality" value="high" />
     <param name="bgcolor" value="#FFFFFF" />
     <embed src="%s" quality="high" bgcolor="#FFFFFF" name="myMoviename" align="" type="application/x-shockwave-flash"  pluginspage="http://www.macromedia.com/go/getflashplayer" """ % (url,url)
-    
+
     if ( dims != None ):
         rv = rv + "height=\"%d\" width=\"%d\"" % dims
-    
+
     rv = rv + """></embed>
 </object>
-""" 
-    
+"""
+
     return rv
 
 def embed_mp3(url):

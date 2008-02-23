@@ -11,7 +11,7 @@ except:
     hash_algorithm = 'SHA1'
     hash_secure = False
 
-        
+
 class NoUsableHashFunction(Exception):
     pass
 
@@ -27,16 +27,16 @@ class FerroxHash:
         else:
             raise NoUsableHashFunction
         self.digest_size = self.hash.digest_size
-    
+
     def update(self,s):
         self.hash.update(s)
-    
+
     def digest(self):
         return self.hash.digest()
-    
+
     def hexdigest(self):
         return self.hash.hexdigest()
-    
+
     def copy(self):
         return self.hash.copy()
 

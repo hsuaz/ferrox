@@ -21,13 +21,13 @@ class IndexController(BaseController):
 
     def register(self):
         c.form = FormGenerator()
-        c.form.defaults = {'username': '', 
+        c.form.defaults = {'username': '',
                            'email': '',
                            'email_confirm': '',
                            'password': '',
                            'password_confirm': ''}
         return render('/register.mako')
-    
+
     def register_check(self):
         schema = model.form.RegisterForm(foo = 'bar')
         try:
@@ -49,9 +49,9 @@ class IndexController(BaseController):
         hasher.update(user.username)
         hasher.update(str(user.id))
         hash = hasher.hexdigest()
-        c.verify_link = h.link_to('Verify', url=h.url_for(controller = 'index', 
-                                                          action = 'verify', 
-                                                          username = username, 
+        c.verify_link = h.link_to('Verify', url=h.url_for(controller = 'index',
+                                                          action = 'verify',
+                                                          username = username,
                                                           code = hash))
         return render('/register_success.mako')
 

@@ -64,7 +64,7 @@ class JournalController(BaseController):
 
         c.is_mine = (c.auth_user and (c.page_owner.id == c.auth_user.id))
         return render('/journal/index.mako')
-        
+
     @check_perm('post_journal')
     def post(self):
         c.form = FormGenerator()
@@ -81,7 +81,7 @@ class JournalController(BaseController):
             c.is_edit = False
             c.form = FormGenerator(form_error=error)
             return render('/journal/post.mako')
-        
+
         # -- put journal in database --
         journal_entry = model.JournalEntry(
             user_id = c.auth_user.id,
@@ -91,14 +91,14 @@ class JournalController(BaseController):
         )
         model.Session.save(journal_entry)
         model.Session.commit()
-        
+
         if search_enabled:
             xapian_database = xapian.WritableDatabase('journal.xapian', xapian.DB_OPEN)
             xapian_document = journal_entry.to_xapian()
             xapian_database.add_document(xapian_document)
-        
+
         h.redirect_to(h.url_for(controller='journal', action='view', username=c.auth_user.username, id=journal_entry.id))
-            
+
     @check_perms(['post_journal','administrate'])
     def edit(self,id=None):
         journal_entry = get_journal(id)
@@ -120,10 +120,10 @@ class JournalController(BaseController):
             c.is_edit = True
             c.form = FormGenerator(form_error=error)
             return render('/journal/post.mako')
-        
+
         journal_entry = get_journal(id)
         self.is_my_journal(journal_entry,True)
-        
+
         # -- update journal in database --
         if ( journal_entry.title != journal_data['title'] or journal_entry.content != journal_data['content'] ):
             if ( journal_entry.editlog == None ):
@@ -134,12 +134,12 @@ class JournalController(BaseController):
             journal_entry.content = journal_data['content']
             journal_entry.content_parsed = journal_data['content'] # placeholder for bbcode parser
         model.Session.commit()
-        
+
         if search_enabled:
             xapian_database = xapian.WritableDatabase('journal.xapian', xapian.DB_OPEN)
             xapian_document = journal_entry.to_xapian()
             xapian_database.replace_document("I%d"%submission.id,xapian_document)
-        
+
         h.redirect_to(h.url_for(controller='journal', action='view', id = journal_entry.id))
 
     @check_perms(['post_journal','administrate'])
@@ -161,19 +161,19 @@ class JournalController(BaseController):
         except model.form.formencode.Invalid, error:
             return "There were input errors: %s" % (error)
             #return self.delete(id)
-        
+
         journal_entry = get_journal(id)
         self.is_my_journal(journal_entry,True)
-        
+
         if (delete_form_data['confirm'] != None):
             # -- update journal in database --
             journal_entry.status = 'deleted'
             model.Session.commit()
-            
+
             if search_enabled:
                 xapian_database = WritableDatabase('journal.xapian',DB_OPEN)
                 xapian_database.delete_document("I%d"%journal_entry.id);
-                
+
             h.redirect_to(h.url_for(controller='journal', action='index', username = journal_entry.user.username))
         else:
             h.redirect_to(h.url_for(controller='journal', action='view', id = journal_entry.id))
@@ -185,7 +185,7 @@ class JournalController(BaseController):
         c.is_mine = self.is_my_journal(journal_entry.user)
 
         return render('/journal/view.mako');
-        
+
     def is_my_journal(self,journal_entry,abort=False):
         if ( not c.auth_user or (not c.auth_user.can('administrate') and (c.auth_user.id != journal_entry.user_id)) ):
             if (abort):

@@ -13,10 +13,10 @@ static PyObject *imagemagick_resize(PyObject *self, PyObject *args)
     {
         return NULL;
     }
-    
+
     MagickWandGenesis();
     magick_wand=NewMagickWand();
-    
+
     status=MagickReadImageBlob(magick_wand,(const void*)image_string,image_length);
     if (status != MagickFalse)
     {
@@ -46,10 +46,10 @@ static PyObject *imagemagick_get_size(PyObject *self, PyObject *args)
     {
         return NULL;
     }
-    
+
     MagickWandGenesis();
     magick_wand=NewMagickWand();
-    
+
     status=MagickReadImageBlob(magick_wand,(const void*)image_string,image_length);
     if (status != MagickFalse)
     {
@@ -77,20 +77,20 @@ static PyObject *imagemagick_get_metadata(PyObject *self, PyObject *args)
     unsigned long numprops;
     PyObject* return_dict;
     int i;
-    
+
     if (!PyArg_ParseTuple(args, "s#", &image_string, &image_length))
     {
         return NULL;
     }
-    
+
     return_dict = PyDict_New();
     if ( return_dict != NULL )
     {
         Py_INCREF(return_dict);
-        
+
         MagickWandGenesis();
         magick_wand=NewMagickWand();
-        
+
         status=MagickReadImageBlob(magick_wand,(const void*)image_string,image_length);
         if (status != MagickFalse)
         {

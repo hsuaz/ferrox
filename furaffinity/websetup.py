@@ -63,13 +63,13 @@ def setup_config(command, filename, section, vars):
     model.Session.save(p)
     p = model.UserPreference(u, 'style_color', 'light')
     model.Session.save(p)
-    
+
     u = model.User('net-cat', 'asdf')
     u.display_name = u'net-cat'
     u.email = u'nobody@furaffinity.net'
     u.role = admin_role
     model.Session.save(u)
-    
+
     u = model.User('luser', 'asdf')
     u.display_name = u'Luser'
     u.email = u'nobody@furaffinity.net'
@@ -85,11 +85,11 @@ def setup_config(command, filename, section, vars):
         import magic
     except ImportError:
         print 'WARNING: mimetypes will be detected by filename instead of magic. In FreeBSD, install "devel/py-magic" from ports.'
-        
+
     try:
         import xapian
         xapian.WritableDatabase('submission.xapian',xapian.DB_CREATE_OR_OVERWRITE)
         xapian.WritableDatabase('journal.xapian',xapian.DB_CREATE_OR_OVERWRITE)
     except ImportError:
         print 'WARNING: Unable to load Xapian bindings. Search disabled.'
-    
+

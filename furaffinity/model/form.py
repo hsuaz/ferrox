@@ -19,12 +19,12 @@ class UniqueUsername(formencode.FancyValidator):
 
 class Recaptcha(validators.FormValidator):
     validate_partial_form = True
-    
+
     fail_message = 'Recaptcha failed'
 
     def validate_partial(self, field_dict, state):
-        captcha_fields = ['remote_addr', 
-                          'recaptcha_challenge_field', 
+        captcha_fields = ['remote_addr',
+                          'recaptcha_challenge_field',
                           'recaptcha_response_field']
         for name in captcha_fields:
             if not field_dict.has_key(name):
@@ -79,7 +79,7 @@ class RegisterForm(formencode.Schema):
 class LoginForm(formencode.Schema):
     username = validators.PlainText(not_empty=True)
     password = validators.PlainText(not_empty=True)
-    
+
 class NewsForm(formencode.Schema):
     title = validators.NotEmpty()
     content = validators.NotEmpty()

@@ -25,7 +25,7 @@ from sqlalchemy import types, exceptions
 
 class Enum(types.TypeDecorator):
     impl = types.Unicode
-    
+
     def __init__(self, values, empty_to_none=False, strict=False):
         """Emulate an Enum type.
 
@@ -49,17 +49,17 @@ class Enum(types.TypeDecorator):
         # The length of the string/unicode column should be the longest string
         # in values
         size = max([len(v) for v in values if v is not None])
-        super(Enum, self).__init__(size)        
-        
-        
+        super(Enum, self).__init__(size)
+
+
     def convert_bind_param(self, value, engine):
         if self.empty_to_none and value is '':
             value = None
         if value not in self.values:
             raise exceptions.AssertionError('"%s" not in Enum.values' % value)
         return super(Enum, self).convert_bind_param(value, engine)
-        
-        
+
+
     def convert_result_value(self, value, engine):
         if self.strict and value not in self.values:
             raise exceptions.AssertionError('"%s" not in Enum.values' % value)
@@ -78,8 +78,7 @@ if __name__ == '__main__':
     t.insert().execute(e=None)
     # boom!
     t.insert().execute(e='lala')
-    
+
     print list(t.select().execute())
-    
-    
-    
+
+

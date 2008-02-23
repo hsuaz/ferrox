@@ -14,7 +14,7 @@
         ${c.form.end()}
     </h2>
     % endif
-    
+
     % if c.is_mine:
     <p class="admin"> ${h.link_to('Submit Art', h.url(controller='gallery', action='submit', username=c.auth_user.username))} </p>
     % endif

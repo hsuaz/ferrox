@@ -13,7 +13,7 @@ class EditlogController(BaseController):
         self.get_editlog_entries(journal.editlog_id)
 
         return render('/editlog/show.mako')
-    
+
     def submission(self, id=None):
         submission = get_submission(id)
 

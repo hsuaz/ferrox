@@ -1,5 +1,5 @@
 from furaffinity.lib.base import *
-    
+
 import sqlalchemy.exceptions
 import os
 import mimetypes
@@ -12,23 +12,23 @@ class ImageManagerException(Exception):
 
 class ImageManagerExceptionFileExists(ImageManagerException):
     pass
-    
+
 class ImageManagerExceptionFileNotFound(ImageManagerException):
     pass
-    
+
 class ImageManagerExceptionAccessDenied(ImageManagerException):
     pass
-    
+
 class ImageManagerExceptionBadAction(ImageManagerException):
     pass
-    
+
 
 # This function will return the image_metadata of an image if it exists, checked by hash.
 # It returns a non-saved, non-committed image_metadata if it's a new file.
 # Else throw exception.
 def store(hash,mimetype,data):
     # Please replace this function with something that doesn't suck.
-    
+
     try:
         image_metadata = model.Session.query(model.ImageMetadata).filter(model.ImageMetadata.hash==hash).one()
     except sqlalchemy.exceptions.InvalidRequestError:
@@ -54,11 +54,11 @@ def store(hash,mimetype,data):
             return image_metadata
         else:
             raise ImageManagerExceptionAccessDenied
-            
+
     else:
         # File already exists in filestore
         return image_metadata
-            
+
 def dump(hash):
     hash = hash.split('.')[0]
     try:
@@ -76,7 +76,7 @@ def dump(hash):
         f.close()
         return (d,image_metadata)
 
-        
+
 def get_submission_file(metadata):
     return metadata.hash+(mimetypes.guess_extension(metadata.mimetype ) or '.txt')
 

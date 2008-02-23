@@ -176,7 +176,7 @@ class Page(list):
         ajax_id=None, framework='scriptaculous', **kwargs):
         """
         Returns a list of links to other page before and after the current
-        page. Example: "1 2 [3] 4 5 6 7 8 >". 
+        page. Example: "1 2 [3] 4 5 6 7 8 >".
 
         link_var:
             The name of the parameter that will carry the number of the page the

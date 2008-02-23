@@ -49,7 +49,6 @@ class BaseController(WSGIController):
 
     def __before__(self, action, **params):
         c.empty_form = FormGenerator()
-        c.prefill = {}
         c.error_msgs = []
         c.route = request_config().mapper_dict
 

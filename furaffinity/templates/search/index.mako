@@ -2,9 +2,6 @@
 
 <div class="basic-box">
     <h2>Post Journal</h2>
-    % if c.input_errors:
-    <p>${c.input_errors}</p>
-    % endif
 
     ${c.form.start(h.url(controller='search', action='do'), method='post')}
     <dl class="standard-form">

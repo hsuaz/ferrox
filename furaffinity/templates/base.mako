@@ -17,19 +17,19 @@
             ${h.link_to('register', h.url(controller='index', action='register'))}.
         </p>
         <p>(${h.link_to("Lost your password?", h.url(controller='index', action='lost_password'))})</p>
-        ${h.form(h.url(controller='index', action='login_check'), method='post')}
+        ${c.empty_form.start(h.url(controller='index', action='login_check'), method='post')}
         <dl class="standard-form">
             <dt>Username</dt>
-            <dd>${h.text_field('username')}</dd>
+            <dd>${c.empty_form.text_field('username')}</dd>
             <dt>Password</dt>
-            <dd>${h.password_field('password')}</dd>
+            <dd>${c.empty_form.password_field('password')}</dd>
         </dl>
-        ${h.submit('Login')}
-        ${h.end_form()}
+        ${c.empty_form.submit('Login')}
+        ${c.empty_form.end()}
         % else:
-        ${h.form(h.url(controller='index', action='logout'), method='post')}
-        <p>Welcome back, ${lib.user_link(c.auth_user)}!  ${h.submit('Log out')}</p>
-        ${h.end_form()}
+        ${c.empty_form.start(h.url(controller='index', action='logout'), method='post')}
+        <p>Welcome back, ${lib.user_link(c.auth_user)}!  ${c.empty_form.submit('Log out')}</p>
+        ${c.empty_form.end()}
         <ul class="inline">
             <li>${h.link_to("Profile", h.url(controller='user', action='view', username=c.auth_user.username))}</li>
             <li>${h.link_to("Journal", h.url(controller='journal', action='index', username=c.auth_user.username))}</li>
@@ -72,17 +72,17 @@
     </div>
     <div class="basic-box" id="search">
         <h2>Search gallery</h2>
-        ${h.form(h.url(controller='search', action='do'), method='post')}
+        ${c.empty_form.start(h.url(controller='search', action='do'), method='post')}
         <p>
-            ${h.text_field('query_main')}<br>
-            ${h.check_box('search_title', checked=True)} Title 
-            ${h.check_box('search_description', checked=True)} Description
-            ${h.hidden_field('search_for', value='submissions')}
-            ${h.hidden_field('query_author', value='')}
-            ${h.hidden_field('query_tags', value='')}
-            ${h.submit('Search')}
+            ${c.empty_form.text_field('query_main')}<br>
+            ${c.empty_form.check_box('search_title', checked=True)} Title
+            ${c.empty_form.check_box('search_description', checked=True)} Description
+            ${c.empty_form.hidden_field('search_for', value='submissions')}
+            ${c.empty_form.hidden_field('query_author', value='')}
+            ${c.empty_form.hidden_field('query_tags', value='')}
+            ${c.empty_form.submit('Search')}
         </p>
-        ${h.end_form()}
+        ${c.empty_form.end()}
     </div>
 </div>
 <ul id="ads">

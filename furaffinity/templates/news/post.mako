@@ -11,7 +11,7 @@
         <dd>${c.form.check_box('is_anonymous')}</dd>
     </dl>
     <p>${c.form.text_area('content', size="80x10")}</p>
-    <p>${h.submit('Post')}</p>
+    <p>${c.form.submit('Post')}</p>
     ${c.form.end()}
 </div>
 

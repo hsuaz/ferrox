@@ -7,6 +7,7 @@ from furaffinity.lib import filestore, tagging
 from pylons.decorators.secure import *
 
 from furaffinity.lib.thumbnailer import Thumbnailer
+from furaffinity.lib.formgen import FormGenerator
 
 from chardet.universaldetector import UniversalDetector
 import codecs
@@ -74,7 +75,8 @@ class GalleryController(BaseController):
             return error
     
         (positive_tags,negative_tags) = tagging.get_neg_and_pos_tags_from_string(submission_data['tags'])
-        c.prefill['tags'] = tagging.recreate_tag_string(positive_tags,negative_tags)
+        c.form = FormGenerator()
+        c.form.defaults['tags'] = tagging.recreate_tag_string(positive_tags,negative_tags)
         
         print submission_data
         print positive_tags
@@ -173,9 +175,7 @@ class GalleryController(BaseController):
     @check_perm('submit_art')
     def submit(self):
         c.edit = False
-        c.prefill['title'] = ''
-        c.prefill['description'] = ''
-        c.prefill['tags'] = ''
+        c.form = FormGenerator()
         return render('/gallery/submit.mako')
 
     @check_perms(['submit_art','administrate'])
@@ -184,9 +184,10 @@ class GalleryController(BaseController):
         self.is_my_submission(submission, True)
         c.submission = submission
         c.edit = True
-        c.prefill['title'] = submission.title
-        c.prefill['description'] = submission.description
-        c.prefill['tags'] = tagging.make_tags_into_string(submission.tags)
+        c.form = FormGenerator()
+        c.form.defaults['title'] = submission.title
+        c.form.defaults['description'] = submission.description
+        c.form.defaults['tags'] = tagging.make_tags_into_string(submission.tags)
         return render('/gallery/submit.mako')
 
     @check_perms(['submit_art','administrate'])
@@ -202,13 +203,12 @@ class GalleryController(BaseController):
     def edit_commit(self, id=None):
         # -- validate form input --
         validator = model.form.SubmitForm();
-        submission_data = None
+        form_data = None
         try:
-            submission_data = validator.to_python(request.params);
+            form_data = validator.to_python(request.params);
         except model.form.formencode.Invalid, error:
             c.edit = True
-            c.prefill = request.params
-            c.input_errors = "There were input errors: %s %s" % (error, c.prefill)
+            c.form = FormGenerator(form_error=error)
             return render('/gallery/submit.mako')
             
         # -- get image from database, make sure user has permission --
@@ -225,7 +225,7 @@ class GalleryController(BaseController):
         self.is_my_submission(submission,True)
         
         # -- get relevant information from submission_data --
-        submission_data = self.set_up_submission_data(submission_data, submission)
+        submission_data = self.set_up_submission_data(form_data, submission)
         
         # -- store image in mogile or wherever, if it's been changed --
         if ( submission_data['fullfile'] != None ):
@@ -341,25 +341,16 @@ class GalleryController(BaseController):
 
     @check_perm('submit_art')
     def submit_upload(self):
-        validator = model.form.SubmitForm();
-        submission_data = None
-        error = None
+        validator = model.form.SubmitForm()
         try:
-            submission_data = validator.to_python(request.params);
+            form_data = validator.to_python(request.params)
         except model.form.formencode.Invalid, error:
-            pass
-        
-        if ( error != None or submission_data['fullfile'] == None ):
-            if ( error == None ):
-                error = 'No file supplied.'
             c.edit = False
-            c.prefill = request.params
-            c.input_errors = "There were input errors: %s %s" % (error, c.prefill)
+            c.form = FormGenerator(form_error=error)
             return render('/gallery/submit.mako')
         
-        
         # -- fill out submission_data --
-        submission_data = self.set_up_submission_data(submission_data,None)
+        submission_data = self.set_up_submission_data(form_data,None)
                                 
         # -- store image in mogile or wherever --
         submission_data['fullfile']['metadata'] = filestore.store( submission_data['fullfile']['hash'], submission_data['fullfile']['mimetype'], submission_data['fullfile']['content'] )

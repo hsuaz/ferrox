@@ -9,9 +9,9 @@
     </h2>
     % if c.page_owner != 'search':
     <h2>
-        ${h.form(h.url(tags=None, commit=None), method='get')}
-        Filter: ${h.text_field('tags',value=c.prefill['tags'])}${h.submit('Filter')}
-        ${h.end_form()}
+        ${c.form.start(h.url(tags=None, commit=None), method='get')}
+        Filter: ${c.form.text_field('tags')}${c.form.submit('Filter')}
+        ${c.form.end()}
     </h2>
     % endif
     

@@ -73,28 +73,35 @@ class IndexController(BaseController):
         if c.auth_user:
             # This shouldn't really happen, so no need to be nice about it
             h.redirect_to('/')
+
+        c.form = FormGenerator()
         return render('/login.mako')
 
     #@https()
     def login_check(self):
-        username = request.params.get('username') or ''
+        if c.auth_user:
+            # This shouldn't really happen, so no need to be nice about it
+            h.redirect_to('/')
+
+        username = request.params.get('username', '')
         user_q = model.Session.query(model.User)
         user = user_q.filter_by(username = username).first()
+        c.form = FormGenerator()
         if user and user.check_password(request.params.get('password')):
             if not user.can('log_in'):
                 c.error_msgs.append("This account (%s) still needs to be verified. " \
                                     "Please check the email address provided for the " \
                                     "verification code." % h.escape_once(username))
-                c.prefill['username'] = username
-                return self.login()
+                c.form.defaults['username'] = username
+                return render('/login.mako')
             else:
                 session['user_id'] = user.id
                 session.save()
                 h.redirect_to(request.headers.get('referer', '/'))
         else:
             c.error_msgs.append("Either there is no such account '%s', or the provided password was incorrect." % h.escape_once(username))
-            c.prefill['username'] = username
-            return self.login()
+            c.form.defaults['username'] = username
+            return render('/login.mako')
 
     def logout(self):
         session['user_id'] = None

@@ -119,3 +119,15 @@ def image_tag(source, alt=None, size=None, **options):
 
     return tag('img', **options)
 
+def form(*args, **kwargs):
+    raise RuntimeError("Do not use the built-in webhelpers form tags "
+                       "functions.  Use formgen instead.  If you don't need "
+                       "errors or defaults, use c.empty_form.")
+start_form = form
+end_form = form
+text_field = form
+submit = form
+password_field = form
+check_box = form
+hidden_field = form
+file_field = form

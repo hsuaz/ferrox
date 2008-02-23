@@ -1,15 +1,15 @@
 <%inherit file="base.mako" />
 
-${h.form(c.url, method='post')}
+${c.empty_form.start(c.url, method='post')}
 % for k,v in c.fields.iteritems():
-${h.hidden_field(k,value=v)}
+${c.empty_form.hidden_field(k,value=v)}
 % endfor
 <div align="center">
 ${c.text}<br />
-${h.submit('Yes', name='confirm')}
-${h.submit('No', name='cancel')}
+${c.empty_form.submit('Yes', name='confirm')}
+${c.empty_form.submit('No', name='cancel')}
 </div>
-${h.end_form()}
+${c.empty_form.end()}
 
-<%def name="title()">Register</%def>
+<%def name="title()">Confirm</%def>
 

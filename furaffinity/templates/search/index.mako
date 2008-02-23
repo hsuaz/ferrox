@@ -6,33 +6,24 @@
     <p>${c.input_errors}</p>
     % endif
 
-    ${h.form(h.url(controller='search', action='do'), method='post')}
+    ${c.form.start(h.url(controller='search', action='do'), method='post')}
     <dl class="standard-form">
         <dt>Query:</dt>
-        <dd>${h.text_field('query_main')}</dd>
-    </dl>
-    <dl class="standard-form">
+        <dd>${c.form.text_field('query_main')}</dd>
         <dt>Search What:</dt>
-        <dd>${h.check_box('search_title', checked=True)} Title 
-        ${h.check_box('search_description', checked=True)} Description </dd>
-    </dl>
-    <dl class="standard-form">
+        <dd>${c.form.check_box('search_title', checked=True)} Title 
+        ${c.form.check_box('search_description', checked=True)} Description </dd>
         <dt>Search For:</dt>
         <dd>${h.radio_button('search_for', value='submissions', checked='checked')} Submissions 
         ${h.radio_button('search_for', value='journals')} Journals
-    </dl>
-    <dl class="standard-form">
         <dt>Tags:</dt>
-        <dd>${h.text_field('query_tags')}</dd>
-    </dl>
-    <dl class="standard-form">
+        <dd>${c.form.text_field('query_tags')}</dd>
         <dt>Artist/Author:</dt>
-        <dd>${h.text_field('query_author')}</dd>
+        <dd>${c.form.text_field('query_author')}</dd>
     </dl>
     
-    <p>${h.submit('Search')}</p>
-    ${h.end_form()}
+    <p>${c.form.submit('Search')}</p>
+    ${c.form.end()}
 </div>
 
 <%def name="title()">Search</%def>
-

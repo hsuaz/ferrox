@@ -7,7 +7,7 @@ class FileUploadValidator(validators.FancyValidator):
     def _to_python(self, value, state):
         filename = value.filename
         content = value.value
-        return dict(filename=filename,content=content)
+        return dict(filename=filename, content=content)
 
 class UniqueUsername(formencode.FancyValidator):
     def _to_python(self, value, state):
@@ -86,7 +86,7 @@ class NewsForm(formencode.Schema):
     is_anonymous = validators.Bool()
 
 class SubmitForm(formencode.Schema):
-    fullfile = FileUploadValidator()
+    fullfile = FileUploadValidator(not_empty=True)
     halffile = FileUploadValidator()
     thumbfile = FileUploadValidator()
     title = formencode.validators.String(not_empty=True)

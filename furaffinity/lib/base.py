@@ -13,6 +13,7 @@ from routes import request_config
 
 import furaffinity.lib.helpers as h
 import furaffinity.lib.hashing as hashing
+from furaffinity.lib.formgen import FormGenerator
 import furaffinity.model as model
 import furaffinity.model.form as form
 
@@ -47,6 +48,7 @@ def check_perms(permissions):
 class BaseController(WSGIController):
 
     def __before__(self, action, **params):
+        c.empty_form = FormGenerator()
         c.prefill = {}
         c.error_msgs = []
         c.route = request_config().mapper_dict

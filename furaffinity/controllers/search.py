@@ -1,5 +1,6 @@
 from furaffinity.lib.base import *
 from furaffinity.lib import filestore, tagging
+from furaffinity.lib.formgen import FormGenerator
 from pylons.decorators.secure import *
 from sqlalchemy import or_,and_,not_
 
@@ -8,16 +9,16 @@ import re
 
 class SearchController(BaseController):
     def index(self):
-        return render('/search/index.mako')
+        c.form = FormGenerator()
+        return render('search/index.mako')
 
-        #return render('/PLACEHOLDER.mako')
     def do(self):
-        validator = model.form.SearchForm();
-        c.search_terms = None
+        validator = model.form.SearchForm()
         try:
-            c.search_terms = validator.to_python(request.params);
+            c.search_terms = validator.to_python(request.params)
         except model.form.formencode.Invalid, error:
-            return error
+            c.form = FormGenerator(form_error=error)
+            return render('search/index.mako')
 
         query_parser = xapian.QueryParser()
         query_parser.set_default_op(xapian.Query.OP_AND)

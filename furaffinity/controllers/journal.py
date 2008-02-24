@@ -125,8 +125,8 @@ class JournalController(BaseController):
         self.is_my_journal(journal_entry,True)
 
         # -- update journal in database --
-        if ( journal_entry.title != journal_data['title'] or journal_entry.content != journal_data['content'] ):
-            if ( journal_entry.editlog == None ):
+        if journal_entry.title != journal_data['title'] or journal_entry.content != journal_data['content']:
+            if journal_entry.editlog == None:
                 journal_entry.editlog = model.EditLog(c.auth_user)
             editlog_entry = model.EditLogEntry(c.auth_user,'no reasons yet',journal_entry.title,journal_entry.content,journal_entry.content)
             journal_entry.editlog.update(editlog_entry)
@@ -165,7 +165,7 @@ class JournalController(BaseController):
         journal_entry = get_journal(id)
         self.is_my_journal(journal_entry,True)
 
-        if (delete_form_data['confirm'] != None):
+        if delete_form_data['confirm'] != None:
             # -- update journal in database --
             journal_entry.status = 'deleted'
             model.Session.commit()
@@ -187,8 +187,8 @@ class JournalController(BaseController):
         return render('/journal/view.mako')
 
     def is_my_journal(self,journal_entry,abort=False):
-        if ( not c.auth_user or (not c.auth_user.can('administrate') and (c.auth_user.id != journal_entry.user_id)) ):
-            if (abort):
+        if not c.auth_user or (not c.auth_user.can('administrate') and (c.auth_user.id != journal_entry.user_id)):
+            if abort:
                 c.error_text = 'You cannot edit this journal entry.'
                 c.error_title = 'Forbidden'
                 abort(403)

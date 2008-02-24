@@ -20,9 +20,9 @@ class FerroxHash:
         self.new()
 
     def new(self):
-        if ( hash_library == 'HASHLIB' ):
+        if hash_library == 'HASHLIB':
             self.hash = hashlib.new('SHA256')
-        elif ( hash_library == 'SHA' ):
+        elif hash_library == 'SHA':
             self.hash = sha.new()
         else:
             raise NoUsableHashFunction

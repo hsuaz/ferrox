@@ -40,7 +40,7 @@ def check_perms(permissions):
             return render('/denied.mako')
         else:
             for permission in permissions:
-                if (c.auth_user.can(permission)):
+                if c.auth_user.can(permission):
                     return func(*args, **kwargs)
             return render('/denied.mako')
     return check

@@ -67,16 +67,16 @@ class Thumbnailer:
 
     def generate(self, linear_dimension, sizedown = True, sizeup = False):
         do_generate = False
-        if ( sizeup and (self.height < linear_dimension) and (self.width < linear_dimension) ):
+        if sizeup and (self.height < linear_dimension) and (self.width < linear_dimension):
             do_generate = True
-        elif ( sizedown and ((self.height > linear_dimension) or (self.width > linear_dimension)) ):
+        elif sizedown and ((self.height > linear_dimension) or (self.width > linear_dimension)):
             do_generate = True
 
-        if ( do_generate ):
-            if ( use_c_lib ):
+        if do_generate:
+            if use_c_lib:
                 aspect = float(self.width) / float(self.height)
                 print "%d %d %f"%(self.width,self.height,aspect)
-                if (aspect > 1.0):
+                if aspect > 1.0:
                     #wide
                     width = int(linear_dimension)
                     height = int(linear_dimension / aspect)
@@ -119,9 +119,9 @@ class Thumbnailer:
             return {}
 
     def __exit__(self, type, value, tb):
-        if ( tb == None ):
+        if tb == None:
             for temporary_file in self.temporary_files:
-                if ( os.path.exists(temporary_file[1]) ):
+                if os.path.exists(temporary_file[1]):
                     os.unlink(temporary_file[1])
 
 

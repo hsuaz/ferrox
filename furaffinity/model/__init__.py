@@ -374,7 +374,7 @@ class User(object):
     def is_online(self):
         ip_log_q = Session.query(IPLogEntry).with_parent(self)
         last_log_entry = ip_log_q.order_by(IPLogEntry.end_time.desc()).first()
-        if ( last_log_entry ):
+        if last_log_entry:
             return datetime.now() - last_log_entry.end_time < timedelta(0, 60 * 15)
         else:
             return False
@@ -444,20 +444,20 @@ class ImageMetadata(object):
         self.height = height
         self.width = width
         self.mimetype = mimetype
-        if ( disable ):
+        if disable:
             self.submission_count = -count
         else:
             self.submission_count = count
 
     def count_inc(self):
-        if ( self.submission_count > 0 ):
+        if self.submission_count > 0:
             sign = abs(self.submission_count) / self.submission_count
         else:
             sign = 1
         self.submission_count = sign * (abs(self.submission_count) + 1)
 
     def count_dec(self):
-        if ( self.submission_count > 0 ):
+        if self.submission_count > 0:
             sign = abs(self.submission_count) / self.submission_count
             self.submission_count = sign * (abs(self.submission_count) - 1)
 
@@ -502,7 +502,7 @@ class Submission(object):
     def get_derived_index (self,types):
         for index in xrange(0,len(self.derived_submission)):
             for type in types:
-                if (self.derived_submission[index].derivetype == type):
+                if self.derived_submission[index].derivetype == type:
                     return index
         return None
 

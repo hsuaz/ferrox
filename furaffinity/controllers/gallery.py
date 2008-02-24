@@ -152,7 +152,7 @@ class GalleryController(BaseController):
             c.submissions = []
             for item in submissions:
                 tn_ind = item.submission.get_derived_index(['thumb'])
-                if ( tn_ind != None ):
+                if tn_ind != None:
                     thumbnail = filestore.get_submission_file(item.submission.derived_submission[tn_ind].metadata)
                 else:
                     thumbnail = None
@@ -228,33 +228,33 @@ class GalleryController(BaseController):
         submission_data = self.set_up_submission_data(form_data, submission)
 
         # -- store image in mogile or wherever, if it's been changed --
-        if ( submission_data['fullfile'] != None ):
+        if submission_data['fullfile'] != None:
             submission.metadata.count_dec()
             submission_data['fullfile']['metadata'] = filestore.store( submission_data['fullfile']['hash'], submission_data['fullfile']['mimetype'], submission_data['fullfile']['content'] )
             submission_data['fullfile']['metadata'].height = submission_data['fullfile']['height']
             submission_data['fullfile']['metadata'].width = submission_data['fullfile']['width']
 
         # -- store thumbnail in mogile or wherever --
-        if ( submission_data['thumbfile'] != None ):
+        if submission_data['thumbfile'] != None:
             tn_ind = submission.get_derived_index(['thumb'])
-            if ( submission.get_derived_index(['thumb']) != None ):
+            if submission.get_derived_index(['thumb']) != None:
                 submission.derived_submission[0].metadata.count_dec()
             submission_data['thumbfile']['metadata'] = filestore.store ( submission_data['thumbfile']['hash'], submission_data['thumbfile']['mimetype'], submission_data['thumbfile']['content'] )
             submission_data['thumbfile']['metadata'].height = submission_data['thumbfile']['height']
             submission_data['thumbfile']['metadata'].width = submission_data['thumbfile']['width']
 
         # -- store halfview in mogile or wherever --
-        if ( submission_data['halffile'] != None ):
+        if submission_data['halffile'] != None:
             tn_ind = submission.get_derived_index(['halfview'])
-            if ( submission.get_derived_index(['halfview']) != None ):
+            if submission.get_derived_index(['halfview']) != None:
                 submission.derived_submission[0].metadata.count_dec()
             submission_data['halffile']['metadata'] = filestore.store ( submission_data['halffile']['hash'], submission_data['halffile']['mimetype'], submission_data['halffile']['content'] )
             submission_data['halffile']['metadata'].height = submission_data['halffile']['height']
             submission_data['halffile']['metadata'].width = submission_data['halffile']['width']
 
         # -- put submission in database --
-        if ( submission.title != submission_data['title'] or submission.description != submission_data['description'] ):
-            if ( submission.editlog == None ):
+        if submission.title != submission_data['title'] or submission.description != submission_data['description']:
+            if submission.editlog == None:
                 submission.editlog = model.EditLog(c.auth_user)
             editlog_entry = model.EditLogEntry(c.auth_user,'no reasons yet',submission.title,submission.description,submission.description_parsed)
             submission.editlog.update(editlog_entry)
@@ -263,14 +263,14 @@ class GalleryController(BaseController):
             submission.description_parsed = submission_data['description'] # waiting for bbcode parser
         submission.type = submission_data['type']
         submission.status = 'normal'
-        if ( submission_data['fullfile'] != None ):
+        if submission_data['fullfile'] != None:
             submission_data['fullfile']['metadata'].count_inc()
             submission.metadata = submission_data['fullfile']['metadata']
 
         tn_ind = submission.get_derived_index(['thumb'])
-        if ( submission_data['thumbfile'] != None ):
+        if submission_data['thumbfile'] != None:
             submission_data['thumbfile']['metadata'].count_inc()
-            if ( tn_ind == None ):
+            if tn_ind == None:
                 derived_submission = model.DerivedSubmission(derivetype = 'thumb')
                 derived_submission.metadata = submission_data['thumbfile']['metadata']
                 submission.derived_submission.append(derived_submission)
@@ -279,9 +279,9 @@ class GalleryController(BaseController):
                 submission.derived_submission[tn_ind].metadata = submission_data['thumbfile']['metadata']
 
         hv_ind = submission.get_derived_index(['halfview'])
-        if ( submission_data['halffile'] != None ):
+        if submission_data['halffile'] != None:
             submission_data['halffile']['metadata'].count_inc()
-            if ( hv_ind == None ):
+            if hv_ind == None:
                 derived_submission = model.DerivedSubmission(derivetype = 'halfview')
                 derived_submission.metadata = submission_data['halffile']['metadata']
                 submission.derived_submission.append(derived_submission)
@@ -326,7 +326,7 @@ class GalleryController(BaseController):
         submission = get_submission(id)
         self.is_my_submission(submission,True)
 
-        if (delete_form_data['confirm'] != None):
+        if delete_form_data['confirm'] != None:
             # -- update submission in database --
             submission.status = 'deleted'
             submission.user_submission[0].status = 'deleted'
@@ -358,7 +358,7 @@ class GalleryController(BaseController):
         submission_data['fullfile']['metadata'].width = submission_data['fullfile']['width']
 
         # -- store thumbnail in mogile or wherever --
-        if ( submission_data['thumbfile'] ):
+        if submission_data['thumbfile']:
             submission_data['thumbfile']['metadata'] = filestore.store ( submission_data['thumbfile']['hash'], submission_data['thumbfile']['mimetype'], submission_data['thumbfile']['content'] )
             submission_data['thumbfile']['metadata'].height = submission_data['thumbfile']['height']
             submission_data['thumbfile']['metadata'].width = submission_data['thumbfile']['width']
@@ -367,7 +367,7 @@ class GalleryController(BaseController):
             pass
 
         # -- store halfview in mogile or wherever --
-        if ( submission_data['halffile'] ):
+        if submission_data['halffile']:
             submission_data['halffile']['metadata'] = filestore.store ( submission_data['halffile']['hash'], submission_data['halffile']['mimetype'], submission_data['halffile']['content'] )
             submission_data['halffile']['metadata'].height = submission_data['halffile']['height']
             submission_data['halffile']['metadata'].width = submission_data['halffile']['width']
@@ -396,13 +396,13 @@ class GalleryController(BaseController):
         )
         submission.user_submission.append(user_submission)
         #model.Session.save(submission)
-        if ( submission_data['thumbfile'] != None ):
+        if submission_data['thumbfile'] != None:
             thumbfile_derived_submission = model.DerivedSubmission(derivetype = 'thumb')
             submission_data['thumbfile']['metadata'].count_inc()
             thumbfile_derived_submission.metadata = submission_data['thumbfile']['metadata']
             submission.derived_submission.append(thumbfile_derived_submission)
             #model.Session.save(submission)
-        if ( submission_data['halffile'] != None ):
+        if submission_data['halffile'] != None:
             thumbfile_derived_submission = model.DerivedSubmission(derivetype = 'halfview')
             submission_data['halffile']['metadata'].count_inc()
             thumbfile_derived_submission.metadata = submission_data['halffile']['metadata']
@@ -428,14 +428,14 @@ class GalleryController(BaseController):
         filename=filestore.get_submission_file(submission.metadata)
 
         c.submission_thumbnail = submission.get_derived_index(['thumb'])
-        if ( c.submission_thumbnail != None ):
+        if c.submission_thumbnail != None:
             tn_filename=filestore.get_submission_file(submission.derived_submission[c.submission_thumbnail].metadata)
             c.submission_thumbnail = h.url_for(controller='gallery', action='file', filename=tn_filename, id=None)
         else:
             # supply default thumbnail for type here
             c.submission_thumbnail = ''
         c.submission_halfview = submission.get_derived_index(['halfview'])
-        if ( c.submission_halfview != None ):
+        if c.submission_halfview != None:
             hv_filename=filestore.get_submission_file(submission.derived_submission[c.submission_halfview].metadata)
             c.submission_halfview = h.url_for(controller='gallery', action='file', filename=hv_filename, id=None)
         else:
@@ -444,7 +444,7 @@ class GalleryController(BaseController):
         c.submission_file = h.url_for(controller='gallery', action='file', filename=filename, id=None)
         c.submission = submission
 
-        if ( submission.type == 'text' ):
+        if submission.type == 'text':
             filedata = filestore.dump(filestore.get_submission_file(submission.metadata))
             c.submission_content = filedata[0]
 
@@ -470,18 +470,18 @@ class GalleryController(BaseController):
 
     def get_submission_type(self,mime_type):
         (major, minor) = mime_type.split('/')
-        if ( major == 'image' ):
+        if major == 'image':
             try:
                 ['png','gif','jpeg'].index(minor)
             except ValueError:
                 return 'unknown'
             else:
                 return 'image'
-        elif ( major == 'application' and minor == 'x-shockwave-flash' ):
+        elif major == 'application' and minor == 'x-shockwave-flash':
             return 'video'
-        elif ( major == 'audio' and minor == 'mpeg' ):
+        elif major == 'audio' and minor == 'mpeg':
             return 'audio'
-        elif ( major == 'text' ):
+        elif major == 'text':
             return 'text'
             try:
                 ['plain','html'].index(minor)
@@ -494,8 +494,8 @@ class GalleryController(BaseController):
 
 
     def is_my_submission(self,submission,abort=False):
-        if ( not c.auth_user or (not c.auth_user.can('administrate') and (c.auth_user.id != journal_entry.user_id)) ):
-            if (abort):
+        if not c.auth_user or (not c.auth_user.can('administrate') and (c.auth_user.id != journal_entry.user_id)):
+            if abort:
                 c.error_text = 'You cannot edit this submission.'
                 c.error_title = 'Forbidden'
                 abort ( 403 )
@@ -505,35 +505,35 @@ class GalleryController(BaseController):
 
     def set_up_submission_data(self,submission_data,submission):
         # Is there a new image uploaded?
-        if ( submission_data['fullfile'] != None ):
+        if submission_data['fullfile'] != None:
             # Yes, find out what type of submission we're dealing with...
             submission_data['fullfile']['mimetype'] = h.get_mime_type(submission_data['fullfile'])
             submission_type = self.get_submission_type(submission_data['fullfile']['mimetype'])
-            if ( submission_type == 'unknown' ):
+            if submission_type == 'unknown':
                 abort(403)
         else:
             # No, grab it out of current submission.
             submission_type = submission.type
 
         # If it's not an image, there are no dimensions
-        if ( submission_type != 'image' ):
+        if submission_type != 'image':
             submission_data['fullfile']['height'] = 0
             submission_data['fullfile']['width'] = 0
 
         # Do we have a thumbnail?
-        if ( submission_data['thumbfile'] != None ):
+        if submission_data['thumbfile'] != None:
             # Yes we do.
 
             # Is it an image?
             submission_data['thumbfile']['mimetype'] = h.get_mime_type(submission_data['thumbfile'])
-            if ( self.get_submission_type(submission_data['thumbfile']['mimetype']) == 'image' ):
+            if self.get_submission_type(submission_data['thumbfile']['mimetype']) == 'image':
                 # Yes it is
                 with Thumbnailer() as t:
                     t.parse(submission_data['thumbfile']['content'],submission_data['thumbfile']['mimetype'])
 
                     # Is it too big?
                     toobig = t.generate(thumbnail_size)
-                    if ( toobig != None ):
+                    if toobig != None:
                         # Yes it is.
                         submission_data['thumbfile'].update(toobig)
                         toobig.clear()
@@ -548,22 +548,22 @@ class GalleryController(BaseController):
 
 
         # Do we have a half view?
-        if ( submission_data['halffile'] != None ):
+        if submission_data['halffile'] != None:
             # Yes we do.
 
             # Do we care?
-            if ( submission_type == 'image' ):
+            if submission_type == 'image':
                 # Yes we do
                 # Is it an image?
                 submission_data['halffile']['mimetype'] = h.get_mime_type(submission_data['halffile'])
-                if ( self.get_submission_type(submission_data['halffile']['mimetype']) == 'image' ):
+                if self.get_submission_type(submission_data['halffile']['mimetype']) == 'image':
                     # Yes it is
                     with Thumbnailer() as t:
                         t.parse(submission_data['halffile']['content'],submission_data['halffile']['mimetype'])
 
                         # Is it too big?
                         toobig = t.generate(halfview_size)
-                        if ( toobig != None ):
+                        if toobig != None:
                             # Yes it is.
                             submission_data['halffile'].update(toobig)
                             toobig.clear()
@@ -583,36 +583,36 @@ class GalleryController(BaseController):
         # Do any required image processing on the main image now. If it's an image.
 
         # Do we even need to generate new thumbnail/halfview?
-        if ( submission_data['fullfile'] != None ):
-            if ( submission_type == 'image' ):
+        if submission_data['fullfile'] != None:
+            if submission_type == 'image':
                 with Thumbnailer() as t:
                     t.parse(submission_data['fullfile']['content'],submission_data['fullfile']['mimetype'])
                     submission_data['fullfile']['width'] = t.width
                     submission_data['fullfile']['height'] = t.height
 
                     # Do we need to make a thumbnail?
-                    if ( submission_data['thumbfile'] == None ):
+                    if submission_data['thumbfile'] == None:
                         # Yes we do
 
                         # Can we derive one from the submission?
-                        if ( submission_type == 'image' ):
+                        if submission_type == 'image':
                             # Yes, we can.
                             submission_data['thumbfile'] = t.generate(thumbnail_size)
                             submission_data['thumbfile']['mimetype'] = submission_data['fullfile']['mimetype']
 
                     # Do we need to make a half view image?
-                    if ( submission_type == 'image' and submission_data['halffile'] == None ):
+                    if submission_type == 'image' and submission_data['halffile'] == None:
                         submission_data['halffile'] = t.generate(halfview_size)
                         submission_data['halffile']['mimetype'] = submission_data['fullfile']['mimetype']
 
                     # Is the submission itself too big?
                     toobig = t.generate(fullfile_size)
-                    if ( toobig != None ):
+                    if toobig != None:
                         # Yes it is
                         submission_data['fullfile'].update(toobig)
                         toobig.clear()
-            elif ( submission_type == 'text' ):
-                if ( submission_data['fullfile']['mimetype'] == 'text/plain' or submission_data['fullfile']['mimetype'] == 'text/html' ):
+            elif submission_type == 'text':
+                if submission_data['fullfile']['mimetype'] == 'text/plain' or submission_data['fullfile']['mimetype'] == 'text/html':
                     detector = UniversalDetector()
                     detector.feed(submission_data['fullfile']['content'])
                     detector.close()
@@ -622,9 +622,9 @@ class GalleryController(BaseController):
 
             submission_data['fullfile']['hash'] = self.hash(submission_data['fullfile']['content'])
 
-        if ( submission_data['halffile'] != None ):
+        if submission_data['halffile'] != None:
             submission_data['halffile']['hash'] = self.hash(submission_data['halffile']['content'])
-        if ( submission_data['thumbfile'] != None ):
+        if submission_data['thumbfile'] != None:
             submission_data['thumbfile']['hash'] = self.hash(submission_data['thumbfile']['content'])
 
         submission_data['type'] = submission_type

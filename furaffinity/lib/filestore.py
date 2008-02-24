@@ -34,14 +34,14 @@ def store(hash,mimetype,data):
     except sqlalchemy.exceptions.InvalidRequestError:
         folder = '/' + hash[0:3] + '/'  + hash[3:6] + '/'  + hash[6:9] + '/'  + hash[9:12]
         filename = hash + (mimetypes.guess_extension(mimetype) or '.txt')
-        if ( not os.access ( imagestore + folder, os.F_OK ) ):
+        if not os.access ( imagestore + folder, os.F_OK ):
             os.makedirs  ( imagestore + folder )
-        if ( os.access ( imagestore + folder + '/' + filename, os.F_OK ) ):
+        if os.access ( imagestore + folder + '/' + filename, os.F_OK ):
             # File exists in store but no entry in image_metadata
             #raise ImageManagerExceptionFileExists
             pass
         f = open(imagestore + folder + '/' + filename,'wb')
-        if (f):
+        if f:
             f.write(data)
             f.close()
             image_metadata = model.ImageMetadata(

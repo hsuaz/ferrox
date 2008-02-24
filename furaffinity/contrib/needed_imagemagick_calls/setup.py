@@ -2,7 +2,7 @@ from distutils.core import setup, Extension
 import commands
 
 
-raw_libs = commands.getoutput('Wand-config --libs').split(' ');
+raw_libs = commands.getoutput('Wand-config --libs').split(' ')
 libs = []
 libdirs = ['/usr/local/lib']
 for k,lib in enumerate(raw_libs):

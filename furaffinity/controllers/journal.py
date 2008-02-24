@@ -76,7 +76,7 @@ class JournalController(BaseController):
         # -- validate form input --
         validator = model.form.JournalForm()
         try:
-            journal_data = validator.to_python(request.params);
+            journal_data = validator.to_python(request.params)
         except model.form.formencode.Invalid, error:
             c.is_edit = False
             c.form = FormGenerator(form_error=error)
@@ -115,7 +115,7 @@ class JournalController(BaseController):
         # -- validate form input --
         validator = model.form.JournalForm()
         try:
-            journal_data = validator.to_python(request.params);
+            journal_data = validator.to_python(request.params)
         except model.form.formencode.Invalid, error:
             c.is_edit = True
             c.form = FormGenerator(form_error=error)
@@ -154,10 +154,10 @@ class JournalController(BaseController):
     @check_perms(['post_journal','administrate'])
     def delete_commit(self, id=None):
         # -- validate form input --
-        validator = model.form.DeleteForm();
+        validator = model.form.DeleteForm()
         delete_form_data = None
         try:
-            delete_form_data = validator.to_python(request.params);
+            delete_form_data = validator.to_python(request.params)
         except model.form.formencode.Invalid, error:
             return "There were input errors: %s" % (error)
             #return self.delete(id)
@@ -172,7 +172,7 @@ class JournalController(BaseController):
 
             if search_enabled:
                 xapian_database = WritableDatabase('journal.xapian',DB_OPEN)
-                xapian_database.delete_document("I%d"%journal_entry.id);
+                xapian_database.delete_document("I%d"%journal_entry.id)
 
             h.redirect_to(h.url_for(controller='journal', action='index', username = journal_entry.user.username))
         else:
@@ -184,7 +184,7 @@ class JournalController(BaseController):
 
         c.is_mine = self.is_my_journal(journal_entry.user)
 
-        return render('/journal/view.mako');
+        return render('/journal/view.mako')
 
     def is_my_journal(self,journal_entry,abort=False):
         if ( not c.auth_user or (not c.auth_user.can('administrate') and (c.auth_user.id != journal_entry.user_id)) ):

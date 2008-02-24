@@ -66,11 +66,11 @@ class GalleryController(BaseController):
         else:
             c.page_owner = None
 
-        validator = model.form.TagFilterForm();
+        validator = model.form.TagFilterForm()
         submission_data = None
         error = None
         try:
-            submission_data = validator.to_python(request.params);
+            submission_data = validator.to_python(request.params)
         except model.form.formencode.Invalid, error:
             return error
 
@@ -202,10 +202,10 @@ class GalleryController(BaseController):
     @check_perms(['submit_art','administrate'])
     def edit_commit(self, id=None):
         # -- validate form input --
-        validator = model.form.SubmitForm();
+        validator = model.form.SubmitForm()
         form_data = None
         try:
-            form_data = validator.to_python(request.params);
+            form_data = validator.to_python(request.params)
         except model.form.formencode.Invalid, error:
             c.edit = True
             c.form = FormGenerator(form_error=error)
@@ -316,10 +316,10 @@ class GalleryController(BaseController):
     @check_perms(['submit_art','administrate'])
     def delete_commit(self, id=None):
         # -- validate form input --
-        validator = model.form.DeleteForm();
+        validator = model.form.DeleteForm()
         delete_form_data = None
         try:
-            delete_form_data = validator.to_python(request.params);
+            delete_form_data = validator.to_python(request.params)
         except model.form.formencode.Invalid, error:
             return "There were input errors: %s" % (error)
 
@@ -334,7 +334,7 @@ class GalleryController(BaseController):
 
             if search_enabled:
                 xapian_database = WritableDatabase('submission.xapian',DB_OPEN)
-                xapian_database.delete_document("I%d"%submission.id);
+                xapian_database.delete_document("I%d"%submission.id)
             h.redirect_to(h.url_for(controller='gallery', action='index', username = submission.user_submission[0].user.username, id=None))
         else:
             h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id))
@@ -448,7 +448,7 @@ class GalleryController(BaseController):
             filedata = filestore.dump(filestore.get_submission_file(submission.metadata))
             c.submission_content = filedata[0]
 
-        return render('/gallery/view.mako');
+        return render('/gallery/view.mako')
 
     def file(self,filename=None):
         filename = os.path.basename(filename)

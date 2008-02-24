@@ -36,10 +36,10 @@ class Thumbnailer:
 
     def __init__(self):
         self.temporary_files = []
-        self.original = None;
-        #self.type = None;
-        self.height = 0;
-        self.width = 0;
+        self.original = None
+        #self.type = None
+        self.height = 0
+        self.width = 0
 
     def parse(self,file_stream,mimetype):
         if use_c_lib:

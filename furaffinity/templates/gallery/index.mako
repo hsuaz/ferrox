@@ -9,12 +9,12 @@
     </h2>
     % if c.page_owner != 'search':
     <h2>
-        ${h.form(h.url(tags=None, commit=None), method='get')}
-        Filter: ${h.text_field('tags',value=c.prefill['tags'])}${h.submit('Filter')}
-        ${h.end_form()}
+        ${c.form.start(h.url(tags=None, commit=None), method='get')}
+        Filter: ${c.form.text_field('tags')}${c.form.submit('Filter')}
+        ${c.form.end()}
     </h2>
     % endif
-    
+
     % if c.is_mine:
     <p class="admin"> ${h.link_to('Submit Art', h.url(controller='gallery', action='submit', username=c.auth_user.username))} </p>
     % endif

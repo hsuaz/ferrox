@@ -1,14 +1,13 @@
 <%inherit file="base.mako" />
 
-${h.form(h.url(controller='index', action='login_check'), method='post')}
+${c.form.start(h.url(controller='index', action='login_check'), method='post')}
 <dl class="standard-form">
     <dt><label for="username">Username</label></dt>
-    <dd>${h.text_field('username', value=c.prefill.get('username'))}</dd>
+    <dd>${c.form.text_field('username')}</dd>
     <dt><label for="password">Password</label></dt>
-    <dd>${h.password_field('password')}</dd>
+    <dd>${c.form.password_field('password')}</dd>
 </dl>
-${h.submit('Login')}
-${h.end_form()}
+${c.form.submit('Login')}
+${c.form.end()}
 
 <%def name="title()">Login</%def>
-

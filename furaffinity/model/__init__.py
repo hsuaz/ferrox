@@ -1,12 +1,12 @@
-try: 
-    import hashlib 
-    use_hashlib = True 
-except: 
-    import sha 
-    use_hashlib = False 
-        
+try:
+    import hashlib
+    use_hashlib = True
+except:
+    import sha
+    use_hashlib = False
+
 import random
-    
+
 import pylons
 
 from sqlalchemy import Column, MetaData, Table, ForeignKey, types, sql
@@ -71,7 +71,6 @@ user_table = Table('user', metadata,
     #Column('hash_algorithm', hash_algorithm_type, nullable=False),
     Column('display_name', types.Unicode, nullable=False),
     Column('role_id', types.Integer, ForeignKey('role.id'), default=1),
-    Column('verified', types.Boolean, nullable=False, default=False),
     mysql_engine='InnoDB'
 )
 
@@ -154,7 +153,7 @@ news_table = Table('news', metadata,
     Column('is_deleted', types.Boolean, nullable=False, default=False),
     Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
     mysql_engine='InnoDB'
-)    
+)
 
 # Submissions
 
@@ -231,7 +230,7 @@ submission_tag_table = Table('submission_tag', metadata,
     Column('submission_id', types.Integer, ForeignKey('submission.id'), primary_key=True, autoincrement=False),
     Column('tag_id', types.Integer, ForeignKey('tag.id'), primary_key=True, autoincrement=False),
     mysql_engine='InnoDB'
-)    
+)
 
 # Mappers
 
@@ -250,7 +249,7 @@ class JournalEntry(object):
             xapian_document.add_term("I%d"%self.id)
             xapian_document.add_value(0,"I%d"%self.id)
             xapian_document.add_term("A%s"%self.user.id)
-            
+
             # title
             words = []
             rmex = re.compile(r'[^a-z0-9-]')
@@ -259,7 +258,7 @@ class JournalEntry(object):
             words = set(words)
             for word in words:
                 xapian_document.add_term("T%s"%word)
-                
+
             # description
             words = []
             # FIX ME: needs bbcode parser. should be plain text representation.
@@ -277,6 +276,12 @@ class Permission(object):
     def __init__(self, name, description):
         self.name = name
         self.description = description
+
+def retrieve_role(name):
+    try:
+        return Session.query(Role).filter_by(name=name).one()
+    except InvalidRequestError:
+        return None
 
 class Role(object):
     def __init__(self, name, description=''):
@@ -331,23 +336,24 @@ class User(object):
         self.username = username
         self.set_password(password)
         self.display_name = username
+        self.role = retrieve_role('Unverified')
 
     def set_password(self, password):
-        if use_hashlib: 
-            algo_name = 'sha256' 
-            algo = hashlib.new(algo_name) 
-            algo.update(str(random.random())) 
-            salt = algo.hexdigest()[-10:] 
-            algo = hashlib.new(algo_name) 
-            algo.update(salt + password) 
-            self.password = "%s$%s$%s" % (algo_name, salt, algo.hexdigest()) 
-        else: 
-            algo_name = 'sha1' 
-            algo = sha.new() 
-            algo.update(str(random.random())) 
-            salt = algo.hexdigest()[-10:] 
-            algo = sha.new() 
-            algo.update(salt + password) 
+        if use_hashlib:
+            algo_name = 'sha256'
+            algo = hashlib.new(algo_name)
+            algo.update(str(random.random()))
+            salt = algo.hexdigest()[-10:]
+            algo = hashlib.new(algo_name)
+            algo.update(salt + password)
+            self.password = "%s$%s$%s" % (algo_name, salt, algo.hexdigest())
+        else:
+            algo_name = 'sha1'
+            algo = sha.new()
+            algo.update(str(random.random()))
+            salt = algo.hexdigest()[-10:]
+            algo = sha.new()
+            algo.update(salt + password)
             self.password = "%s$%s$%s" % (algo_name, salt, algo.hexdigest())
 
     def check_password(self, password):
@@ -368,7 +374,7 @@ class User(object):
     def is_online(self):
         ip_log_q = Session.query(IPLogEntry).with_parent(self)
         last_log_entry = ip_log_q.order_by(IPLogEntry.end_time.desc()).first()
-        if ( last_log_entry ):
+        if last_log_entry:
             return datetime.now() - last_log_entry.end_time < timedelta(0, 60 * 15)
         else:
             return False
@@ -438,37 +444,37 @@ class ImageMetadata(object):
         self.height = height
         self.width = width
         self.mimetype = mimetype
-        if ( disable ):
+        if disable:
             self.submission_count = -count
         else:
             self.submission_count = count
-    
+
     def count_inc(self):
-        if ( self.submission_count > 0 ):
+        if self.submission_count > 0:
             sign = abs(self.submission_count) / self.submission_count
         else:
             sign = 1
         self.submission_count = sign * (abs(self.submission_count) + 1)
 
     def count_dec(self):
-        if ( self.submission_count > 0 ):
+        if self.submission_count > 0:
             sign = abs(self.submission_count) / self.submission_count
             self.submission_count = sign * (abs(self.submission_count) - 1)
-        
+
     def enable(self):
         self.submission_count = abs(self.submission_count)
-        
+
     def disable(self):
         self.submission_count = -abs(self.submission_count)
-        
+
     def is_enabled(self):
         return ( self.submission_count > 0 )
-        
+
     def get_filename(self):
         from furaffinity.lib import filestore
         return filestore.get_submission_file(self)
-        
-        
+
+
 
 class IPLogEntry(object):
     def __init__(self, user_id, ip_integer):
@@ -491,12 +497,12 @@ class Submission(object):
         for index in xrange(0,len(self.user_submission)):
             if self.user_submission[index].status == 'primary':
                 return self.user_submission[index].user
-        
+
     # Deprecated. Use get_derived_by_type instead.
     def get_derived_index (self,types):
         for index in xrange(0,len(self.derived_submission)):
             for type in types:
-                if (self.derived_submission[index].derivetype == type):
+                if self.derived_submission[index].derivetype == type:
                     return index
         return None
 
@@ -505,25 +511,25 @@ class Submission(object):
             if self.derived_submission[index].derivetype == type:
                 return self.derived_submission[index]
         return None
-    
+
     def get_users_by_relationship (self, relationship):
         users = []
         for index in xrange(0,len(self.user_submission)):
             if self.user_submission[index].relationship == relationship:
                 users.append( self.user_submission[index].user )
         return users
-        
+
     def to_xapian(self):
         if search_enabled:
             xapian_document = xapian.Document()
             xapian_document.add_term("I%d"%self.id)
             xapian_document.add_value(0,"I%d"%self.id)
             xapian_document.add_term("A%s"%self.primary_artist().id)
-            
+
             # tags
             for tag in self.tags:
                 xapian_document.add_term("G%s"%tag.text)
-                
+
             # title
             words = []
             rmex = re.compile(r'[^a-z0-9-]')
@@ -532,7 +538,7 @@ class Submission(object):
             words = set(words)
             for word in words:
                 xapian_document.add_term("T%s"%word)
-                
+
             # description
             words = []
             # FIX ME: needs bbcode parser. should be plain text representation.
@@ -545,7 +551,7 @@ class Submission(object):
             return xapian_document
         else:
             return None
-    
+
 class UserSubmission(object):
     def __init__(self, user_id, relationship, status ):
         self.user_id = user_id
@@ -566,7 +572,7 @@ class EditLog(object):
     def __init__(self,user):
         self.last_edited_by = user
         self.last_edited_at = datetime.now()
-        
+
     def update(self,editlog_entry):
         self.last_edited_by = editlog_entry.edited_by
         self.last_edited_at = editlog_entry.edited_at
@@ -650,7 +656,7 @@ editlog_entry_mapper = mapper(EditLogEntry, editlog_entry_table, properties=dict
     edited_by = relation(User),
     )
 )
-        
+
 news_mapper = mapper(News, news_table, properties=dict(
     author = relation(User),
     editlog = relation(EditLog),

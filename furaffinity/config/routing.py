@@ -63,7 +63,7 @@ def make_map():
     map.connect('/users/:username/journals/:id/delete', controller='journal', action='delete')
     map.connect('/users/:username/journals/:id/delete_commit', controller='journal', action='delete_commit', **require_post)
     map.connect('/users/:username/journals/:id/editlog', controller='editlog', action='journal')
-    
+
     map.connect('/view/:id', controller='gallery', action='forward_to_user')
     #map.connect('/journal', controller='journal', action='index')
 

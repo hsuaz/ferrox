@@ -19,12 +19,15 @@ def setup_config(command, filename, section, vars):
     print "Successfully setup"
 
     print "Creating base data"
-    nli_role = model.Role('Not logged in', 'The role assigned to users who are not logged in.')
-    nli_role.sigil = ' '
-    model.Session.save(nli_role)
+    null_role = model.Role('Unverified', 'User who has not verified eir email')
+    null_role.sigil = ' '
+    model.Session.save(null_role)
 
     normal_role = model.Role('Member', 'Regular user')
     normal_role.sigil = '~'
+    login_perm = model.Permission('log_in',
+                                  'Can log in.')
+    normal_role.permissions.append(login_perm)
     submit_perm = model.Permission('submit_art',
                                   'Can submit content to site.')
     normal_role.permissions.append(submit_perm)
@@ -38,6 +41,7 @@ def setup_config(command, filename, section, vars):
     admin_perm = model.Permission('administrate',
                                   'General access to administration tools.')
     admin_role.permissions.append(admin_perm)
+    admin_role.permissions.append(login_perm)
     admin_role.permissions.append(submit_perm)
     admin_role.permissions.append(journal_perm)
     model.Session.save(admin_role)
@@ -47,33 +51,29 @@ def setup_config(command, filename, section, vars):
     u.display_name = u'Fender'
     u.email = u'nobody@furaffinity.net'
     u.role = admin_role
-    u.verified = True
     model.Session.save(u)
 
     u = model.User('eevee', 'pretzel')
     u.display_name = u'Eevee'
-    u.email = u'nobody@furaffinity.net'
+    u.email = u'ferrox@veekun.com'
     u.role = admin_role
-    u.verified = True
     model.Session.save(u)
 
     p = model.UserPreference(u, 'style_sheet', 'sufficiently-advanced')
     model.Session.save(p)
     p = model.UserPreference(u, 'style_color', 'light')
     model.Session.save(p)
-    
+
     u = model.User('net-cat', 'asdf')
     u.display_name = u'net-cat'
     u.email = u'nobody@furaffinity.net'
     u.role = admin_role
-    u.verified = True
     model.Session.save(u)
-    
+
     u = model.User('luser', 'asdf')
     u.display_name = u'Luser'
     u.email = u'nobody@furaffinity.net'
     u.role = normal_role
-    u.verified = True
     model.Session.save(u)
 
     n = model.News(u'headline', u'news content', u)
@@ -85,11 +85,11 @@ def setup_config(command, filename, section, vars):
         import magic
     except ImportError:
         print 'WARNING: mimetypes will be detected by filename instead of magic. In FreeBSD, install "devel/py-magic" from ports.'
-        
+
     try:
         import xapian
         xapian.WritableDatabase('submission.xapian',xapian.DB_CREATE_OR_OVERWRITE)
         xapian.WritableDatabase('journal.xapian',xapian.DB_CREATE_OR_OVERWRITE)
     except ImportError:
         print 'WARNING: Unable to load Xapian bindings. Search disabled.'
-    
+

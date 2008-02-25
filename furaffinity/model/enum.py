@@ -72,6 +72,4 @@ if __name__ == '__main__':
     #t.insert().execute(e='lala')
     
     print list(t.select().execute())
-    
-    
-    
+

@@ -33,14 +33,14 @@ except ImportError:
 class Thumbnailer:
     def __enter__(self):
         return self
-    
+
     def __init__(self):
         self.temporary_files = []
-        self.original = None;
-        #self.type = None;
-        self.height = 0;
-        self.width = 0;
-        
+        self.original = None
+        #self.type = None
+        self.height = 0
+        self.width = 0
+
     def parse(self,file_stream,mimetype):
         if use_c_lib:
             self.original = file_stream
@@ -54,9 +54,9 @@ class Thumbnailer:
             f.seek(0)
             f.write(file_stream)
             f.close()
-            
+
             self.original = temporary_file
-            
+
             #print("idenitify -format \"%%m %%w %%h\" %s"%temporary_file[1])
             imagedata = os.popen("identify -format \"%%m %%w %%h \" %s"%temporary_file[1])
             information = imagedata.read().split(' ')
@@ -64,19 +64,19 @@ class Thumbnailer:
             #self.type = information[0]
             self.width = int(information[1])
             self.height = int(information[2])
-        
+
     def generate(self, linear_dimension, sizedown = True, sizeup = False):
         do_generate = False
-        if ( sizeup and (self.height < linear_dimension) and (self.width < linear_dimension) ):
+        if sizeup and (self.height < linear_dimension) and (self.width < linear_dimension):
             do_generate = True
-        elif ( sizedown and ((self.height > linear_dimension) or (self.width > linear_dimension)) ):
+        elif sizedown and ((self.height > linear_dimension) or (self.width > linear_dimension)):
             do_generate = True
-            
-        if ( do_generate ):
-            if ( use_c_lib ):
+
+        if do_generate:
+            if use_c_lib:
                 aspect = float(self.width) / float(self.height)
                 print "%d %d %f"%(self.width,self.height,aspect)
-                if (aspect > 1.0):
+                if aspect > 1.0:
                     #wide
                     width = int(linear_dimension)
                     height = int(linear_dimension / aspect)
@@ -84,25 +84,25 @@ class Thumbnailer:
                     #tall
                     width = int(linear_dimension * aspect)
                     height  = int(linear_dimension)
-                    
+
                 return dict (
                     content = imagemagick.resize(self.original, width, height),
                     width = width,
                     height = height
                 )
-                
+
             else:
                 temporary_file = mkstemp()
                 os.close(temporary_file[0])
                 self.temporary_files.append(temporary_file)
-                
+
                 os.system("convert %s -resize %dx%d %s"%(self.original[1],linear_dimension,linear_dimension,temporary_file[1]))
                 imagedata = os.popen("identify -format \"%%m %%w %%h \" %s"%temporary_file[1])
                 information = imagedata.read().split(' ')
                 imagedata.close()
                 width = int(information[1])
                 height = int(information[2])
-                
+
                 f = open(temporary_file[1],'rb')
                 data = f.read()
                 f.close()
@@ -111,17 +111,17 @@ class Thumbnailer:
                     width = int(information[1]),
                     height = int(information[2])
                 )
-    
+
     def get_metadata (self):
         if use_c_lib:
             return imagemagick.get_metadata(self.original)
         else:
             return {}
-    
+
     def __exit__(self, type, value, tb):
-        if ( tb == None ):
+        if tb == None:
             for temporary_file in self.temporary_files:
-                if ( os.path.exists(temporary_file[1]) ):
+                if os.path.exists(temporary_file[1]):
                     os.unlink(temporary_file[1])
-            
+
 

@@ -2,13 +2,13 @@ from distutils.core import setup, Extension
 import commands
 
 
-raw_libs = commands.getoutput('Wand-config --libs').split(' ');
+raw_libs = commands.getoutput('Wand-config --libs').split(' ')
 libs = []
 libdirs = ['/usr/local/lib']
 for k,lib in enumerate(raw_libs):
-    if ( lib[0:2] == '-l' ):
+    if lib[0:2] == '-l':
         libs.append(lib[2:])
-    elif ( lib[0:2] == '-L' ):
+    elif lib[0:2] == '-L':
         libdirs.append(lib[2:])
 
 imagemagick = Extension('imagemagick',

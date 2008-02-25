@@ -24,16 +24,16 @@
         ${entry.content}
     </div>
     % if c.auth_user.can('administrate'):
-    ${h.form(h.url(controller='news', action='edit', id=entry.id), method='post')}
+    ${c.empty_form.start(h.url(controller='news', action='edit', id=entry.id), method='post')}
     <ul class="inline admin">
         <li>${h.link_to("Edit", h.url(controller='news', action='edit', id=entry.id))}</li>
         % if entry.is_deleted:
-        <li>${h.submit('Undelete')}</li>
+        <li>${c.empty_form.submit('Undelete')}</li>
         % else:
-        <li>${h.submit('Delete')}</li>
+        <li>${c.empty_form.submit('Delete')}</li>
         % endif
     </ul>
-    ${h.end_form()}
+    ${c.empty_form.end()}
     % endif
 </div>
 </%def>
@@ -58,16 +58,16 @@
         ${entry.content}
     </div>
     % if c.auth_user.can('administrate'):
-    ${h.form(h.url(controller='journal', action='edit', username=entry.user.username, id=entry.id), method='post')}
+    ${c.empty_form.start(h.url(controller='journal', action='edit', username=entry.user.username, id=entry.id), method='post')}
     <ul class="inline admin">
         <li>${h.link_to("Edit", h.url(controller='journal', action='edit', username=entry.user.username, id=entry.id))}</li>
         % if entry.status == 'deleted':
-        <li>${h.submit('Undelete')}</li>
+        <li>${c.empty_form.submit('Undelete')}</li>
         % else:
-        <li>${h.submit('Delete')}</li>
+        <li>${c.empty_form.submit('Delete')}</li>
         % endif
     </ul>
-    ${h.end_form()}
+    ${c.empty_form.end()}
     % endif
 </div>
 </%def>

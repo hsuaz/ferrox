@@ -7,7 +7,7 @@ class FileUploadValidator(validators.FancyValidator):
     def _to_python(self, value, state):
         filename = value.filename
         content = value.value
-        return dict(filename=filename,content=content)
+        return dict(filename=filename, content=content)
 
 class UniqueUsername(formencode.FancyValidator):
     def _to_python(self, value, state):
@@ -19,12 +19,12 @@ class UniqueUsername(formencode.FancyValidator):
 
 class Recaptcha(validators.FormValidator):
     validate_partial_form = True
-    
+
     fail_message = 'Recaptcha failed'
 
     def validate_partial(self, field_dict, state):
-        captcha_fields = ['remote_addr', 
-                          'recaptcha_challenge_field', 
+        captcha_fields = ['remote_addr',
+                          'recaptcha_challenge_field',
                           'recaptcha_response_field']
         for name in captcha_fields:
             if not field_dict.has_key(name):
@@ -68,10 +68,9 @@ class RegisterForm(formencode.Schema):
     email_confirm = validators.String()
     password = validators.String(not_empty = True)
     password_confirm = validators.String()
-    commit = validators.PlainText(not_empty=False)
     remote_addr = validators.String(not_empty = True)
-    recaptcha_challenge_field = validators.String(not_empty = True)
-    recaptcha_response_field = validators.String(not_empty = True)
+    recaptcha_challenge_field = validators.String(not_empty=True)
+    recaptcha_response_field = validators.String(not_empty=True)
     TOS_accept = validators.OneOf(['1'])
     chained_validators = [validators.FieldsMatch('email', 'email_confirm'),
                           validators.FieldsMatch('password', 'password_confirm'),
@@ -80,27 +79,23 @@ class RegisterForm(formencode.Schema):
 class LoginForm(formencode.Schema):
     username = validators.PlainText(not_empty=True)
     password = validators.PlainText(not_empty=True)
-    commit = validators.PlainText(not_empty=True)
-    
+
 class NewsForm(formencode.Schema):
     title = validators.NotEmpty()
     content = validators.NotEmpty()
     is_anonymous = validators.Bool()
-    commit = validators.PlainText(not_empty=True)
 
 class SubmitForm(formencode.Schema):
-    fullfile = FileUploadValidator()
+    fullfile = FileUploadValidator(not_empty=True)
     halffile = FileUploadValidator()
     thumbfile = FileUploadValidator()
     title = formencode.validators.String(not_empty=True)
     tags = formencode.validators.String(not_empty=True)
     description = formencode.validators.NotEmpty(not_empty=True)
-    commit = formencode.validators.PlainText(not_empty=False)
 
 class JournalForm(formencode.Schema):
     title = validators.String(not_empty=True)
     content = validators.NotEmpty(not_empty=True)
-    commit = validators.PlainText(not_empty=False, if_missing=None)
 
 class DeleteForm(formencode.Schema):
     confirm = formencode.validators.PlainText(not_empty=False, if_missing=None)
@@ -113,11 +108,9 @@ class SearchForm(formencode.Schema):
     search_for = formencode.validators.PlainText()
     search_title = formencode.validators.Bool()
     search_description = formencode.validators.Bool()
-    commit = formencode.validators.PlainText(not_empty=False)
 
 class TagFilterForm(formencode.Schema):
     tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
-    commit = formencode.validators.PlainText(not_empty=False, if_missing=None)
 
 class ReplyValidator(validators.FormValidator):
     validate_partial_form = True

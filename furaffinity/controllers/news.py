@@ -3,7 +3,7 @@ import logging
 import formencode
 
 from furaffinity.lib.base import *
-import furaffinity.lib.paginate as paginate 
+import furaffinity.lib.paginate as paginate
 from furaffinity.lib.formgen import FormGenerator
 from furaffinity.model import form
 
@@ -19,7 +19,7 @@ class NewsController(BaseController):
         c.newspage = paginate.Page(news_q, page_nr=page, items_per_page=10)
         c.newsnav = c.newspage.navigator(link_var=page_link_var)
         return render('news/index.mako')
-        
+
     @check_perm('administrate')
     def post(self):
         c.form = FormGenerator()
@@ -34,7 +34,7 @@ class NewsController(BaseController):
         except formencode.Invalid, error:
             c.form.defaults = error.value
             c.form.errors = error.error_dict
-            return render('news/post.mako')            
+            return render('news/post.mako')
 
         title = h.escape_once(form_result['title'])
         content = h.escape_once(form_result['content'])
@@ -43,7 +43,7 @@ class NewsController(BaseController):
         model.Session.save(news)
         model.Session.commit()
         h.redirect_to('/news')
-        
+
     @check_perm('administrate')
     def edit(self):
         c.form = FormGenerator()
@@ -65,7 +65,7 @@ class NewsController(BaseController):
         except formencode.Invalid, error:
             c.form.defaults = error.value
             c.form.errors = error.error_dict
-            return render('news/edit.mako')            
+            return render('news/edit.mako')
 
         title = h.escape_once(form_result['title'])
         content = h.escape_once(form_result['content'])
@@ -79,7 +79,7 @@ class NewsController(BaseController):
             c.item.content = content
         c.item.is_anonymous = form_result['is_anonymous']
         model.Session.save(c.item)
-        model.Session.commit()        
+        model.Session.commit()
         h.redirect_to('/news')
 
     @check_perm('administrate')
@@ -88,15 +88,15 @@ class NewsController(BaseController):
         item = news_q.filter_by(id = c.id).one()
         item.is_deleted = True
         model.Session.save(item)
-        model.Session.commit()        
+        model.Session.commit()
         h.redirect_to('/news')
-        
+
     @check_perm('administrate')
     def undelete(self):
         news_q = model.Session.query(model.News)
         item = news_q.filter_by(id = c.id).one()
         item.is_deleted = False
         model.Session.save(item)
-        model.Session.commit()        
+        model.Session.commit()
         h.redirect_to('/news')
 

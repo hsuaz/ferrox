@@ -51,14 +51,14 @@ if re.match('^mysql', pylons.config['sqlalchemy.url']):
     #user_submission_relationship_type = MSEnum('artist','commissioner','gifted','isin')
 else:
     ip_type = types.String(length=11)
-#hash_algorithm_type = Enum(['WHIRLPOOL','SHA512','SHA256','SHA1'], empty_to_none=True, strict=True)
-note_status_type = Enum(['unread','read'], empty_to_none=True, strict=True)
-journal_status_type = Enum(['normal','under_review','removed_by_admin','deleted'], empty_to_none=True, strict=True)
-submission_type_type = Enum(['image','video','audio','text'], empty_to_none=True, strict=True)
-submission_status_type = Enum(['normal','under_review','removed_by_admin','unlinked','deleted'], empty_to_none=True, strict=True)
-derived_submission_derivetype_type = Enum(['thumb','halfview'], empty_to_none=True, strict=True)
-user_submission_status_type = Enum(['primary','normal','deleted'], empty_to_none=True, strict=True)
-user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin'], empty_to_none=True, strict=True)
+#hash_algorithm_type = Enum(['WHIRLPOOL','SHA512','SHA256','SHA1'])
+note_status_type = Enum(['unread','read'])
+journal_status_type = Enum(['normal','under_review','removed_by_admin','deleted'])
+submission_type_type = Enum(['image','video','audio','text'])
+submission_status_type = Enum(['normal','under_review','removed_by_admin','unlinked','deleted'])
+derived_submission_derivetype_type = Enum(['thumb','halfview'])
+user_submission_status_type = Enum(['primary','normal','deleted'])
+user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin'])
 
 # Users
 

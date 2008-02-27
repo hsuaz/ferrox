@@ -25,6 +25,8 @@ import time
 search_enabled = True
 try:
     import xapian
+    if xapian.major_version() < 1:
+        search_enabled = False
 except ImportError:
     search_enabled = False
 

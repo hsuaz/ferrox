@@ -7,6 +7,10 @@ from sqlalchemy import or_,and_,not_
 import xapian
 import re
 
+if xapian.major_version() < 1:
+    raise ImportError("xapian needs >=1.0 found %s" % xapian.version_string())
+
+
 class SearchController(BaseController):
     def index(self):
         c.form = FormGenerator()

@@ -328,6 +328,7 @@ class GuestUser(object):
         return self.preferences[pref]
 
 class User(object):
+    @classmethod
     def get_by_name(cls, username):
         """Fetch a user, given eir username."""
         try:

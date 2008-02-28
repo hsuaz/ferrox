@@ -47,8 +47,7 @@ class NewsController(BaseController):
     @check_perm('administrate')
     def edit(self):
         c.form = FormGenerator()
-        news_q = model.Session.query(model.News)
-        c.item = news_q.filter_by(id = c.id).one()
+        c.item = model.Session.query(model.News).get(c.id)
         c.form.defaults = h.to_dict(c.item)
         import sys
         sys.stderr.write(str(c.form.defaults))
@@ -56,15 +55,12 @@ class NewsController(BaseController):
 
     @check_perm('administrate')
     def edit_commit(self, id):
-        c.form = FormGenerator()
-        news_q = model.Session.query(model.News)
-        c.item = news_q.filter_by(id = id).one()
+        c.item = model.Session.query(model.News).get(id)
         schema = model.form.NewsForm()
         try:
             form_result = schema.to_python(request.params)
         except formencode.Invalid, error:
-            c.form.defaults = error.value
-            c.form.errors = error.error_dict
+            c.form = FormGenerator(form_error=error)
             return render('news/edit.mako')
 
         title = h.escape_once(form_result['title'])
@@ -78,7 +74,6 @@ class NewsController(BaseController):
             c.item.title = title
             c.item.content = content
         c.item.is_anonymous = form_result['is_anonymous']
-        model.Session.save(c.item)
         model.Session.commit()
         h.redirect_to('/news')
 

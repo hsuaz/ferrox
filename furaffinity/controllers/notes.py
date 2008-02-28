@@ -21,7 +21,7 @@ class NotesController(BaseController):
             abort(403)
 
     def _note_setup(self, username, id):
-        c.page_owner = model.retrieve_user(username)
+        c.page_owner = model.User.get_by_name(username)
         note_q = model.Session.query(model.Note)
         try:
             c.note = note_q.filter_by(id=id).one()
@@ -35,7 +35,7 @@ class NotesController(BaseController):
 
 
     def user_index(self, username):
-        c.page_owner = model.retrieve_user(username)
+        c.page_owner = model.User.get_by_name(username)
         if c.page_owner != c.auth_user:
             abort(403)
 

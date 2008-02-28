@@ -48,7 +48,7 @@ def get_submission(id,eagerloads=[]):
         submission = model.Session.query(model.Submission)
         for el in eagerloads:
             submission = submission.options(eagerload(el))
-        submission = submission.filter(model.Submission.id==id).one()
+        submission = submission.get(id)
         c.tags = tagging.make_tags_into_string(submission.tags)
     except sqlalchemy.exceptions.InvalidRequestError:
         c.error_text = 'Requested submission was not found.'
@@ -62,7 +62,7 @@ class GalleryController(BaseController):
 
     def index(self, username = None):
         if username != None:
-            c.page_owner = model.retrieve_user(username)
+            c.page_owner = model.User.get_by_name(username)
         else:
             c.page_owner = None
 
@@ -133,7 +133,7 @@ class GalleryController(BaseController):
     # We really don't need this anymore...
     '''
     def user_index(self, username=None):
-        c.page_owner = model.retrieve_user(username)
+        c.page_owner = model.User.get_by_name(username)
         if c.page_owner == None:
             abort(404)
 
@@ -420,7 +420,7 @@ class GalleryController(BaseController):
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id, username=c.auth_user.username))
 
     def forward_to_user(self,id,username):
-        c.page_owner = model.retrieve_user(username)
+        c.page_owner = model.User.get_by_name(username)
         h.redirect_to(h.url_for(controller='gallery', action='view', id = id, username=c.page_owner.username))
 
     def view(self,id=None):

@@ -31,7 +31,7 @@ class SearchController(BaseController):
             tag_query = None
 
         if c.search_terms['query_author']:
-            author_object = model.retrieve_user(c.search_terms['query_author'].strip())
+            author_object = model.User.get_by_name(c.search_terms['query_author'].strip())
             author_query = query_parser.parse_query(str(author_object.id),query_flags,'A')
         else:
             author_query = None

@@ -58,13 +58,13 @@ class IndexController(BaseController):
     def verify(self):
         username = request.params['username']
         code = request.params['code']
-        user = model.retrieve_user(username)
+        user = model.User.get_by_name(username)
         hasher = hashlib.md5()
         hasher.update(user.username)
         hasher.update(str(user.id))
         hash = hasher.hexdigest()
         if hash == code:
-            user.role = model.retrieve_role('Member')
+            user.role = model.Role.get_by_name('Member')
             model.Session.commit()
         c.verified = (hash == code)
         return render('/verify.mako')

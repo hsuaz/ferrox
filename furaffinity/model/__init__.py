@@ -277,13 +277,15 @@ class Permission(object):
         self.name = name
         self.description = description
 
-def retrieve_role(name):
-    try:
-        return Session.query(Role).filter_by(name=name).one()
-    except InvalidRequestError:
-        return None
-
 class Role(object):
+    @classmethod
+    def get_by_name(cls, name):
+        """Fetch a role, given its name."""
+        try:
+            return Session.query(cls).filter_by(name=name).one()
+        except InvalidRequestError:
+            return None
+
     def __init__(self, name, description=''):
         self.name = name
         self.description = description
@@ -325,18 +327,19 @@ class GuestUser(object):
     def preference(self, pref):
         return self.preferences[pref]
 
-def retrieve_user(username):
-    try:
-        return Session.query(User).filter_by(username=username).one()
-    except InvalidRequestError:
-        return None
-
 class User(object):
+    def get_by_name(cls, username):
+        """Fetch a user, given eir username."""
+        try:
+            return Session.query(cls).filter_by(username=username).one()
+        except InvalidRequestError:
+            return None
+
     def __init__(self, username, password):
         self.username = username
         self.set_password(password)
         self.display_name = username
-        self.role = retrieve_role('Unverified')
+        self.role = Role.get_by_name('Unverified')
 
     def set_password(self, password):
         if use_hashlib:
@@ -703,3 +706,4 @@ note_mapper = mapper(Note, note_table, properties=dict(
     recipient = relation(User, primaryjoin=note_table.c.to_user_id==user_table.c.id),
     )
 )
+

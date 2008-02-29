@@ -1,26 +1,26 @@
+from furaffinity.lib.base import *
+from furaffinity.lib.formgen import FormGenerator
+import furaffinity.lib.paginate as paginate
+from furaffinity.model import form
+import webhelpers
+
 import logging
 import formencode
 import sqlalchemy
 from sqlalchemy import sql
 
-from furaffinity.lib.base import *
-import furaffinity.lib.paginate as paginate
-from furaffinity.model import form
-from furaffinity.lib.formgen import FormGenerator
-import webhelpers
 log = logging.getLogger(__name__)
 
 class NotesController(BaseController):
-
     def _enforce_ownership(self, note):
-        """
-        Causes an instant 403 if the logged-in user is neither the sender nor
-        the recipient of the given note.
+        """Causes an instant 403 if the logged-in user is neither the sender
+        nor the recipient of the given note.
         """
         if note.recipient != c.auth_user and note.sender != c.auth_user:
             abort(403)
 
     def _note_setup(self, username, id):
+        """Fetches the page's note and user and inserts them into c."""
         c.page_owner = model.User.get_by_name(username)
         note_q = model.Session.query(model.Note)
         try:
@@ -35,6 +35,7 @@ class NotesController(BaseController):
 
 
     def user_index(self, username):
+        """Inbox (well, only box for now) for a user."""
         c.page_owner = model.User.get_by_name(username)
         if c.page_owner != c.auth_user:
             abort(403)
@@ -46,6 +47,7 @@ class NotesController(BaseController):
         return render('notes/index.mako')
 
     def view(self, username, id):
+        """View of a single note thread."""
         self._note_setup(username, id)
         c.javascripts = ['notes']
 
@@ -78,14 +80,17 @@ class NotesController(BaseController):
         return rendered
 
     def ajax_expand(self, username, id):
+        """View of a single note's HTML, for Ajax inclusion."""
         self._note_setup(username, id)
         return render('notes/ajax_expand.mako')
 
     def write(self, username):
+        """Form for sending a new note."""
         c.form = FormGenerator()
         return render('notes/send.mako')
 
     def reply(self, username, id):
+        """Form for replying to a note."""
         self._note_setup(username, id)
         c.reply_to_note = c.note.latest_note(c.page_owner)
         c.form = FormGenerator()
@@ -102,6 +107,7 @@ class NotesController(BaseController):
         return render('notes/send.mako')
 
     def forward(self, username, id):
+        """Form for forwarding a note."""
         self._note_setup(username, id)
         c.form = FormGenerator()
         c.form.defaults['subject'] = 'Fwd: ' + c.note.base_subject()
@@ -111,10 +117,11 @@ class NotesController(BaseController):
         return render('notes/send.mako')
 
     def write_send(self, username):
+        """Form handler for sending any note."""
         validator = model.form.SendNoteForm()
         try:
             form_data = validator.to_python(request.params)
-        except model.form.formencode.Invalid, error:
+        except formencode.Invalid, error:
             c.form = FormGenerator(form_error=error)
             return render('notes/send.mako')
 
@@ -144,5 +151,6 @@ class NotesController(BaseController):
         if note.original_note_id == None:
             note.original_note_id = note.id  # TODO perf
         model.Session.commit()
-        h.redirect_to(h.url_for(controller='notes', action='view', username=c.auth_user.username, id=note.latest_note(c.auth_user).id))
-
+        h.redirect_to(h.url_for(controller='notes', action='view',
+                                username=c.auth_user.username,
+                                id=note.latest_note(c.auth_user).id))

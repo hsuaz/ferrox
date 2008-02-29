@@ -120,7 +120,7 @@
             <div class="rel">Has you friended</div>
             <div class="links">
                 <a href="${h.url_for(controller='user', action='view', username=user.username)}">Profile</a> |
-                <a href="${h.url_for(controller='gallery', action='user_index', username=user.username)}">Gallery</a> |
+                <a href="${h.url_for(controller='gallery', action='index', username=user.username)}">Gallery</a> |
                 <a href="${h.url_for(controller='journal', action='index', username=user.username)}">Journal</a>
             </div>
             % if user.is_online():

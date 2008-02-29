@@ -22,7 +22,7 @@
         % for item in c.submissions:
         <div class="submission">
             <div class="submission_header">
-                <div class="submission_title">${h.link_to(item.title, h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist().username))}</div>
+                <div class="submission_title">${h.link_to(item.title, h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist.username))}</div>
                 <div class="submission_date">Date: ${h.format_time(item.time)}</div>
             </div>
             <div class="submission_info">

@@ -129,5 +129,6 @@ text_field = form
 submit = form
 password_field = form
 check_box = form
+radio_buttom = form
 hidden_field = form
 file_field = form

@@ -1,25 +1,25 @@
-import logging
+from pylons.decorators.secure import *
 
 from furaffinity.lib.base import *
 from furaffinity.lib.formgen import FormGenerator
 
-from pylons.decorators.secure import *
-
 import formencode
 import hashlib
+import logging
 
 log = logging.getLogger(__name__)
 
 class IndexController(BaseController):
-
     def index(self):
+        """Main site index page."""
         news_q = model.Session.query(model.News)
-        news_q = news_q.filter_by(is_deleted = False)
+        news_q = news_q.filter_by(is_deleted=False)
         news_q = news_q.order_by(model.News.time.desc())
         c.news = news_q.limit(5)
         return render('/index.mako')
 
     def register(self):
+        """User registration."""
         c.form = FormGenerator()
         c.form.defaults = {'username': '',
                            'email': '',
@@ -29,13 +29,12 @@ class IndexController(BaseController):
         return render('/register.mako')
 
     def register_check(self):
-        schema = model.form.RegisterForm(foo = 'bar')
+        """User registration POST target."""
+        schema = model.form.RegisterForm()
         try:
             form_data = schema.to_python(request.params)
         except formencode.Invalid, error:
             c.form = FormGenerator(form_error=error)
-            import sys
-            sys.stderr.write(str(c.form.errors))
             return render('/register.mako')
 
         username = form_data['username']
@@ -49,13 +48,14 @@ class IndexController(BaseController):
         hasher.update(user.username)
         hasher.update(str(user.id))
         hash = hasher.hexdigest()
-        c.verify_link = h.link_to('Verify', url=h.url_for(controller = 'index',
-                                                          action = 'verify',
-                                                          username = username,
-                                                          code = hash))
+        c.verify_link = h.link_to('Verify', url=h.url_for(controller='index',
+                                                          action='verify',
+                                                          username=username,
+                                                          code=hash))
         return render('/register_success.mako')
 
     def verify(self):
+        """Account verification."""
         username = request.params['username']
         code = request.params['code']
         user = model.User.get_by_name(username)
@@ -70,6 +70,7 @@ class IndexController(BaseController):
         return render('/verify.mako')
 
     def login(self):
+        """User login form."""
         if c.auth_user:
             # This shouldn't really happen, so no need to be nice about it
             h.redirect_to('/')
@@ -79,6 +80,7 @@ class IndexController(BaseController):
 
     #@https()
     def login_check(self):
+        """User login POST target."""
         if c.auth_user:
             # This shouldn't really happen, so no need to be nice about it
             h.redirect_to('/')
@@ -89,9 +91,11 @@ class IndexController(BaseController):
         c.form = FormGenerator()
         if user and user.check_password(request.params.get('password')):
             if not user.can('log_in'):
-                c.error_msgs.append("This account (%s) still needs to be verified. " \
-                                    "Please check the email address provided for the " \
-                                    "verification code." % h.escape_once(username))
+                c.error_msgs.append(
+                    "This account (%s) still needs to be verified. " \
+                    "Please check the email address provided for the " \
+                    "verification code." % h.escape_once(username)
+                    )
                 c.form.defaults['username'] = username
                 return render('/login.mako')
             else:
@@ -99,11 +103,15 @@ class IndexController(BaseController):
                 session.save()
                 h.redirect_to(request.headers.get('referer', '/'))
         else:
-            c.error_msgs.append("Either there is no such account '%s', or the provided password was incorrect." % h.escape_once(username))
+            c.error_msgs.append(
+                "Either there is no such account '%s', or the provided " \
+                "password was incorrect." % h.escape_once(username)
+                )
             c.form.defaults['username'] = username
             return render('/login.mako')
 
     def logout(self):
+        """Logout POST target."""
         session['user_id'] = None
         session.save()
         h.redirect_to(request.headers.get('referer', '/'))

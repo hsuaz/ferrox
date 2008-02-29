@@ -5,7 +5,7 @@
     <h2>${c.submission.title}</h2>
 
     <div class="time">Submitted on ${h.format_time(c.submission.time)}</div>
-    <div class="artist FINISHME">by ${lib.user_link(c.submission.primary_artist())}</div>
+    <div class="artist FINISHME">by ${lib.user_link(c.submission.primary_artist)}</div>
     <div class="buttons FINISHME">buttons here lol</div>
     <div class="tags FINISHME">${c.tags}</div>
     <div class="content">

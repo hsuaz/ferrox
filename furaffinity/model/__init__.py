@@ -1,9 +1,4 @@
-try:
-    import hashlib
-    use_hashlib = True
-except:
-    import sha
-    use_hashlib = False
+import hashlib
 
 import random
 
@@ -30,6 +25,11 @@ try:
 except ImportError:
     search_enabled = False
 
+if pylons.config['mogilefs.tracker'] == 'FAKE':
+    from furaffinity.lib import fakemogilefs as mogilefs
+else:
+    from furaffinity.lib import mogilefs
+    
 #This plays hell with websetup, so only use where needed.
 #from furaffinity.lib import filestore
 
@@ -339,37 +339,20 @@ class User(object):
         self.role = retrieve_role('Unverified')
 
     def set_password(self, password):
-        if use_hashlib:
-            algo_name = 'sha256'
-            algo = hashlib.new(algo_name)
-            algo.update(str(random.random()))
-            salt = algo.hexdigest()[-10:]
-            algo = hashlib.new(algo_name)
-            algo.update(salt + password)
-            self.password = "%s$%s$%s" % (algo_name, salt, algo.hexdigest())
-        else:
-            algo_name = 'sha1'
-            algo = sha.new()
-            algo.update(str(random.random()))
-            salt = algo.hexdigest()[-10:]
-            algo = sha.new()
-            algo.update(salt + password)
-            self.password = "%s$%s$%s" % (algo_name, salt, algo.hexdigest())
+        algo_name = 'sha256'
+        algo = hashlib.new(algo_name)
+        algo.update(str(random.random()))
+        salt = algo.hexdigest()[-10:]
+        algo = hashlib.new(algo_name)
+        algo.update(salt + password)
+        self.password = "%s$%s$%s" % (algo_name, salt, algo.hexdigest())
 
     def check_password(self, password):
         (algo_name, salt, hashed_password) = self.password.split('$')
-        if use_hashlib:
-            algo = hashlib.new(algo_name)
-            algo.update(salt)
-            algo.update(password)
-            return algo.hexdigest() == hashed_password
-        else:
-            if algo_name != 'sha1':
-                raise RuntimeError("Hashed password needs python2.5")
-            algo = sha.new()
-            algo.update(salt)
-            algo.update(password)
-            return algo.hexdigest() == hashed_password
+        algo = hashlib.new(algo_name)
+        algo.update(salt)
+        algo.update(password)
+        return algo.hexdigest() == hashed_password
 
     def is_online(self):
         ip_log_q = Session.query(IPLogEntry).with_parent(self)
@@ -473,6 +456,7 @@ class ImageMetadata(object):
     def get_filename(self):
         from furaffinity.lib import filestore
         return filestore.get_submission_file(self)
+        
 
 
 

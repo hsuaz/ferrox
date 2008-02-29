@@ -32,6 +32,7 @@ def make_map():
 
     map.connect('/news/:id/edit', controller='news', action='edit')
     map.connect('/news/:id/edit_commit', controller='news', action='edit_commit', **require_post)
+    map.connect('/news/:id/editlog', controller='editlog', action='news')
 
     map.connect('/users/:username/notes', controller='notes', action='user_index')
     map.connect('/users/:username/notes/write', controller='notes', action='write')
@@ -64,14 +65,15 @@ def make_map():
     map.connect('/users/:username/journals/:id/delete_commit', controller='journal', action='delete_commit', **require_post)
     map.connect('/users/:username/journals/:id/editlog', controller='editlog', action='journal')
 
-    map.connect('/view/:id', controller='gallery', action='forward_to_user')
-    #map.connect('/journal', controller='journal', action='index')
-
     map.connect('/stylesheets/:sheet/:color', controller='stylesheets', action='index', color=None)
 
     map.connect('/debug', controller='debug', action='index')
     map.connect('/debug/crash', controller='debug', action='crash')
 
+    # Backwards compatibility
+    map.connect('/view/:id', controller='back_compat', action='view_submission')
+
+    # Defaults that we may or may not actually be using
     map.connect(':controller/:action/:id', action='index', id=None)
     map.connect('*url', controller='template', action='view')
 

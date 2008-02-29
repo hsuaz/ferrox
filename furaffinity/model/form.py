@@ -44,7 +44,7 @@ class Recaptcha(validators.FormValidator):
 
 class ExistingUserValidator(formencode.FancyValidator):
     def _to_python(self, value, state):
-        return model.retrieve_user(value)
+        return model.User.get_by_name(value)
 
     def validate_python(self, value, state):
         if value == None:

@@ -277,13 +277,15 @@ class Permission(object):
         self.name = name
         self.description = description
 
-def retrieve_role(name):
-    try:
-        return Session.query(Role).filter_by(name=name).one()
-    except InvalidRequestError:
-        return None
-
 class Role(object):
+    @classmethod
+    def get_by_name(cls, name):
+        """Fetch a role, given its name."""
+        try:
+            return Session.query(cls).filter_by(name=name).one()
+        except InvalidRequestError:
+            return None
+
     def __init__(self, name, description=''):
         self.name = name
         self.description = description
@@ -325,18 +327,20 @@ class GuestUser(object):
     def preference(self, pref):
         return self.preferences[pref]
 
-def retrieve_user(username):
-    try:
-        return Session.query(User).filter_by(username=username).one()
-    except InvalidRequestError:
-        return None
-
 class User(object):
+    @classmethod
+    def get_by_name(cls, username):
+        """Fetch a user, given eir username."""
+        try:
+            return Session.query(cls).filter_by(username=username).one()
+        except InvalidRequestError:
+            return None
+
     def __init__(self, username, password):
         self.username = username
         self.set_password(password)
         self.display_name = username
-        self.role = retrieve_role('Unverified')
+        self.role = Role.get_by_name('Unverified')
 
     def set_password(self, password):
         algo_name = 'sha256'
@@ -476,11 +480,12 @@ class Submission(object):
         self.discussion_id = discussion_id
         self.status = status
 
-    def primary_artist(self):
+    def _get_primary_artist(self):
         #return self.user_submission[0].user
         for index in xrange(0,len(self.user_submission)):
             if self.user_submission[index].status == 'primary':
                 return self.user_submission[index].user
+    primary_artist = property(_get_primary_artist)
 
     # Deprecated. Use get_derived_by_type instead.
     def get_derived_index (self,types):
@@ -506,44 +511,44 @@ class Submission(object):
     def to_xapian(self):
         if search_enabled:
             xapian_document = xapian.Document()
-            xapian_document.add_term("I%d"%self.id)
-            xapian_document.add_value(0,"I%d"%self.id)
-            xapian_document.add_term("A%s"%self.primary_artist().id)
+            xapian_document.add_term("I%d" % self.id)
+            xapian_document.add_value(0, "I%d" % self.id)
+            xapian_document.add_term("A%s" % self.primary_artist.id)
 
             # tags
             for tag in self.tags:
-                xapian_document.add_term("G%s"%tag.text)
+                xapian_document.add_term("G%s" % tag.text)
 
             # title
             words = []
             rmex = re.compile(r'[^a-z0-9-]')
             for word in self.title.lower().split(' '):
-                words.append(rmex.sub('',word))
+                words.append(rmex.sub('', word))
             words = set(words)
             for word in words:
-                xapian_document.add_term("T%s"%word)
+                xapian_document.add_term("T%s" % word)
 
             # description
             words = []
             # FIX ME: needs bbcode parser. should be plain text representation.
             for word in self.description.lower().split(' '):
-                words.append(rmex.sub('',word))
+                words.append(rmex.sub('', word))
             words = set(words)
             for word in words:
-                xapian_document.add_term("P%s"%word)
+                xapian_document.add_term("P%s" % word)
 
             return xapian_document
         else:
             return None
 
 class UserSubmission(object):
-    def __init__(self, user_id, relationship, status ):
+    def __init__(self, user_id, relationship, status):
         self.user_id = user_id
         self.relationship = relationship
         self.status = status
 
 class DerivedSubmission(object):
-    def __init__(self, derivetype ):
+    def __init__(self, derivetype):
         self.derivetype = derivetype
 
 class News(object):
@@ -560,7 +565,7 @@ class EditLog(object):
     def update(self,editlog_entry):
         self.last_edited_by = editlog_entry.edited_by
         self.last_edited_at = editlog_entry.edited_at
-        self.editlog_entries.append(editlog_entry)
+        self.entries.append(editlog_entry)
 
 class EditLogEntry(object):
     def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed):
@@ -572,11 +577,11 @@ class EditLogEntry(object):
         self.previous_text_parsed = previous_text_parsed
 
 class SubmissionTag(object):
-    def __init__ (self, tag):
+    def __init__(self, tag):
         self.tag = tag
 
 class Tag(object):
-    def __init__ (self, text):
+    def __init__(self, text):
         self.text = text
         self.id = crc32(text)
 
@@ -636,7 +641,7 @@ editlog_mapper = mapper(EditLog, editlog_table, properties=dict(
 )
 
 editlog_entry_mapper = mapper(EditLogEntry, editlog_entry_table, properties=dict(
-    editlog = relation(EditLog, backref='editlog_entries'),
+    editlog = relation(EditLog, backref='entries'),
     edited_by = relation(User),
     )
 )
@@ -687,3 +692,4 @@ note_mapper = mapper(Note, note_table, properties=dict(
     recipient = relation(User, primaryjoin=note_table.c.to_user_id==user_table.c.id),
     )
 )
+

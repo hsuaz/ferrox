@@ -5,33 +5,38 @@ from furaffinity.controllers.gallery import get_submission
 from furaffinity.controllers.journal import get_journal
 
 class EditlogController(BaseController):
+
+    def news(self, id=None):
+        """Edit log for a news post."""
+
+        news = model.Session.query(model.News).get(id)
+        if not news:
+            abort(404)
+
+        c.original = news
+        c.original_controller = 'news'
+        c.editlog_entries = news.editlog.entries
+
+        return render('/editlog/show.mako')
+
     def journal(self, id=None):
+        """Edit log for a journal entry."""
+
         journal = get_journal(id)
 
         c.original = journal
         c.original_controller = 'journal'
-        self.get_editlog_entries(journal.editlog_id)
+        c.editlog_entries = journal.editlog.entries
 
         return render('/editlog/show.mako')
 
     def submission(self, id=None):
+        """Edit log for a submission's description."""
+
         submission = get_submission(id)
 
         c.original = submission
         c.original_controller = 'gallery'
-        self.get_editlog_entries(submission.editlog_id)
+        c.editlog_entries = submission.editlog.entries
 
         return render('/editlog/show.mako')
-
-    def get_editlog_entries(self, editlog_id):
-        editlog_entry_q = model.Session.query(model.EditLogEntry)
-        editlog_entries = editlog_entry_q.filter(model.EditLogEntry.editlog_id == editlog_id).all()
-
-        c.editlog_entries = []
-        for entry in editlog_entries:
-            dictentry = h.to_dict(entry)
-            dictentry.update ( dict ( edited_by = entry.edited_by ) )
-            c.editlog_entries.append(dictentry)
-
-        return c.editlog_entries
-

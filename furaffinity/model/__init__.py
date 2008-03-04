@@ -1,6 +1,11 @@
-import hashlib
+from __future__ import with_statement
 
+import hashlib
+import time
 import random
+import cStringIO
+import os.path
+import mimetypes
 
 import pylons
 
@@ -19,6 +24,9 @@ import re
 import sys
 from binascii import crc32
 
+from furaffinity.lib.thumbnailer import Thumbnailer
+from furaffinity.lib.mimetype import get_mime_type
+
 search_enabled = True
 try:
     import xapian
@@ -29,7 +37,7 @@ if pylons.config['mogilefs.tracker'] == 'FAKE':
     from furaffinity.lib import fakemogilefs as mogilefs
 else:
     from furaffinity.lib import mogilefs
-    
+
 #This plays hell with websetup, so only use where needed.
 #from furaffinity.lib import filestore
 
@@ -41,17 +49,8 @@ metadata = MetaData()
 # Database specific types.
 if re.match('^mysql', pylons.config['sqlalchemy.url']):
     ip_type = MSInteger(unsigned=True)
-    # MSEnum is horribly broken.
-    #hash_algorithm_type = MSEnum('WHIRLPOOL','SHA512','SHA256','SHA1')
-    #journal_status_type = MSEnum('normal','under_review','removed_by_admin','deleted')
-    #submission_type_type = MSEnum('image','video','audio','text')
-    #submission_status_type = MSEnum('normal','under_review','removed_by_admin','unlinked','deleted')
-    #derived_submission_derivetype_type = MSEnum('thumb')
-    #user_submission_status_type = MSEnum('primary','normal','deleted')
-    #user_submission_relationship_type = MSEnum('artist','commissioner','gifted','isin')
 else:
     ip_type = types.String(length=11)
-#hash_algorithm_type = Enum(['WHIRLPOOL','SHA512','SHA256','SHA1'])
 note_status_type = Enum(['unread','read'])
 journal_status_type = Enum(['normal','under_review','removed_by_admin','deleted'])
 submission_type_type = Enum(['image','video','audio','text'])
@@ -67,8 +66,6 @@ user_table = Table('user', metadata,
     Column('username', types.String(32), nullable=False),
     Column('email', types.String(256), nullable=False),
     Column('password', types.String(256), nullable=False),
-    #Column('salt', types.String(5), nullable=False),
-    #Column('hash_algorithm', hash_algorithm_type, nullable=False),
     Column('display_name', types.Unicode, nullable=False),
     Column('role_id', types.Integer, ForeignKey('role.id'), default=1),
     mysql_engine='InnoDB'
@@ -157,6 +154,7 @@ news_table = Table('news', metadata,
 
 # Submissions
 
+'''
 image_metadata_table = Table('image_metadata', metadata,
     Column('id', types.Integer, primary_key=True, autoincrement=True),
     Column('hash', types.String(length=64), nullable=False, unique=True, index=True),
@@ -166,10 +164,11 @@ image_metadata_table = Table('image_metadata', metadata,
     Column('submission_count', types.Integer, nullable=False),
     mysql_engine='InnoDB'
 )
+'''
 
 submission_table = Table('submission', metadata,
     Column('id', types.Integer, primary_key=True),
-    Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
+    #Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
     Column('title', types.String(length=128), nullable=False),
     Column('description', types.Text, nullable=False),
     Column('description_parsed', types.Text, nullable=False),
@@ -177,6 +176,8 @@ submission_table = Table('submission', metadata,
     Column('discussion_id', types.Integer, nullable=False),
     Column('time', types.DateTime, nullable=False, default=datetime.now),
     Column('status', submission_status_type, index=True, nullable=False),
+    Column('mogile_key', types.String(150), nullable=False),
+    Column('mimetype', types.String(35), nullable=False),
     Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
     mysql_engine='InnoDB'
 )
@@ -184,8 +185,10 @@ submission_table = Table('submission', metadata,
 derived_submission_table = Table('derived_submission', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('submission_id', types.Integer, ForeignKey("submission.id"), nullable=False),
-    Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
+    #Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
     Column('derivetype', derived_submission_derivetype_type, nullable=False),
+    Column('mogile_key', types.String(150), nullable=False),
+    Column('mimetype', types.String(35), nullable=False),
     mysql_engine='InnoDB'
 )
 
@@ -277,13 +280,15 @@ class Permission(object):
         self.name = name
         self.description = description
 
-def retrieve_role(name):
-    try:
-        return Session.query(Role).filter_by(name=name).one()
-    except InvalidRequestError:
-        return None
-
 class Role(object):
+    @classmethod
+    def get_by_name(cls, name):
+        """Fetch a role, given its name."""
+        try:
+            return Session.query(cls).filter_by(name=name).one()
+        except InvalidRequestError:
+            return None
+
     def __init__(self, name, description=''):
         self.name = name
         self.description = description
@@ -325,18 +330,20 @@ class GuestUser(object):
     def preference(self, pref):
         return self.preferences[pref]
 
-def retrieve_user(username):
-    try:
-        return Session.query(User).filter_by(username=username).one()
-    except InvalidRequestError:
-        return None
-
 class User(object):
+    @classmethod
+    def get_by_name(cls, username):
+        """Fetch a user, given eir username."""
+        try:
+            return Session.query(cls).filter_by(username=username).one()
+        except InvalidRequestError:
+            return None
+
     def __init__(self, username, password):
         self.username = username
         self.set_password(password)
         self.display_name = username
-        self.role = retrieve_role('Unverified')
+        self.role = Role.get_by_name('Unverified')
 
     def set_password(self, password):
         algo_name = 'sha256'
@@ -421,45 +428,6 @@ class User(object):
 
         return note_q
 
-class ImageMetadata(object):
-    def __init__(self, hash, height, width, mimetype, count, disable=False ):
-        self.hash = hash
-        self.height = height
-        self.width = width
-        self.mimetype = mimetype
-        if disable:
-            self.submission_count = -count
-        else:
-            self.submission_count = count
-
-    def count_inc(self):
-        if self.submission_count > 0:
-            sign = abs(self.submission_count) / self.submission_count
-        else:
-            sign = 1
-        self.submission_count = sign * (abs(self.submission_count) + 1)
-
-    def count_dec(self):
-        if self.submission_count > 0:
-            sign = abs(self.submission_count) / self.submission_count
-            self.submission_count = sign * (abs(self.submission_count) - 1)
-
-    def enable(self):
-        self.submission_count = abs(self.submission_count)
-
-    def disable(self):
-        self.submission_count = -abs(self.submission_count)
-
-    def is_enabled(self):
-        return ( self.submission_count > 0 )
-
-    def get_filename(self):
-        from furaffinity.lib import filestore
-        return filestore.get_submission_file(self)
-        
-
-
-
 class IPLogEntry(object):
     def __init__(self, user_id, ip_integer):
         self.user_id = user_id
@@ -468,19 +436,21 @@ class IPLogEntry(object):
         self.end_time = datetime.now()
 
 class Submission(object):
-    def __init__(self, title, description, description_parsed, type, discussion_id, status ):
-        self.title = title
-        self.description = description
-        self.description_parsed = description_parsed
-        self.type = type
-        self.discussion_id = discussion_id
-        self.status = status
+    def __init__(self):
+        self.title = ''
+        self.description = ''
+        self.description_parsed = ''
+        self.type = None
+        self.discussion_id = 0
+        self.status = 'normal'
+        self.file_blob = None
 
-    def primary_artist(self):
+    def _get_primary_artist(self):
         #return self.user_submission[0].user
         for index in xrange(0,len(self.user_submission)):
             if self.user_submission[index].status == 'primary':
                 return self.user_submission[index].user
+    primary_artist = property(_get_primary_artist)
 
     # Deprecated. Use get_derived_by_type instead.
     def get_derived_index (self,types):
@@ -491,7 +461,7 @@ class Submission(object):
         return None
 
     def get_derived_by_type (self, type):
-        for index in xrange(0,len(self.user_submission)):
+        for index in xrange(0,len(self.derived_submission)):
             if self.derived_submission[index].derivetype == type:
                 return self.derived_submission[index]
         return None
@@ -506,44 +476,248 @@ class Submission(object):
     def to_xapian(self):
         if search_enabled:
             xapian_document = xapian.Document()
-            xapian_document.add_term("I%d"%self.id)
-            xapian_document.add_value(0,"I%d"%self.id)
-            xapian_document.add_term("A%s"%self.primary_artist().id)
+            xapian_document.add_term("I%d" % self.id)
+            xapian_document.add_value(0, "I%d" % self.id)
+            xapian_document.add_term("A%s" % self.primary_artist.id)
 
             # tags
             for tag in self.tags:
-                xapian_document.add_term("G%s"%tag.text)
+                xapian_document.add_term("G%s" % tag.text)
 
             # title
             words = []
             rmex = re.compile(r'[^a-z0-9-]')
             for word in self.title.lower().split(' '):
-                words.append(rmex.sub('',word))
+                words.append(rmex.sub('', word))
             words = set(words)
             for word in words:
-                xapian_document.add_term("T%s"%word)
+                xapian_document.add_term("T%s" % word)
 
             # description
             words = []
             # FIX ME: needs bbcode parser. should be plain text representation.
             for word in self.description.lower().split(' '):
-                words.append(rmex.sub('',word))
+                words.append(rmex.sub('', word))
             words = set(words)
             for word in words:
-                xapian_document.add_term("P%s"%word)
+                xapian_document.add_term("P%s" % word)
 
             return xapian_document
         else:
             return None
 
+    def hash(self, s):
+        """Returns the MD5 hash of a single string."""
+
+        m = md5.new()
+        m.update(s)
+        return m.hexdigest()
+
+    def get_submission_type(self, mime_type=None):
+        """Determines what kind of supported filetype the provided MIME-type
+        corresponds to.
+        
+        Uses self.mimetype if none is provided.
+        """
+
+        if not mime_type:
+            mime_type = self.mimetype
+
+        (major, minor) = mime_type.split('/')
+        if major == 'image':
+            if minor in ('png','gif','jpeg'):
+                return 'image'
+            else:
+                return 'unknown'
+        elif major == 'application' and minor == 'x-shockwave-flash':
+            return 'video'
+        elif major == 'audio' and minor == 'mpeg':
+            return 'audio'
+        elif major == 'text':
+            if minor in ('plain','html'):
+                return 'text'
+            else:
+                return 'unknown'
+        else:
+            return 'unknown'
+
+    def set_file(self, file_object):
+        """Sets self's properties based on provided fileobject.
+        
+        fileobject is a dictionary with 'content' and 'filename'
+        
+        Resizes input image if it is too big. (Specified in ini file.)
+        
+        Sets file_blob, mogile_key and old_mogile_key. (See commit_mogile() for more details.)
+        """
+        
+        self.file_blob = file_object['content']
+        self.filename = file_object['filename']
+
+        self.mimetype = get_mime_type(file_object)
+        self.type = self.get_submission_type()
+
+        toobig = None
+        with Thumbnailer() as t:
+            t.parse(self.file_blob,self.mimetype)
+            toobig = t.generate(int(pylons.config['gallery.fullfile_size']))
+
+        if toobig:
+            self.file_blob = toobig['content']
+
+        self.old_mogile_key = None
+        if self.mogile_key:
+            self.old_mogile_key = self.mogile_key
+
+        fn = os.path.splitext(re.sub(r'[^a-zA-Z0-9\.\-]','_',file_object['filename']))[0]
+        self.mogile_key = hex(int(time.time()) + random.randint(-100,100))[2:] + '_' + fn
+        self.mogile_key = self.mogile_key[0:135] + mimetypes.guess_extension(self.mimetype)
+
+    def generate_halfview(self):
+        """Creates, updates or deletes the 'half' DerivedSubmission
+        
+        MUST USE set_file() FIRST! Needs self.file_blob.
+        
+        If self.file_blob is smaller than half view size (ini file) or is not 'image',
+        delete or don't create DerivedSubmission.
+        
+        If self.file_blob is larger than half view size, create or update DerivedSubmission.
+        
+        Sets file_blob, mogile_key and old_mogile_key in DerivedSubmission.
+        (See commit_mogile() for more details.)
+        """
+        
+        old_mogile_key = None
+        current = self.get_derived_by_type('halfview')
+        if current:
+            old_mogile_key = current.mogile_key
+            #self.derived_submission.remove(current)
+            #Session.delete(current)
+
+        if self.type == 'image':
+            half_fileobject = None
+            with Thumbnailer() as t:
+                t.parse(self.file_blob, self.mimetype)
+                half_fileobject = t.generate(int(pylons.config['gallery.halfview_size']))
+
+            if half_fileobject:
+                new_derived_submission = False
+                if not current:
+                    current = DerivedSubmission('halfview')
+                    new_derived_submission = True
+                filename_parts = os.path.splitext(self.mogile_key)
+                current.mogile_key = filename_parts[0] + '.half' + filename_parts[1]
+                current.mimetype = self.mimetype
+                current.file_blob = half_fileobject['content']
+                current.old_mogile_key = old_mogile_key
+                if new_derived_submission:
+                    self.derived_submission.append(current)
+                else:
+                    Session.update(current)
+                    
+        elif current:
+            self.derived_submission.remove(current)
+            Session.delete(current)
+
+    def generate_thumbnail(self, proposed=None):
+        """Creates, updates or deletes the 'thumb' DerivedSubmission
+        
+        Needs self.file_blob if proposed is None. Must use set_file() first in that case.
+        
+        If proposed is not None, create or update DerivedSubmission
+        
+        If self.file_blob is larger than thumbnail size (ini file), create or update DerivedSubmission.
+        
+        If self.file_blob is smaller than thumbnail size or is not 'image',
+        delete or don't create DerivedSubmission.
+        
+        Sets file_blob, mogile_key and old_mogile_key in DerivedSubmission.
+        (See commit_mogile() for more details.)
+        """
+        
+        if not hasattr(self, 'file_blob'):
+            self.file_blob = None
+
+        old_mogile_key = None
+        current = self.get_derived_by_type('thumb')
+        if current:
+            old_mogile_key = current.mogile_key
+            #self.derived_submission.remove(current)
+            #Session.delete(current)
+
+        thumb_fileobject = None
+        with Thumbnailer() as t:
+            use_self = True
+            dont_bother = False
+            if proposed:
+                proposed_mimetype = get_mime_type(proposed)
+                proposed_type = self.get_submission_type(proposed_mimetype)
+                if proposed_type == 'image':
+                    t.parse(proposed['content'], proposed_mimetype)
+                    use_self = False
+
+            if use_self:
+                if self.type == 'image' and self.file_blob:
+                    t.parse(self.file_blob, self.mimetype)
+                else:
+                    dont_bother = True
+
+            if not dont_bother:
+                thumb_fileobject = t.generate(int(pylons.config['gallery.thumbnail_size']))
+            else:
+                old_mogile_key = None
+
+        if thumb_fileobject:
+            new_derived_submission = False
+            if not current:
+                current = DerivedSubmission('thumb')
+                new_derived_submission = True
+            filename_parts = os.path.splitext(self.mogile_key)
+            current.mogile_key = filename_parts[0] + '.tn' + filename_parts[1]
+            current.mimetype = self.mimetype
+            current.file_blob = thumb_fileobject['content']
+            current.old_mogile_key = old_mogile_key
+            if new_derived_submission:
+                self.derived_submission.append(current)
+            else:
+                Session.update(current)
+        elif current:
+            self.derived_submission.remove(current)
+            Session.delete(current)
+
+    def commit_mogile(self):
+        """
+        Need to roll this into the session commit mechanism somehow.
+        
+        For self and each derived_submission...
+            if self.file_blob, send to mogile using self.mogile key
+            if self.old_mogile_key, remove self.old_mogile_key from mogile
+        """
+        store = mogilefs.Client(pylons.config['mogilefs.domain'], [pylons.config['mogilefs.tracker']])
+
+        if self.file_blob:
+            blobstream = cStringIO.StringIO(self.file_blob)
+            if self.old_mogile_key:
+                store.delete(self.old_mogile_key)
+            store.send_file(self.mogile_key, blobstream)
+            blobstream.close()
+
+        for d in self.derived_submission:
+            if d.file_blob:
+                if d.old_mogile_key:
+                    store.delete(d.old_mogile_key)
+                blobstream = cStringIO.StringIO(d.file_blob)
+                store.send_file(d.mogile_key, blobstream)
+                blobstream.close()
+
 class UserSubmission(object):
-    def __init__(self, user_id, relationship, status ):
+    def __init__(self, user_id, relationship, status):
         self.user_id = user_id
         self.relationship = relationship
         self.status = status
 
 class DerivedSubmission(object):
-    def __init__(self, derivetype ):
+    def __init__(self, derivetype):
         self.derivetype = derivetype
 
 class News(object):
@@ -560,7 +734,7 @@ class EditLog(object):
     def update(self,editlog_entry):
         self.last_edited_by = editlog_entry.edited_by
         self.last_edited_at = editlog_entry.edited_at
-        self.editlog_entries.append(editlog_entry)
+        self.entries.append(editlog_entry)
 
 class EditLogEntry(object):
     def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed):
@@ -572,11 +746,11 @@ class EditLogEntry(object):
         self.previous_text_parsed = previous_text_parsed
 
 class SubmissionTag(object):
-    def __init__ (self, tag):
+    def __init__(self, tag):
         self.tag = tag
 
 class Tag(object):
-    def __init__ (self, text):
+    def __init__(self, text):
         self.text = text
         self.id = crc32(text)
 
@@ -636,7 +810,7 @@ editlog_mapper = mapper(EditLog, editlog_table, properties=dict(
 )
 
 editlog_entry_mapper = mapper(EditLogEntry, editlog_entry_table, properties=dict(
-    editlog = relation(EditLog, backref='editlog_entries'),
+    editlog = relation(EditLog, backref='entries'),
     edited_by = relation(User),
     )
 )
@@ -652,17 +826,19 @@ user_submission_mapper = mapper(UserSubmission, user_submission_table, propertie
     )
 )
 
+'''
 image_metadata_mapper = mapper(ImageMetadata, image_metadata_table)
+'''
 
 submission_mapper = mapper(Submission, submission_table, properties=dict(
-    metadata = relation(ImageMetadata, backref='submission'),
+    #metadata = relation(ImageMetadata, backref='submission'),
     editlog = relation(EditLog)
     )
 )
 
 derived_submission_mapper = mapper(DerivedSubmission,derived_submission_table, properties=dict(
-    submission = relation(Submission, backref='derived_submission'),
-    metadata = relation(ImageMetadata, backref='derived_submission')
+    submission = relation(Submission, backref='derived_submission', lazy=False)
+    #metadata = relation(ImageMetadata, backref='derived_submission')
     )
 )
 
@@ -687,3 +863,4 @@ note_mapper = mapper(Note, note_table, properties=dict(
     recipient = relation(User, primaryjoin=note_table.c.to_user_id==user_table.c.id),
     )
 )
+

@@ -22,13 +22,13 @@
         % for item in c.submissions:
         <div class="submission">
             <div class="submission_header">
-                <div class="submission_title">${h.link_to(item.title, h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist().username))}</div>
+                <div class="submission_title">${h.link_to(item.title, h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist.username))}</div>
                 <div class="submission_date">Date: ${h.format_time(item.time)}</div>
             </div>
             <div class="submission_info">
                 ${item.description_parsed}<br>
-                % if item.get_derived_index(['thumb']) != None:
-                <div class="submission_thumbnail">${h.image_tag(h.url_for(controller='gallery', action='file', filename=item.get_derived_by_type('thumb').metadata.get_filename()), item.title)}</div>
+                % if item.get_derived_by_type('thumb') != None:
+                <div class="submission_thumbnail">${h.image_tag(h.url_for(controller='gallery', action='file', filename=item.get_derived_by_type('thumb').mogile_key), item.title)}</div>
                 % endif
             </div>
         </div>

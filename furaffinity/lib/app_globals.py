@@ -12,4 +12,3 @@ class Globals(object):
         variable
         """
         pass
-

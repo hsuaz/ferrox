@@ -11,9 +11,9 @@ from pylons.i18n import _, ungettext, N_
 from pylons.templating import render
 from routes import request_config
 
+from furaffinity.lib.formgen import FormGenerator
 import furaffinity.lib.helpers as h
 import furaffinity.lib.hashing as hashing
-from furaffinity.lib.formgen import FormGenerator
 import furaffinity.model as model
 import furaffinity.model.form as form
 

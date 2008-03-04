@@ -1,11 +1,8 @@
-import logging
-
-import formencode
-
 from furaffinity.lib.base import *
 import furaffinity.lib.paginate as paginate
-
 from furaffinity.model import form
+
+import logging
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +50,10 @@ class StylesheetsController(BaseController):
     }
 
     def index(self, sheet, color=None):
+        """Returns the selected stylesheet filled with the selected colors."""
+
         response.headers['Content-type'] = 'text/css;charset=utf8'
         c.colors = self.colorschemes.get(color, self.colorschemes['dark'])
         return render('stylesheets/%s.mako' % sheet)
+
     # TODO make a sub for the float-clear stuff

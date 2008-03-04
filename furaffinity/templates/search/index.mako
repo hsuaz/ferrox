@@ -5,17 +5,21 @@
 
     ${c.form.start(h.url(controller='search', action='do'), method='post')}
     <dl class="standard-form">
-        <dt>Query:</dt>
+        <dt>Query</dt>
         <dd>${c.form.text_field('query_main')}</dd>
-        <dt>Search What:</dt>
-        <dd>${c.form.check_box('search_title', checked=True)} Title
-        ${c.form.check_box('search_description', checked=True)} Description </dd>
-        <dt>Search For:</dt>
-        <dd>${h.radio_button('search_for', value='submissions', checked='checked')} Submissions
-        ${h.radio_button('search_for', value='journals')} Journals
-        <dt>Tags:</dt>
+        <dt>Search What</dt>
+        <dd>
+            ${c.form.check_box('search_title', checked=True)} Title
+            ${c.form.check_box('search_description', checked=True)} Description
+        </dd>
+        <dt>Search For</dt>
+        <dd>
+            ${c.form.radio_button('search_for', value='submissions', checked='checked')} Submissions
+            ${c.form.radio_button('search_for', value='journals')} Journals
+        </dd>
+        <dt>Tags</dt>
         <dd>${c.form.text_field('query_tags')}</dd>
-        <dt>Artist/Author:</dt>
+        <dt>Artist/Author</dt>
         <dd>${c.form.text_field('query_author')}</dd>
     </dl>
 

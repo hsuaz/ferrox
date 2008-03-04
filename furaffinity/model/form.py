@@ -44,7 +44,7 @@ class Recaptcha(validators.FormValidator):
 
 class ExistingUserValidator(formencode.FancyValidator):
     def _to_python(self, value, state):
-        return model.retrieve_user(value)
+        return model.User.get_by_name(value)
 
     def validate_python(self, value, state):
         if value == None:
@@ -85,13 +85,19 @@ class NewsForm(formencode.Schema):
     content = validators.NotEmpty()
     is_anonymous = validators.Bool()
 
-class SubmitForm(formencode.Schema):
-    fullfile = FileUploadValidator(not_empty=True)
+class SubmitEditForm(formencode.Schema):
+    fullfile = FileUploadValidator()
     halffile = FileUploadValidator()
     thumbfile = FileUploadValidator()
     title = formencode.validators.String(not_empty=True)
     tags = formencode.validators.String(not_empty=True)
     description = formencode.validators.NotEmpty(not_empty=True)
+
+class SubmitForm(SubmitEditForm):
+    fullfile = FileUploadValidator(not_empty=True)
+
+class EditForm(SubmitEditForm):
+    fullfile = FileUploadValidator()
 
 class JournalForm(formencode.Schema):
     title = validators.String(not_empty=True)

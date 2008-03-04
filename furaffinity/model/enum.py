@@ -50,6 +50,13 @@ class Enum(types.TypeDecorator):
         
     def is_mutable(self):
         return False
+        
+    def compare_values(self, x, y):
+        if type(x) == type(str()):
+            x = self.convert_bind_param(x, None)
+        if type(y) == type(str()):
+            y = self.convert_bind_param(y, None)
+        return x == y
 
 if __name__ == '__main__':
     from sqlalchemy import *

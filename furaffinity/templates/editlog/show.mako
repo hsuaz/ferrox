@@ -8,11 +8,11 @@
     % for item in c.editlog_entries:
     <div class="entry">
         <div class="edit-header">
-            <div class="title">${item['previous_title']}</div>
-            <div class="author">Edited by ${lib.user_link(item['edited_by'])} at ${h.format_time(item['edited_at'])}</div>
+            <div class="title">${item.previous_title}</div>
+            <div class="author">Edited by ${lib.user_link(item.edited_by)} at ${h.format_time(item.edited_at)}</div>
         </div>
         <div class="content">
-            ${item['previous_text_parsed']}<br>
+            ${item.previous_text_parsed}<br>
         </div>
     </div>
     % endfor

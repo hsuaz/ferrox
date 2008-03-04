@@ -84,6 +84,8 @@ def get_by_text(text, create=False):
     return cache_by_text[text]
 
 def cache_by_list(list):
+    if not list:
+        return []
     list_of_tags_fetched = []
     total_tags_to_fetch = 0
     tag_query = model.Session.query(model.Tag)

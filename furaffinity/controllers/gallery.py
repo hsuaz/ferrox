@@ -119,6 +119,8 @@ class GalleryController(BaseController):
 
         if c.page_owner != None:
             q = q.filter(model.UserSubmission.c.user_id == c.page_owner.id)
+            
+        q = q.filter(model.UserSubmission.c.review_status == 'normal')
 
         c.submissions = q.all()
         return render('/gallery/index.mako')
@@ -153,25 +155,16 @@ class GalleryController(BaseController):
         self.is_my_submission(submission, True)
         c.text = "Are you sure you want to delete the submission \"%s\"?" % \
                  submission.title
-        c.url = h.url(action="delete_commit", id=id)
+        c.url = h.url_for(controller='gallery', action="delete_commit", id=id)
         c.fields = {}
         return render('/confirm.mako')
 
     @check_perms(['submit_art','administrate'])
     def edit_commit(self, id=None):
         """Form handler for editing a submission."""
-
-        # -- validate form input --
-        validator = model.form.EditForm()
-        form_data = None
-        try:
-            form_data = validator.to_python(request.params)
-        except formencode.Invalid, error:
-            c.edit = True
-            c.form = FormGenerator(form_error=error)
-            return render('/gallery/submit.mako')
-
+        
         # -- get image from database, make sure user has permission --
+        # Error handling needs submission, so we need to get it no matter what.
         submission = get_submission(id,[
             'tags',
             'user_submission',
@@ -181,6 +174,33 @@ class GalleryController(BaseController):
             'editlog.entries'
         ])
         self.is_my_submission(submission,True)
+
+        # -- validate form input --
+        validator = model.form.EditForm()
+        form_data = None
+        try:
+            form_data = validator.to_python(request.params)
+        except formencode.Invalid, error:
+            c.edit = True
+            c.submission = submission
+            c.form = FormGenerator(form_error=error)
+            return render('/gallery/submit.mako')
+
+        
+        if not submission.editlog:
+            editlog = model.EditLog(c.auth_user)
+            model.Session.save(editlog)
+            submission.editlog = editlog
+        
+        editlog_entry = model.EditLogEntry(
+            user = c.auth_user,
+            reason = 'still no reason to the madness',
+            previous_title = submission.title,
+            previous_text = submission.description,
+            previous_text_parsed = submission.description_parsed
+        )
+        model.Session.save(editlog_entry)
+        submission.editlog.update(editlog_entry)
 
         submission.title = h.escape_once(form_data['title'])
         submission.description = h.escape_once(form_data['description'])
@@ -214,36 +234,38 @@ class GalleryController(BaseController):
             xapian_document = submission.to_xapian()
             xapian_database.replace_document("I%d"%submission.id,xapian_document)
 
-        h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id, username=submission.primary_artist.display_name))
+        h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id, username=submission.primary_artist.username))
 
 
     @check_perms(['submit_art','administrate'])
     def delete_commit(self, id=None):
         """Form handler for deleting a submission."""
-
+    
         # -- validate form input --
         validator = model.form.DeleteForm()
         delete_form_data = None
         try:
             delete_form_data = validator.to_python(request.params)
         except formencode.Invalid, error:
-            return "There were input errors: %s" % (error)
+            return render('/error.mako')
 
         submission = get_submission(id)
         self.is_my_submission(submission,True)
+        redirect_username=submission.primary_artist.username
 
         if delete_form_data['confirm'] != None:
             # -- update submission in database --
             submission.status = 'deleted'
-            submission.user_submission[0].status = 'deleted'
+            for user_submission in submission.user_submission:
+                user_submission.review_status = 'deleted'
             model.Session.commit()
 
             if search_enabled:
-                xapian_database = WritableDatabase('submission.xapian',DB_OPEN)
+                xapian_database = xapian.WritableDatabase('submission.xapian',xapian.DB_OPEN)
                 xapian_database.delete_document("I%d"%submission.id)
-            h.redirect_to(h.url_for(controller='gallery', action='index', username=submission.user_submission[0].user.username, id=None))
+            h.redirect_to(h.url_for(controller='gallery', action='index', username=redirect_username, id=None))
         else:
-            h.redirect_to(h.url_for(controller='gallery', action='view', id=submission.id))
+            h.redirect_to(h.url_for(controller='gallery', action='view', id=submission.id, username=redirect_username))
 
     @check_perm('submit_art')
     def submit_upload(self):
@@ -275,7 +297,8 @@ class GalleryController(BaseController):
         user_submission = model.UserSubmission(
             user_id = session['user_id'],
             relationship = 'artist',
-            status = 'primary'
+            ownership_status = 'primary',
+            review_status = 'normal'
         )
         submission.user_submission.append(user_submission)
 

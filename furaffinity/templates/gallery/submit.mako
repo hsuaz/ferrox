@@ -4,7 +4,7 @@
     <h2>Submit Art</h2>
 
     % if c.edit:
-    ${c.form.start(h.url(controller='gallery', action='edit_commit', id=c.submission.id), method='post', multipart=True)}
+    ${c.form.start(h.url(controller='gallery', action='edit_commit', id=c.submission.id, username=c.submission.primary_artist.username), method='post', multipart=True)}
     % else:
     ${c.form.start(h.url(controller='gallery', action='submit_upload'), method='post', multipart=True)}
     % endif

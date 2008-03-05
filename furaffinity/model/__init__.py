@@ -26,6 +26,7 @@ from binascii import crc32
 
 from furaffinity.lib.thumbnailer import Thumbnailer
 from furaffinity.lib.mimetype import get_mime_type
+from furaffinity.lib import helpers as h
 
 search_enabled = True
 try:
@@ -56,7 +57,8 @@ journal_status_type = Enum(['normal','under_review','removed_by_admin','deleted'
 submission_type_type = Enum(['image','video','audio','text'])
 submission_status_type = Enum(['normal','under_review','removed_by_admin','unlinked','deleted'])
 derived_submission_derivetype_type = Enum(['thumb','halfview'])
-user_submission_status_type = Enum(['primary','normal','deleted'])
+user_submission_ownership_status_type = Enum(['primary','normal'])
+user_submission_review_status_type = Enum(['normal','under_review','removed_by_admin','deleted'])
 user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin'])
 
 # Users
@@ -194,9 +196,10 @@ derived_submission_table = Table('derived_submission', metadata,
 historic_submission_table = Table('historic_submission', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('submission_id', types.Integer, ForeignKey("submission.id"), nullable=False),
-    Column('date', types.Integer, nullable=False),
     Column('mogile_key', types.String(150), nullable=False),
     Column('mimetype', types.String(35), nullable=False),
+    Column('edited_at', types.Integer, nullable=False, default=time.time()),
+    Column('edited_by_id', types.Integer, ForeignKey('user.id')),
     mysql_engine='InnoDB'
 )
 
@@ -205,13 +208,14 @@ user_submission_table = Table('user_submission', metadata,
     Column('user_id', types.Integer, ForeignKey("user.id")),
     Column('submission_id', types.Integer, ForeignKey("submission.id")),
     Column('relationship', user_submission_relationship_type, nullable=False),
-    Column('status', user_submission_status_type, nullable=False),
+    Column('ownership_status', user_submission_ownership_status_type, nullable=False),
+    Column('review_status', user_submission_review_status_type, nullable=False),
     mysql_engine='InnoDB'
 )
 
 editlog_table = Table('editlog', metadata,
     Column('id', types.Integer, primary_key=True),
-    Column('last_edited_at', types.DateTime, nullable=False, default=datetime.now),
+    Column('last_edited_at', types.Integer, nullable=False, default=time.time()),
     Column('last_edited_by_id', types.Integer, ForeignKey('user.id')),
     mysql_engine='InnoDB'
 )
@@ -219,7 +223,7 @@ editlog_table = Table('editlog', metadata,
 editlog_entry_table = Table('editlog_entry', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
-    Column('edited_at', types.DateTime, nullable=False, default=datetime.now),
+    Column('edited_at', types.Integer, nullable=False, default=time.time()),
     Column('edited_by_id', types.Integer, ForeignKey('user.id')),
     Column('reason', types.String(length=250)),
     Column('previous_title', types.Text, nullable=False),
@@ -458,7 +462,7 @@ class Submission(object):
     def _get_primary_artist(self):
         #return self.user_submission[0].user
         for index in xrange(0,len(self.user_submission)):
-            if self.user_submission[index].status == 'primary':
+            if self.user_submission[index].ownership_status == 'primary':
                 return self.user_submission[index].user
     primary_artist = property(_get_primary_artist)
 
@@ -576,17 +580,14 @@ class Submission(object):
             self.file_blob = toobig['content']
 
         self.old_mogile_key = None
-        print self.mogile_key, 
         if self.mogile_key != None:
-            print " making historic %s" % self.mogile_key,
-            historic = HistoricSubmission()
+            historic = HistoricSubmission(self.primary_artist)
             historic.mogile_key = self.mogile_key
             historic.mimetype = self.mimetype
             self.historic_submission.append(historic)
             
             #No more deleting!
             #self.old_mogile_key = self.mogile_key
-        print "endl"
         
         fn = os.path.splitext(re.sub(r'[^a-zA-Z0-9\.\-]','_',file_object['filename']))[0]
         self.mogile_key = hex(int(time.time()) + random.randint(-100,100))[2:] + '_' + fn
@@ -692,7 +693,7 @@ class Submission(object):
                 current = DerivedSubmission('thumb')
                 new_derived_submission = True
             else:
-                historic = HistoricSubmission()
+                historic = HistoricSubmission(self.primary_artist)
                 historic.mogile_key = current.mogile_key
                 historic.mimetype = current.mimetype
                 self.historic_submission.append(historic)
@@ -730,7 +731,7 @@ class Submission(object):
             blobstream.close()
 
         for d in self.derived_submission:
-            if d.file_blob:
+            if hasattr(d,'file_blob') and d.file_blob:
                 if hasattr(d,'old_mogile_key') and d.old_mogile_key:
                     store.delete(d.old_mogile_key)
                 blobstream = cStringIO.StringIO(d.file_blob)
@@ -738,18 +739,28 @@ class Submission(object):
                 blobstream.close()
 
 class UserSubmission(object):
-    def __init__(self, user_id, relationship, status):
+    def __init__(self, user_id, relationship, ownership_status, review_status):
         self.user_id = user_id
         self.relationship = relationship
-        self.status = status
+        self.ownership_status = ownership_status
+        self.review_status = review_status
 
 class DerivedSubmission(object):
     def __init__(self, derivetype):
         self.derivetype = derivetype
 
 class HistoricSubmission(object):
-    def __init__(self):
-        self.date = time.time()
+    def __init__(self, user):
+        self.edited_by = user
+        
+    def _get_previous_title(self):
+        return "Historic Submission: %s" % self.mogile_key
+    previous_title = property(_get_previous_title)
+    
+    def _get_previous_text_parsed(self):
+        return "[%s]"%h.link_to('View Historic Submission',h.url_for(controller='gallery', action='file', filename=self.mogile_key))
+    previous_text_parsed = property(_get_previous_text_parsed)
+
 
 class News(object):
     def __init__(self, title, content, author):
@@ -760,7 +771,7 @@ class News(object):
 class EditLog(object):
     def __init__(self,user):
         self.last_edited_by = user
-        self.last_edited_at = datetime.now()
+        self.last_edited_at = time.time()
 
     def update(self,editlog_entry):
         self.last_edited_by = editlog_entry.edited_by
@@ -770,7 +781,7 @@ class EditLog(object):
 class EditLogEntry(object):
     def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed):
         self.edited_by = user
-        self.edited_at = datetime.now()
+        self.edited_at = time.time()
         self.reason = reason
         self.previous_title = previous_title
         self.previous_text = previous_text
@@ -868,7 +879,8 @@ derived_submission_mapper = mapper(DerivedSubmission,derived_submission_table, p
 )
 
 historic_submission_mapper = mapper(HistoricSubmission,historic_submission_table, properties=dict(
-    submission = relation(Submission, backref='historic_submission')
+    submission = relation(Submission, backref='historic_submission'),
+    edited_by = relation(User)
     )
 )
 

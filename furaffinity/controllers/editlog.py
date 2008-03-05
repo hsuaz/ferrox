@@ -34,9 +34,36 @@ class EditlogController(BaseController):
         """Edit log for a submission's description."""
 
         submission = get_submission(id)
-
+        
         c.original = submission
         c.original_controller = 'gallery'
-        c.editlog_entries = submission.editlog.entries
-
+        
+        # Need to weave historic_submission and editlog.entries together.
+        c.editlog_entries = []
+        
+        historic_len = len(submission.historic_submission)
+        editlog_len = 0;
+        if submission.editlog:
+            editlog_len = len(submission.editlog.entries)
+            
+        editlog_index = 0
+        historic_index = 0
+        
+        while editlog_index < editlog_len or historic_index < historic_len:
+            if editlog_index < editlog_len and historic_index < historic_len:
+                if submission.editlog.entries[editlog_index].edited_at < submission.historic_submission[historic_index].edited_at:
+                    c.editlog_entries.append(submission.editlog.entries[editlog_index])
+                    editlog_index += 1
+                else:
+                    c.editlog_entries.append(submission.historic_submission[historic_index])
+                    historic_index += 1
+            elif editlog_index < editlog_len:
+                c.editlog_entries.append(submission.editlog.entries[editlog_index])
+                editlog_index += 1
+            else: #if historic_index < historic_len:
+                c.editlog_entries.append(submission.historic_submission[historic_index])
+                historic_index += 1
+            
+                
+        
         return render('/editlog/show.mako')

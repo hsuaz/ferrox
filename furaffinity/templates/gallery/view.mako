@@ -20,7 +20,7 @@
         % elif (c.submission.type == 'audio'):
         ${h.embed_mp3(h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key, id=None))} (Music Submission)<br>
         % elif (c.submission.type == 'text'):
-        ${h.link_to('Text Submission', h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key, id=None))}, Text submission<br>
+        ${h.link_to('Text Submission', h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key))}, Text submission<br>
         <pre>
         ${c.submission.description_parsed}
         </pre>

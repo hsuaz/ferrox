@@ -79,7 +79,11 @@ def ip_to_string(ip_integer):
 
 def format_time(datetime):
     """Format a datetime object standardly."""
-    return datetime.strftime('%m/%d/%y %I:%M %p')
+    format_string = '%m/%d/%y %I:%M %p'
+    if hasattr(datetime,'strftime'):
+        return datetime.strftime(format_string)
+    else:
+        return time.strftime(format_string,time.gmtime(datetime))
 
 def image_tag(source, alt=None, size=None, **options):
     """

@@ -185,8 +185,16 @@ submission_table = Table('submission', metadata,
 derived_submission_table = Table('derived_submission', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('submission_id', types.Integer, ForeignKey("submission.id"), nullable=False),
-    #Column('image_metadata_id', types.Integer, ForeignKey("image_metadata.id"), nullable=False),
     Column('derivetype', derived_submission_derivetype_type, nullable=False),
+    Column('mogile_key', types.String(150), nullable=False),
+    Column('mimetype', types.String(35), nullable=False),
+    mysql_engine='InnoDB'
+)
+
+historic_submission_table = Table('historic_submission', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('submission_id', types.Integer, ForeignKey("submission.id"), nullable=False),
+    Column('date', types.Integer, nullable=False),
     Column('mogile_key', types.String(150), nullable=False),
     Column('mimetype', types.String(35), nullable=False),
     mysql_engine='InnoDB'
@@ -444,6 +452,8 @@ class Submission(object):
         self.discussion_id = 0
         self.status = 'normal'
         self.file_blob = None
+        self.old_mogile_key = None
+        self.mogile_key = None
 
     def _get_primary_artist(self):
         #return self.user_submission[0].user
@@ -566,9 +576,18 @@ class Submission(object):
             self.file_blob = toobig['content']
 
         self.old_mogile_key = None
-        if self.mogile_key:
-            self.old_mogile_key = self.mogile_key
-
+        print self.mogile_key, 
+        if self.mogile_key != None:
+            print " making historic %s" % self.mogile_key,
+            historic = HistoricSubmission()
+            historic.mogile_key = self.mogile_key
+            historic.mimetype = self.mimetype
+            self.historic_submission.append(historic)
+            
+            #No more deleting!
+            #self.old_mogile_key = self.mogile_key
+        print "endl"
+        
         fn = os.path.splitext(re.sub(r'[^a-zA-Z0-9\.\-]','_',file_object['filename']))[0]
         self.mogile_key = hex(int(time.time()) + random.randint(-100,100))[2:] + '_' + fn
         self.mogile_key = self.mogile_key[0:135] + mimetypes.guess_extension(self.mimetype)
@@ -672,11 +691,19 @@ class Submission(object):
             if not current:
                 current = DerivedSubmission('thumb')
                 new_derived_submission = True
+            else:
+                historic = HistoricSubmission()
+                historic.mogile_key = current.mogile_key
+                historic.mimetype = current.mimetype
+                self.historic_submission.append(historic)
+                
             filename_parts = os.path.splitext(self.mogile_key)
             current.mogile_key = filename_parts[0] + '.tn' + filename_parts[1]
             current.mimetype = self.mimetype
             current.file_blob = thumb_fileobject['content']
-            current.old_mogile_key = old_mogile_key
+            #no more deleting
+            #current.old_mogile_key = old_mogile_key
+            
             if new_derived_submission:
                 self.derived_submission.append(current)
             else:
@@ -704,7 +731,7 @@ class Submission(object):
 
         for d in self.derived_submission:
             if d.file_blob:
-                if d.old_mogile_key:
+                if hasattr(d,'old_mogile_key') and d.old_mogile_key:
                     store.delete(d.old_mogile_key)
                 blobstream = cStringIO.StringIO(d.file_blob)
                 store.send_file(d.mogile_key, blobstream)
@@ -719,6 +746,10 @@ class UserSubmission(object):
 class DerivedSubmission(object):
     def __init__(self, derivetype):
         self.derivetype = derivetype
+
+class HistoricSubmission(object):
+    def __init__(self):
+        self.date = time.time()
 
 class News(object):
     def __init__(self, title, content, author):
@@ -826,19 +857,18 @@ user_submission_mapper = mapper(UserSubmission, user_submission_table, propertie
     )
 )
 
-'''
-image_metadata_mapper = mapper(ImageMetadata, image_metadata_table)
-'''
-
 submission_mapper = mapper(Submission, submission_table, properties=dict(
-    #metadata = relation(ImageMetadata, backref='submission'),
     editlog = relation(EditLog)
     )
 )
 
 derived_submission_mapper = mapper(DerivedSubmission,derived_submission_table, properties=dict(
     submission = relation(Submission, backref='derived_submission', lazy=False)
-    #metadata = relation(ImageMetadata, backref='derived_submission')
+    )
+)
+
+historic_submission_mapper = mapper(HistoricSubmission,historic_submission_table, properties=dict(
+    submission = relation(Submission, backref='historic_submission')
     )
 )
 

@@ -19,6 +19,7 @@ from datetime import datetime
 
 from datetime import datetime, timedelta
 from enum import *
+from datetimeasint import *
 import re
 
 import sys
@@ -105,8 +106,8 @@ ip_log_table = Table('ip_log', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('user_id', types.Integer, ForeignKey('user.id'), nullable=False),
     Column('ip', ip_type, nullable=False),
-    Column('start_time', types.DateTime, nullable=False, default=datetime.now),
-    Column('end_time', types.DateTime, nullable=False, default=datetime.now),
+    Column('start_time', DateTimeAsInteger, nullable=False, default=datetime.now),
+    Column('end_time', DateTimeAsInteger, nullable=False, default=datetime.now),
     mysql_engine='InnoDB'
 )
 
@@ -121,7 +122,7 @@ note_table = Table('note', metadata,
     Column('content', types.Unicode, nullable=False),
     Column('content_parsed', types.Unicode, nullable=False),
     Column('status', note_status_type, nullable=False),
-    Column('time', types.DateTime, nullable=False, default=datetime.now),
+    Column('time', DateTimeAsInteger, nullable=False, default=datetime.now),
     mysql_engine='InnoDB'
 )
 
@@ -134,7 +135,7 @@ journal_entry_table = Table('journal_entry', metadata,
     Column('title', types.Unicode, nullable=False),
     Column('content', types.Unicode, nullable=False),
     Column('content_parsed', types.Unicode, nullable=False),
-    Column('time', types.DateTime, nullable=False, default=datetime.now),
+    Column('time', DateTimeAsInteger, nullable=False, default=datetime.now),
     Column('status', journal_status_type, index=True ),
     Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
     mysql_engine='InnoDB'
@@ -147,7 +148,7 @@ news_table = Table('news', metadata,
     Column('author_user_id', types.Integer, ForeignKey("user.id")),
     Column('title', types.Unicode, nullable=False),
     Column('content', types.Unicode, nullable=False),
-    Column('time', types.DateTime, nullable=False, default=datetime.now),
+    Column('time', DateTimeAsInteger, nullable=False, default=datetime.now),
     Column('is_anonymous', types.Boolean, nullable=False, default=False),
     Column('is_deleted', types.Boolean, nullable=False, default=False),
     Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
@@ -176,7 +177,7 @@ submission_table = Table('submission', metadata,
     Column('description_parsed', types.Text, nullable=False),
     Column('type', submission_type_type, nullable=False),
     Column('discussion_id', types.Integer, nullable=False),
-    Column('time', types.DateTime, nullable=False, default=datetime.now),
+    Column('time', DateTimeAsInteger, nullable=False, default=datetime.now),
     Column('status', submission_status_type, index=True, nullable=False),
     Column('mogile_key', types.String(150), nullable=False),
     Column('mimetype', types.String(35), nullable=False),
@@ -198,7 +199,7 @@ historic_submission_table = Table('historic_submission', metadata,
     Column('submission_id', types.Integer, ForeignKey("submission.id"), nullable=False),
     Column('mogile_key', types.String(150), nullable=False),
     Column('mimetype', types.String(35), nullable=False),
-    Column('edited_at', types.Integer, nullable=False, default=time.time()),
+    Column('edited_at', DateTimeAsInteger, nullable=False, default=datetime.now),
     Column('edited_by_id', types.Integer, ForeignKey('user.id')),
     mysql_engine='InnoDB'
 )
@@ -215,7 +216,7 @@ user_submission_table = Table('user_submission', metadata,
 
 editlog_table = Table('editlog', metadata,
     Column('id', types.Integer, primary_key=True),
-    Column('last_edited_at', types.Integer, nullable=False, default=time.time()),
+    Column('last_edited_at', DateTimeAsInteger, nullable=False, default=datetime.now),
     Column('last_edited_by_id', types.Integer, ForeignKey('user.id')),
     mysql_engine='InnoDB'
 )
@@ -223,7 +224,7 @@ editlog_table = Table('editlog', metadata,
 editlog_entry_table = Table('editlog_entry', metadata,
     Column('id', types.Integer, primary_key=True),
     Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
-    Column('edited_at', types.Integer, nullable=False, default=time.time()),
+    Column('edited_at', DateTimeAsInteger, nullable=False, default=datetime.now),
     Column('edited_by_id', types.Integer, ForeignKey('user.id')),
     Column('reason', types.String(length=250)),
     Column('previous_title', types.Text, nullable=False),
@@ -771,7 +772,7 @@ class News(object):
 class EditLog(object):
     def __init__(self,user):
         self.last_edited_by = user
-        self.last_edited_at = time.time()
+        self.last_edited_at = datetime.now
 
     def update(self,editlog_entry):
         self.last_edited_by = editlog_entry.edited_by
@@ -781,7 +782,7 @@ class EditLog(object):
 class EditLogEntry(object):
     def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed):
         self.edited_by = user
-        self.edited_at = time.time()
+        self.edited_at = datetime.now()
         self.reason = reason
         self.previous_title = previous_title
         self.previous_text = previous_text

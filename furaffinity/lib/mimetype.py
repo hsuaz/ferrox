@@ -5,6 +5,8 @@ try:
         ms.load()
         type = ms.buffer(fileobject['content'])
         ms.close()
+        if ';' in type:
+            return type.split(';')[0]
         return type
 except ImportError:
     import mimetypes

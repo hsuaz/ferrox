@@ -29,6 +29,9 @@ from furaffinity.lib.thumbnailer import Thumbnailer
 from furaffinity.lib.mimetype import get_mime_type
 from furaffinity.lib import helpers as h
 
+import chardet
+import codecs
+
 search_enabled = True
 try:
     import xapian
@@ -531,7 +534,7 @@ class Submission(object):
     def get_submission_type(self, mime_type=None):
         """Determines what kind of supported filetype the provided MIME-type
         corresponds to.
-        
+
         Uses self.mimetype if none is provided.
         """
 
@@ -558,27 +561,35 @@ class Submission(object):
 
     def set_file(self, file_object):
         """Sets self's properties based on provided fileobject.
-        
+
         fileobject is a dictionary with 'content' and 'filename'
-        
+
         Resizes input image if it is too big. (Specified in ini file.)
-        
+
         Sets file_blob, mogile_key and old_mogile_key. (See commit_mogile() for more details.)
         """
-        
+
         self.file_blob = file_object['content']
         self.filename = file_object['filename']
 
         self.mimetype = get_mime_type(file_object)
         self.type = self.get_submission_type()
+        print self.mimetype
 
-        toobig = None
-        with Thumbnailer() as t:
-            t.parse(self.file_blob,self.mimetype)
-            toobig = t.generate(int(pylons.config['gallery.fullfile_size']))
+        if self.type == 'image':
+            toobig = None
+            with Thumbnailer() as t:
+                t.parse(self.file_blob,self.mimetype)
+                toobig = t.generate(int(pylons.config['gallery.fullfile_size']))
 
-        if toobig:
-            self.file_blob = toobig['content']
+            if toobig:
+                self.file_blob = toobig['content']
+        elif self.type == 'text':
+            print self.mimetype
+            detection_result = chardet.detect(self.file_blob)
+            if detection_result['encoding'].lower() != 'utf-8' and detection_result['encoding'].lower() != 'ascii':
+                unicode_string = codecs.getdecoder(detection_result['encoding'])(self.file_blob)
+                self.file_blob = codecs.getencoder('utf-8')(unicode_string)
 
         self.old_mogile_key = None
         if self.mogile_key != None:
@@ -586,28 +597,28 @@ class Submission(object):
             historic.mogile_key = self.mogile_key
             historic.mimetype = self.mimetype
             self.historic_submission.append(historic)
-            
+
             #No more deleting!
             #self.old_mogile_key = self.mogile_key
-        
+
         fn = os.path.splitext(re.sub(r'[^a-zA-Z0-9\.\-]','_',file_object['filename']))[0]
         self.mogile_key = hex(int(time.time()) + random.randint(-100,100))[2:] + '_' + fn
         self.mogile_key = self.mogile_key[0:135] + mimetypes.guess_extension(self.mimetype)
 
     def generate_halfview(self):
         """Creates, updates or deletes the 'half' DerivedSubmission
-        
+
         MUST USE set_file() FIRST! Needs self.file_blob.
-        
+
         If self.file_blob is smaller than half view size (ini file) or is not 'image',
         delete or don't create DerivedSubmission.
-        
+
         If self.file_blob is larger than half view size, create or update DerivedSubmission.
-        
+
         Sets file_blob, mogile_key and old_mogile_key in DerivedSubmission.
         (See commit_mogile() for more details.)
         """
-        
+
         old_mogile_key = None
         current = self.get_derived_by_type('halfview')
         if current:
@@ -635,27 +646,27 @@ class Submission(object):
                     self.derived_submission.append(current)
                 else:
                     Session.update(current)
-                    
+
         elif current:
             self.derived_submission.remove(current)
             Session.delete(current)
 
     def generate_thumbnail(self, proposed=None):
         """Creates, updates or deletes the 'thumb' DerivedSubmission
-        
+
         Needs self.file_blob if proposed is None. Must use set_file() first in that case.
-        
+
         If proposed is not None, create or update DerivedSubmission
-        
+
         If self.file_blob is larger than thumbnail size (ini file), create or update DerivedSubmission.
-        
+
         If self.file_blob is smaller than thumbnail size or is not 'image',
         delete or don't create DerivedSubmission.
-        
+
         Sets file_blob, mogile_key and old_mogile_key in DerivedSubmission.
         (See commit_mogile() for more details.)
         """
-        
+
         if not hasattr(self, 'file_blob'):
             self.file_blob = None
 
@@ -698,14 +709,14 @@ class Submission(object):
                 historic.mogile_key = current.mogile_key
                 historic.mimetype = current.mimetype
                 self.historic_submission.append(historic)
-                
+
             filename_parts = os.path.splitext(self.mogile_key)
             current.mogile_key = filename_parts[0] + '.tn' + filename_parts[1]
             current.mimetype = self.mimetype
             current.file_blob = thumb_fileobject['content']
             #no more deleting
             #current.old_mogile_key = old_mogile_key
-            
+
             if new_derived_submission:
                 self.derived_submission.append(current)
             else:
@@ -717,7 +728,7 @@ class Submission(object):
     def commit_mogile(self):
         """
         Need to roll this into the session commit mechanism somehow.
-        
+
         For self and each derived_submission...
             if self.file_blob, send to mogile using self.mogile key
             if self.old_mogile_key, remove self.old_mogile_key from mogile
@@ -753,11 +764,11 @@ class DerivedSubmission(object):
 class HistoricSubmission(object):
     def __init__(self, user):
         self.edited_by = user
-        
+
     def _get_previous_title(self):
         return "Historic Submission: %s" % self.mogile_key
     previous_title = property(_get_previous_title)
-    
+
     def _get_previous_text_parsed(self):
         return "[%s]"%h.link_to('View Historic Submission',h.url_for(controller='gallery', action='file', filename=self.mogile_key))
     previous_text_parsed = property(_get_previous_text_parsed)

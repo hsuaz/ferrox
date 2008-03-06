@@ -8,8 +8,6 @@ from furaffinity.lib.formgen import FormGenerator
 from furaffinity.lib.thumbnailer import Thumbnailer
 from furaffinity.lib.mimetype import get_mime_type
 
-from chardet.universaldetector import UniversalDetector
-import codecs
 import formencode
 import logging
 import md5
@@ -119,7 +117,7 @@ class GalleryController(BaseController):
 
         if c.page_owner != None:
             q = q.filter(model.UserSubmission.c.user_id == c.page_owner.id)
-            
+
         q = q.filter(model.UserSubmission.c.review_status == 'normal')
 
         c.submissions = q.all()
@@ -162,7 +160,7 @@ class GalleryController(BaseController):
     @check_perms(['submit_art','administrate'])
     def edit_commit(self, id=None):
         """Form handler for editing a submission."""
-        
+
         # -- get image from database, make sure user has permission --
         # Error handling needs submission, so we need to get it no matter what.
         submission = get_submission(id,[
@@ -186,12 +184,12 @@ class GalleryController(BaseController):
             c.form = FormGenerator(form_error=error)
             return render('/gallery/submit.mako')
 
-        
+
         if not submission.editlog:
             editlog = model.EditLog(c.auth_user)
             model.Session.save(editlog)
             submission.editlog = editlog
-        
+
         editlog_entry = model.EditLogEntry(
             user = c.auth_user,
             reason = 'still no reason to the madness',
@@ -209,7 +207,7 @@ class GalleryController(BaseController):
             submission.set_file(form_data['fullfile'])
             submission.generate_halfview()
         submission.generate_thumbnail(form_data['thumbfile'])
-        
+
 
         # Tag shuffle
         form_data['tags'] = tagging.get_tags_from_string(form_data['tags'])
@@ -240,7 +238,7 @@ class GalleryController(BaseController):
     @check_perms(['submit_art','administrate'])
     def delete_commit(self, id=None):
         """Form handler for deleting a submission."""
-    
+
         # -- validate form input --
         validator = model.form.DeleteForm()
         delete_form_data = None

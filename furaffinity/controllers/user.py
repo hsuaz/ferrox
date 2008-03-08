@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 class UserController(BaseController):
 
-    def view(self):
+    def view(self, username=None, sub_domain=None):
         """View a userpage."""
         return render('user/view.mako')
 

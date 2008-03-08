@@ -13,13 +13,18 @@ def make_map():
                  always_scan=config['debug'],
                  explicit=True)
 
+    map.sub_domains = True
+    map.sub_domains_ignore = ['www']
     # We do this a lot, so be epic lazy
     require_post = dict(conditions=dict(method=['POST']))
+    with_sub_domain = dict(conditions=dict(sub_domain=True))
 
     # The ErrorController route (handles 404/500 error pages); it should
     # likely stay at the top, ensuring it can always be resolved
     map.connect('error/:action/:id', controller='error')
 
+    map.connect('/', controller='user', action='view', **with_sub_domain)
+    
     map.connect('/', controller='index', action='index')
     map.connect('/login', controller='index', action='login')
     map.connect('/login_check', controller='index', action='login_check', **require_post)
@@ -76,5 +81,7 @@ def make_map():
     # Defaults that we may or may not actually be using
     map.connect(':controller/:action/:id', action='index', id=None)
     map.connect('*url', controller='template', action='view')
+    
+    
 
     return map

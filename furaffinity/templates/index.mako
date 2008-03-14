@@ -87,7 +87,7 @@
     <div class="basic-box">
         <h2>News</h2>
         % for item in c.news:
-        ${lib.news_entry(item)}
+        ${lib.news_entry(item, True)}
         % endfor
     </div>
 </div>

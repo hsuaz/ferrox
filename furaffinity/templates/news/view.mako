@@ -8,13 +8,11 @@
         <li>${h.link_to('Post News', h.url(controller = 'news', action='post'))}</li>
     </ul>
     % endif
-    % for item in c.newspage:
-    ${lib.news_entry(item, True)}
-    % endfor
+    ${lib.news_entry(c.news, False)}
 </div>
 <p class="nav">
     ${c.newsnav}
 </p>
 
-<%def name="title()">News</%def>
+<%def name="title()">c.news.title() - News</%def>
 

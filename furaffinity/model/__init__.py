@@ -28,6 +28,7 @@ from binascii import crc32
 from furaffinity.lib.thumbnailer import Thumbnailer
 from furaffinity.lib.mimetype import get_mime_type
 from furaffinity.lib import helpers as h
+import furaffinity.lib.bbcode_for_fa as bbcode
 
 import chardet
 import codecs
@@ -138,6 +139,7 @@ journal_entry_table = Table('journal_entry', metadata,
     Column('title', types.Unicode, nullable=False),
     Column('content', types.Unicode, nullable=False),
     Column('content_parsed', types.Unicode, nullable=False),
+    Column('content_short', types.Unicode, nullable=False),
     Column('time', DateTimeAsInteger, nullable=False, default=datetime.now),
     Column('status', journal_status_type, index=True ),
     Column('editlog_id', types.Integer, ForeignKey('editlog.id')),
@@ -151,6 +153,8 @@ news_table = Table('news', metadata,
     Column('author_user_id', types.Integer, ForeignKey("user.id")),
     Column('title', types.Unicode, nullable=False),
     Column('content', types.Unicode, nullable=False),
+    Column('content_parsed', types.Unicode, nullable=False),
+    Column('content_short', types.Unicode, nullable=False),
     Column('time', DateTimeAsInteger, nullable=False, default=datetime.now),
     Column('is_anonymous', types.Boolean, nullable=False, default=False),
     Column('is_deleted', types.Boolean, nullable=False, default=False),
@@ -159,18 +163,6 @@ news_table = Table('news', metadata,
 )
 
 # Submissions
-
-'''
-image_metadata_table = Table('image_metadata', metadata,
-    Column('id', types.Integer, primary_key=True, autoincrement=True),
-    Column('hash', types.String(length=64), nullable=False, unique=True, index=True),
-    Column('height', types.Integer, nullable=False),
-    Column('width', types.Integer, nullable=False),
-    Column('mimetype', types.String(length=35), nullable=False),
-    Column('submission_count', types.Integer, nullable=False),
-    mysql_engine='InnoDB'
-)
-'''
 
 submission_table = Table('submission', metadata,
     Column('id', types.Integer, primary_key=True),
@@ -254,14 +246,22 @@ submission_tag_table = Table('submission_tag', metadata,
 # Mappers
 
 class JournalEntry(object):
-    def __init__(self, user_id, title, content, content_parsed):
+    def __init__(self, user_id, title, content):
+        content = h.escape_once(content)
         self.user_id = user_id
         self.discussion_id = 0
         self.title = title
         self.content = content
-        self.content_parsed = content_parsed
+        self.content_parsed = bbcode.parser_long.parse(content)
+        self.content_short = bbcode.parser_short.parse(content)
+
         self.status = 'normal'
 
+    def update_content (self, content):
+        self.content = content
+        self.content_parsed = bbcode.parser_long.parse(content)
+        self.content_short = bbcode.parser_short.parse(content)
+        
     def to_xapian(self):
         if search_enabled:
             xapian_document = xapian.Document()
@@ -490,6 +490,10 @@ class Submission(object):
             if self.user_submission[index].relationship == relationship:
                 users.append( self.user_submission[index].user )
         return users
+        
+    def update_description (self, description):
+        self.description = description
+        self.description_parsed = bbcode.parser.parse(description)
 
     def to_xapian(self):
         if search_enabled:
@@ -778,8 +782,15 @@ class News(object):
     def __init__(self, title, content, author):
         self.title = title
         self.content = content
+        self.content_parsed = bbcode.parser_long.parse(content)
+        self.content_short = bbcode.parser_short.parse(content)
         self.author = author
 
+    def update_content (self, content):
+        self.content = content
+        self.content_parsed = bbcode.parser_long.parse(content)
+        self.content_short = bbcode.parser_short.parse(content)
+        
 class EditLog(object):
     def __init__(self,user):
         self.last_edited_by = user
@@ -814,11 +825,15 @@ class Note(object):
         self.to_user_id = to_user_id
         self.subject = subject
         self.content = content
-        self.content_parsed = content  # bbcode placeholder
+        self.content_parsed = bbcode.parser.parse(content)
         self.original_note_id = original_note_id
         self.status = 'unread'
         self.time = datetime.now()
 
+    def update_content (self, content):
+        self.content = content
+        self.content_parsed = bbcode.parser.parse(content)
+        
     def latest_note(self, recipient):
         """
         Returns the latest note in this note's thread, preferring one that was

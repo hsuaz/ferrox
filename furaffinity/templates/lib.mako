@@ -1,4 +1,4 @@
-<%def name="news_entry(entry)">
+<%def name="news_entry(entry, short)">
 <%
     if entry.is_deleted:
         if not c.auth_user.can('administrate'):
@@ -21,7 +21,11 @@
         <div class="date">Date: ${h.format_time(entry.time)}</div>
     </div>
     <div class="content">
-        ${entry.content}
+        % if short:
+            ${entry.content_short}
+        % else:
+            ${entry.content_parsed}
+        % endif
     </div>
     % if c.auth_user.can('administrate'):
     ${c.empty_form.start(h.url(controller='news', action='edit', id=entry.id), method='post')}
@@ -38,7 +42,7 @@
 </div>
 </%def>
 
-<%def name="journal_entry(entry)">
+<%def name="journal_entry(entry, short)">
 <%
     if entry.status == 'deleted':
         if not c.auth_user.can('administrate'):
@@ -55,7 +59,11 @@
         <div class="date">Date: ${h.format_time(entry.time)}</div>
     </div>
     <div class="content">
-        ${entry.content}
+        % if short:
+            ${entry.content_short}
+        % else:
+            ${entry.content_parsed}
+        % endif
     </div>
     % if c.auth_user.can('administrate'):
     ${c.empty_form.start(h.url(controller='journal', action='edit', username=entry.user.username, id=entry.id), method='post')}

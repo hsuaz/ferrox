@@ -19,6 +19,14 @@ class NewsController(BaseController):
         c.newsnav = c.newspage.navigator(link_var=page_link_var)
         return render('news/index.mako')
 
+    def view(self, id):
+        page_link_var = 'p'
+        page = request.params.get(page_link_var, 0)
+        news_q = model.Session.query(model.News)
+        news_q = news_q.filter_by(id=id)
+        c.news = news_q.one()
+        return render('news/view.mako')
+
     @check_perm('administrate')
     def post(self):
         """Form for posting news."""
@@ -74,7 +82,7 @@ class NewsController(BaseController):
                                                c.item.content_parsed)
             c.item.editlog.update(editlog_entry)
             c.item.title = title
-            c.item.content = content
+            c.item.update_content(h.escape_once(content))
         c.item.is_anonymous = form_data['is_anonymous']
         model.Session.commit()
         h.redirect_to('/news')

@@ -21,6 +21,8 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
+# This tag is only valid or useful for journals and news.
+
 def get_journal(id=None, eagerloads=[]):
     """Fetches a journal entry, and dies nicely if it can't be found."""
     try:
@@ -86,11 +88,11 @@ class JournalController(BaseController):
             return render('/journal/post.mako')
 
         # -- put journal in database --
+        form_data['content'] = h.escape_once(form_data['content'])
         journal_entry = model.JournalEntry(
             user_id=c.auth_user.id,
             title=form_data['title'],
-            content=form_data['content'],
-            content_parsed=form_data['content'] # placeholder for bbcode parser
+            content=form_data['content']
         )
         model.Session.save(journal_entry)
         model.Session.commit()
@@ -114,7 +116,7 @@ class JournalController(BaseController):
         c.is_edit = True
         c.form = FormGenerator()
         c.form.defaults['title'] = journal_entry.title
-        c.form.defaults['content'] = journal_entry.content_parsed
+        c.form.defaults['content'] = journal_entry.content
         return render('/journal/post.mako')
 
     @check_perms(['post_journal','administrate'])
@@ -132,6 +134,7 @@ class JournalController(BaseController):
         journal_entry = get_journal(id)
         self.is_my_journal(journal_entry, True)
 
+        form_data['content'] = h.escape_once(form_data['content'])
         # -- update journal in database --
         if journal_entry.title != form_data['title'] or \
            journal_entry.content != form_data['content']:
@@ -143,19 +146,16 @@ class JournalController(BaseController):
                                                journal_entry.content_parsed)
             journal_entry.editlog.update(editlog_entry)
             journal_entry.title = form_data['title']
-            journal_entry.content = form_data['content']
-            journal_entry.content_parsed = form_data['content'] # placeholder for bbcode parser
+            journal_entry.update_content(form_data['content'])
         model.Session.commit()
 
         if search_enabled:
             xapian_database = xapian.WritableDatabase('journal.xapian',
                                                       xapian.DB_OPEN)
             xapian_document = journal_entry.to_xapian()
-            xapian_database.replace_document("I%d" % submission.id, 
-                                             xapian_document)
+            xapian_database.replace_document("I%d" % journal_entry.id, xapian_document)
 
-        h.redirect_to(h.url_for(controller='journal', action='view',
-                                id=journal_entry.id))
+        h.redirect_to(h.url_for(controller='journal', action='view', id=journal_entry.id, username=journal_entry.user.display_name))
 
     @check_perms(['post_journal','administrate'])
     def delete(self,id=None):

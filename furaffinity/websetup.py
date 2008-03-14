@@ -76,9 +76,11 @@ def setup_config(command, filename, section, vars):
     u.role = normal_role
     model.Session.save(u)
 
+    '''
     n = model.News(u'headline', u'news content', u)
     model.Session.save(n)
-
+    '''
+    
     model.Session.commit()
 
     try:

@@ -35,9 +35,12 @@ def make_map():
     map.connect('/users/:username', controller='user', action='view')
     map.connect('/users/:username/settings', controller='user', action='settings')
 
+    map.connect('/news/post', controller='news', action='post')
+    map.connect('/news/do_post', controller='news', action='do_post')
     map.connect('/news/:id/edit', controller='news', action='edit')
     map.connect('/news/:id/edit_commit', controller='news', action='edit_commit', **require_post)
     map.connect('/news/:id/editlog', controller='editlog', action='news')
+    map.connect('/news/:id', controller='news', action='view')
 
     map.connect('/users/:username/notes', controller='notes', action='user_index')
     map.connect('/users/:username/notes/write', controller='notes', action='write')

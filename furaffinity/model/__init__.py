@@ -25,7 +25,7 @@ import re
 import sys
 from binascii import crc32
 
-from furaffinity.lib.thumbnailer import Thumbnailer
+from furaffinity.lib.image import ImageClass
 from furaffinity.lib.mimetype import get_mime_type
 from furaffinity.lib import helpers as h
 import furaffinity.lib.bbcode_for_fa as bbcode
@@ -258,7 +258,9 @@ class JournalEntry(object):
         self.status = 'normal'
 
     def update_content (self, content):
+        print 'does this function even get fucking called'
         self.content = content
+        #bbcode.parser_short.tag_handlers['cut'].link = h.url_for(controller='journal', action='view', id=self.id)
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
         
@@ -582,12 +584,12 @@ class Submission(object):
 
         if self.type == 'image':
             toobig = None
-            with Thumbnailer() as t:
-                t.parse(self.file_blob,self.mimetype)
-                toobig = t.generate(int(pylons.config['gallery.fullfile_size']))
+            with ImageClass() as t:
+                t.set_data(self.file_blob)
+                toobig = t.get_resized(int(pylons.config['gallery.fullfile_size']))
 
             if toobig:
-                self.file_blob = toobig['content']
+                self.file_blob = toobig.get_data()
         elif self.type == 'text':
             print self.mimetype
             detection_result = chardet.detect(self.file_blob)
@@ -632,9 +634,9 @@ class Submission(object):
 
         if self.type == 'image':
             half_fileobject = None
-            with Thumbnailer() as t:
-                t.parse(self.file_blob, self.mimetype)
-                half_fileobject = t.generate(int(pylons.config['gallery.halfview_size']))
+            with ImageClass() as t:
+                t.set_data(self.file_blob)
+                half_fileobject = t.get_resized(int(pylons.config['gallery.halfview_size']))
 
             if half_fileobject:
                 new_derived_submission = False
@@ -644,7 +646,7 @@ class Submission(object):
                 filename_parts = os.path.splitext(self.mogile_key)
                 current.mogile_key = filename_parts[0] + '.half' + filename_parts[1]
                 current.mimetype = self.mimetype
-                current.file_blob = half_fileobject['content']
+                current.file_blob = half_fileobject.get_data()
                 current.old_mogile_key = old_mogile_key
                 if new_derived_submission:
                     self.derived_submission.append(current)
@@ -682,24 +684,24 @@ class Submission(object):
             #Session.delete(current)
 
         thumb_fileobject = None
-        with Thumbnailer() as t:
+        with ImageClass() as t:
             use_self = True
             dont_bother = False
             if proposed:
                 proposed_mimetype = get_mime_type(proposed)
                 proposed_type = self.get_submission_type(proposed_mimetype)
                 if proposed_type == 'image':
-                    t.parse(proposed['content'], proposed_mimetype)
+                    t.set_data(proposed['content'])
                     use_self = False
 
             if use_self:
                 if self.type == 'image' and self.file_blob:
-                    t.parse(self.file_blob, self.mimetype)
+                    t.set_data(self.file_blob)
                 else:
                     dont_bother = True
 
             if not dont_bother:
-                thumb_fileobject = t.generate(int(pylons.config['gallery.thumbnail_size']))
+                thumb_fileobject = t.get_resized(int(pylons.config['gallery.thumbnail_size']))
             else:
                 old_mogile_key = None
 
@@ -717,7 +719,7 @@ class Submission(object):
             filename_parts = os.path.splitext(self.mogile_key)
             current.mogile_key = filename_parts[0] + '.tn' + filename_parts[1]
             current.mimetype = self.mimetype
-            current.file_blob = thumb_fileobject['content']
+            current.file_blob = thumb_fileobject.get_data()
             #no more deleting
             #current.old_mogile_key = old_mogile_key
 

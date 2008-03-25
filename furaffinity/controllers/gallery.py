@@ -5,7 +5,6 @@ from pylons.decorators.secure import *
 from furaffinity.lib import filestore, tagging
 from furaffinity.lib.base import *
 from furaffinity.lib.formgen import FormGenerator
-from furaffinity.lib.thumbnailer import Thumbnailer
 from furaffinity.lib.mimetype import get_mime_type
 
 import formencode
@@ -37,9 +36,9 @@ else:
 
 log = logging.getLogger(__name__)
 
-fullfile_size = 1280
-thumbnail_size = 120
-halfview_size = 300
+#fullfile_size = 1280
+#thumbnail_size = 120
+#halfview_size = 300
 
 def get_submission(id, eagerloads=[]):
     """Fetches a submission, and dies nicely if it can't be found."""

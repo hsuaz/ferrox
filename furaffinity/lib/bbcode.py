@@ -258,14 +258,21 @@ class Cut(TagBase):
     
     def __init__(self, show=True):
         self.show = show
+        self.link = None
         TagBase.__init__(self)
         
     def start(self, name, params):
         if not self.show:
-            if params:
-                return "[[[ %s ]]]"%params
+            if self.link:
+                if params:
+                    return """[[[ <a href="%s">%s</a> ]]]""" % (self.link, params)
+                else:
+                    return """[[[ <a href="%s">Read more</a> ]]]""" % self.link
             else:
-                return '[[[ Read more ]]]'
+                if params:
+                    return "[[[ %s ]]]"%params
+                else:
+                    return '[[[ Read more ]]]'
         else:
             return ''
             

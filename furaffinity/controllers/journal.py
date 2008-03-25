@@ -92,8 +92,9 @@ class JournalController(BaseController):
         journal_entry = model.JournalEntry(
             user_id=c.auth_user.id,
             title=form_data['title'],
-            content=form_data['content']
+            content=''
         )
+        journal_entry.update_content(form_data['content'])
         model.Session.save(journal_entry)
         model.Session.commit()
 

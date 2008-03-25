@@ -55,3 +55,15 @@ parser_long.tag_handlers['cut'] = Cut()
 parser_short = BBcodeParser(sanitizer=h.escape_once) # for use with [cut] tags
 parser_short.tag_handlers.update(parser.tag_handlers)
 parser_short.tag_handlers['cut'] = Cut(False)
+
+parser_plaintext = BBCodeParser(sanitizer=h.escape_once)
+parser_plaintext.tag_handlers['b'] = \
+    parser_plaintext.tag_handlers['i'] = \
+    parser_plaintext.tag_handlers['u'] = \
+    parser_plaintext.tag_handlers['s'] = \
+    parser_plaintext.tag_handlers['quote'] = \
+    parser_plaintext.tag_handlers['url'] = \
+    parser_plaintext.tag_handlers['code'] = \
+    parser_plaintext.tag_handlers['user'] = \
+    parser_plaintext.tag_handlers['icon'] = \
+    parser_plaintext.tag_handlers['cut'] = Blank(False)

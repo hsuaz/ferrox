@@ -262,6 +262,7 @@ class JournalEntry(object):
         #bbcode.parser_short.tag_handlers['cut'].link = h.url_for(controller='journal', action='view', id=self.id)
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
+        self.content_plain = bbcode.parser_plaintext.parse(content)
         
     def to_xapian(self):
         if search_enabled:
@@ -274,7 +275,7 @@ class JournalEntry(object):
             words = []
             rmex = re.compile(r'[^a-z0-9-]')
             for word in self.title.lower().split(' '):
-                words.append(rmex.sub('',word))
+                words.append(rmex.sub('',word[0:20]))
             words = set(words)
             for word in words:
                 xapian_document.add_term("T%s"%word)
@@ -282,8 +283,8 @@ class JournalEntry(object):
             # description
             words = []
             # FIX ME: needs bbcode parser. should be plain text representation.
-            for word in self.content.lower().split(' '):
-                words.append(rmex.sub('',word))
+            for word in self.content_plain.lower().split(' '):
+                words.append(rmex.sub('',word[0:20]))
             words = set(words)
             for word in words:
                 xapian_document.add_term("P%s"%word)
@@ -495,6 +496,7 @@ class Submission(object):
     def update_description (self, description):
         self.description = description
         self.description_parsed = bbcode.parser.parse(description)
+        self.description_plain = bbcode.parser_plaintext.parse(description)
 
     def to_xapian(self):
         if search_enabled:
@@ -511,7 +513,7 @@ class Submission(object):
             words = []
             rmex = re.compile(r'[^a-z0-9-]')
             for word in self.title.lower().split(' '):
-                words.append(rmex.sub('', word))
+                words.append(rmex.sub('', word[0:20]))
             words = set(words)
             for word in words:
                 xapian_document.add_term("T%s" % word)
@@ -519,8 +521,8 @@ class Submission(object):
             # description
             words = []
             # FIX ME: needs bbcode parser. should be plain text representation.
-            for word in self.description.lower().split(' '):
-                words.append(rmex.sub('', word))
+            for word in self.description_plain.lower().split(' '):
+                words.append(rmex.sub('', word[0:20]))
             words = set(words)
             for word in words:
                 xapian_document.add_term("P%s" % word)

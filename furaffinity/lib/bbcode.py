@@ -208,6 +208,13 @@ class TagBase:
         # This function is only needed if you use inhibit_parse
         return ''
 
+class Blank(TagBase):
+    def start(self, name, params):
+        return ''
+
+    def end(self, name):
+        return ''
+            
 class Bold(TagBase):
     def start(self, name, params):
         return '<strong>'

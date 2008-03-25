@@ -258,8 +258,7 @@ class JournalEntry(object):
         self.status = 'normal'
 
     def update_content (self, content):
-        print 'does this function even get fucking called'
-        self.content = content
+        self.content = h.escape_once(content)
         #bbcode.parser_short.tag_handlers['cut'].link = h.url_for(controller='journal', action='view', id=self.id)
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
@@ -789,7 +788,7 @@ class News(object):
         self.author = author
 
     def update_content (self, content):
-        self.content = content
+        self.content = h.escape_once(content)
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
         
@@ -833,7 +832,7 @@ class Note(object):
         self.time = datetime.now()
 
     def update_content (self, content):
-        self.content = content
+        self.content = h.escape_once(content)
         self.content_parsed = bbcode.parser.parse(content)
         
     def latest_note(self, recipient):

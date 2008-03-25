@@ -9,8 +9,6 @@ try:
 except ImportError:
     enable_syntax_highlighting = False
 
-enable_syntax_highlighting = False
-    
 
 class BBcodeException:
     def __init__(self,text):
@@ -22,12 +20,24 @@ class BBcodeException:
 
 class BBcodeParser:
 
-    def __init__(self):
+    def __init__(self, sanitizer=None):
         self.tag_handlers = {}
         self.param_sanitizer = re.compile(r'[^a-zA-Z0-9\"\'\ \-\_\;\&]')
+        if sanitizer:
+            self.output_sanitizer = sanitizer
+        else:
+            self.output_sanitizer = lambda x: BBcodeParser.default_output_sanitizer(x)
 
-        pass
-
+    @classmethod
+    def default_output_sanitizer(cls, text):
+        return text\
+            .replace('&', '&amp;')\
+            .replace('<', '&lt;')\
+            .replace('>', '&gt;')\
+            .replace('"', '&quot;')\
+            .replace("\n", '<br>')\
+            .replace("\r", '')
+        
     def parse(self, text, offset=0):
         if offset == 0:
             self.errors = []
@@ -38,7 +48,7 @@ class BBcodeParser:
         inhibit_bin = ''
         while '[' in remaining:
             out, remaining = remaining.split('[',1)
-            output += out.replace("\n", '<br>').replace("\r", '')
+            output += self.output_sanitizer(out)
             offset += len(out) + 1
             params = ''
             tag = ''
@@ -161,7 +171,7 @@ class BBcodeParser:
                         self.tag_handlers[tag].last_error = None
                     offset += len(inside)
         
-        output += remaining.replace("\n", '<br>').replace("\r", '')
+        output += self.output_sanitizer(remaining)
         left_tag_stack.reverse()
         for unclosed_tag in left_tag_stack:
             output += self.tag_handlers[unclosed_tag[0]].end(unclosed_tag[0])
@@ -241,15 +251,22 @@ class Quote(TagBase):
 class URL(TagBase):
     sanitize_params = False
     
+    def __init__(self, sanitizer_callback=None):
+        TagBase.__init__(self)
+        if not sanitizer_callback:
+            self.sanitizer_callback = lambda x: BBCodeParser.default_output_sanitizer(x)
+        else:
+            self.sanitizer_callback = sanitizer_callback
+            
     def start(self, name, params):
+        if params[0:10] == 'javascript':
+            params = params[11:]
+        
         if not params:
             self.last_error = 'no url provided for [url]'
             return '<a>'
         
-        # ============================================================
-        # DANGER WILL ROBINSON
-        # ============================================================
-        return "<a href=\"%s\">" % params
+        return "<a href=\"%s\">" % self.sanitizer_callback(params)
 
     def end(self, name):
         return '</a>'
@@ -297,7 +314,7 @@ class Code(TagBase):
     
     def start(self, name, params):
         self.params = params
-        return 'Code:<br /><div style="border: 1px black solid; width: 80%; font-family: monospace">'
+        return "Code (%s):<br /><div style=\"border: 1px black solid; width: 80%%; font-family: monospace\">"%params
         
     def end(self, name):
         return '</div>'
@@ -309,18 +326,15 @@ class Code(TagBase):
             except pygments.util.ClassNotFound:
                 pass
             else:
-                formatter = pygments.formatters.get_formatter_by_name('html')
+                formatter = pygments.formatters.get_formatter_by_name('html', noclasses=True)
                 return pygments.highlight(text, lexer, formatter)
         
-        # ============================================================
-        # DANGER WILL ROBINSON
-        # ============================================================
-        while '</pre>' in text.lower():
-            #this shouldn't ever be triggered.
-            where = text.lower().index('</pre>')
-            text = text[:where-1] + text[where+5:]
-        return "<span>%s</pre>"%text
-            
+        return "<pre>%s</pre>"%text\
+            .replace('&','&amp;')\
+            .replace('<','&lt;')\
+            .replace('>','&gt;')\
+            .replace('"','&quot;')
+
 if __name__ == '__main__':
     b = BBcodeParser()
     b.tag_handlers['b'] = Bold()

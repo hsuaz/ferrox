@@ -199,7 +199,7 @@ class GalleryController(BaseController):
         model.Session.save(editlog_entry)
         submission.editlog.update(editlog_entry)
 
-        form_data['description'] = h.escape_once(form_data['description'])
+        #form_data['description'] = h.escape_once(form_data['description'])
         submission.title = h.escape_once(form_data['title'])
         submission.description = form_data['description']
         if form_data['fullfile']:
@@ -278,7 +278,7 @@ class GalleryController(BaseController):
 
         submission = model.Submission()
 
-        form_data['description'] = h.escape_once(form_data['description'])
+        #form_data['description'] = h.escape_once(form_data['description'])
         submission.title = h.escape_once(form_data['title'])
         submission.description = form_data['description']
         submission.set_file(form_data['fullfile'])

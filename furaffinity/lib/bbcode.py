@@ -8,6 +8,8 @@ try:
     
 except ImportError:
     enable_syntax_highlighting = False
+
+enable_syntax_highlighting = False
     
 
 class BBcodeException:
@@ -313,7 +315,11 @@ class Code(TagBase):
         # ============================================================
         # DANGER WILL ROBINSON
         # ============================================================
-        return "<pre>%s</pre>"%text.replace('</pre>','<-pre>')
+        while '</pre>' in text.lower():
+            #this shouldn't ever be triggered.
+            where = text.lower().index('</pre>')
+            text = text[:where-1] + text[where+5:]
+        return "<span>%s</pre>"%text
             
 if __name__ == '__main__':
     b = BBcodeParser()

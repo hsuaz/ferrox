@@ -235,6 +235,8 @@ comment_table = Table('comment', metadata,
     Column('user_id', types.Integer, ForeignKey('user.id')),
     Column('left', types.Integer, nullable=False),
     Column('right', types.Integer, nullable=False),
+    Column('subject', types.Unicode, nullable=False),
+    Column('time', DateTimeAsInteger, nullable=False, default=datetime.now),
     Column('content', types.Unicode, nullable=False),
     Column('content_parsed', types.Unicode, nullable=False),
     Column('content_short', types.Unicode, nullable=False),
@@ -837,10 +839,37 @@ class Comment(object):
         belongs to, so we don't have to hunt it down again.
         """
 
+        # Easy parts; remember the parent/discussion and add to bridge table
+        self._parent = parent
+        self._discussion = discussion
+
+        discussion.comments.append(self)
+
+        if not parent:
+            # This comment is a brand new top-level one; its left and right
+            # need to be higher than the highest right
+            last_comment = Session.query(Comment) \
+                .with_parent(discussion, property='comments') \
+                .order_by(Comment.right.desc()) \
+                .first()
+            if last_comment:
+                self.left = last_comment.right + 1
+                self.right = last_comment.right + 2
+            else:
+                # First comment at all
+                self.left = 1
+                self.right = 2
+
+            return
+
+        # Otherwise, we're replying to an existing comment.
         # The new comment's left should be the parent's old right, as it's
         # being inserted as the last descendant, and every left or right
         # value to the right of that should be bumped up by two.
         parent_right = parent.right
+
+        self.left = parent_right
+        self.right = parent_right + 1
 
         bridge_table = news_comment_table
         join = sql.exists([1],
@@ -858,15 +887,6 @@ class Comment(object):
                     values={column: column + 2}
                     )
                 )
-
-        self.left = parent_right
-        self.right = parent_right + 1
-
-        self._parent = parent
-        self._discussion = discussion
-
-        # Don't forget to actually add the new comment..
-        discussion.comments.append(self)
 
     def get_discussion(self):
         """Returns this comment's associated news/journal/submission."""
@@ -888,6 +908,8 @@ class Comment(object):
     def __init__(self, user, subject, content):
         self.user_id = user.id
         self.subject = subject
+        self.left = 0
+        self.right = 0
         self.content = content
         self.content_parsed = content
         self.content_short = content

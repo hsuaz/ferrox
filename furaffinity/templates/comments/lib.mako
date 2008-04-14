@@ -9,10 +9,10 @@ ${single_comment(comment, discussion_url)}
 <%def name="single_comment(comment, discussion_url)">
 <div class="comment entry" style="margin-left: ${40 * comment.indent}px;">
     <div class="header">
-        <div class="title">Hey subject here</div>
+        <div class="title">${comment.subject}</div>
         <div class="avatar FINISHME"><img src="http://userpic.livejournal.com/41114350/600603" alt="avatar"/></div>
         <div class="author">${lib.user_link(comment.user)}</div>
-        <div class="date">today</div>
+        <div class="date">${h.format_time(comment.time)}</div>
         <ul class="micro-linkbar">
             <li>${h.link_to("%s Reply" % h.image_tag('/images/icons/mail-reply-sender.png', ''), h.url(controller='comments', action='reply', discussion_url=discussion_url, id=comment.id))}</li>
             <li>${h.link_to("%s Link" % h.image_tag('/images/icons/text-html.png', ''), h.url(controller='comments', action='view', discussion_url=discussion_url, id=comment.id))}</li>

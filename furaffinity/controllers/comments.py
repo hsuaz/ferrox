@@ -50,14 +50,20 @@ class CommentsController(BaseController):
     def reply(self, discussion_url, id=None):
         """Post a comment, either top-level or replying to another comment."""
         discussion = self._get_discussion(discussion_url)
-        c.comment = model.Session.query(model.Comment).get(id)
         c.form = FormGenerator()
+        if id:
+            c.comment = model.Session.query(model.Comment).get(id)
+        else:
+            c.comment = None
         return render('comments/reply.mako')
 
     def reply_commit(self, discussion_url, id=None):
         """Form handler for reply to a comment."""
         discussion = self._get_discussion(discussion_url)
-        c.parent = model.Session.query(model.Comment).get(id)
+        if id:
+            c.parent = model.Session.query(model.Comment).get(id)
+        else:
+            c.parent = None
         validator = model.form.CommentForm()
         try:
             form_data = validator.to_python(request.params)

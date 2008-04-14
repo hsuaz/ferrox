@@ -44,6 +44,7 @@ def make_map():
 
     map.connect('/*discussion_url/comments', controller='comments', action='view')
     map.connect('/*discussion_url/comments/reply', controller='comments', action='reply')
+    map.connect('/*discussion_url/comments/reply_commit', controller='comments', action='reply_commit')
     map.connect('/*discussion_url/comments/:id', controller='comments', action='view')
     map.connect('/*discussion_url/comments/:id/reply', controller='comments', action='reply')
     map.connect('/*discussion_url/comments/:id/reply_commit', controller='comments', action='reply_commit')

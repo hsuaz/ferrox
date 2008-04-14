@@ -123,3 +123,34 @@ check_box = form
 radio_buttom = form
 hidden_field = form
 file_field = form
+
+def indented_comments(comments):
+    """Given a list of comment rows, returns them with an indent property set
+    corresponding to the depth relative to the first (presumably the root).
+
+    The comments should be in order by left.  This will always put them in
+    the correct order.
+    """
+
+    last_comment = None
+    indent = 0
+    right_ancestry = []
+    for comment in comments:
+        if last_comment \
+           and comment.left < last_comment.right:
+            indent = indent + 1
+            right_ancestry.append(last_comment)
+
+        for i in xrange(len(right_ancestry) - 1, -1, -1):
+            if comment.left > right_ancestry[i].right:
+                indent = indent - 1
+                right_ancestry.pop(i)
+
+        if len(right_ancestry):
+            comment._parent = right_ancestry[-1]
+
+        comment.indent = indent
+
+        last_comment = comment
+
+    return comments

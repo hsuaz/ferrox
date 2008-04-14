@@ -1,4 +1,5 @@
 <%namespace name="lib" file="/lib.mako"/>
+<%namespace name="comments" file="/comments/lib.mako"/>
 <%inherit file="../base.mako" />
 
 <div class="basic-box">
@@ -14,5 +15,6 @@
     ${c.newsnav}
 </p>
 
-<%def name="title()">c.news.title() - News</%def>
+${comments.comment_tree(c.news.comments, h.url_for())}
 
+<%def name="title()">${c.news.title} - News</%def>

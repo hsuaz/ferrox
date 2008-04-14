@@ -228,6 +228,25 @@ editlog_entry_table = Table('editlog_entry', metadata,
     mysql_engine='InnoDB'
 )
 
+# Comments
+
+comment_table = Table('comment', metadata,
+    Column('id', types.Integer, primary_key=True),
+    Column('user_id', types.Integer, ForeignKey('user.id')),
+    Column('left', types.Integer, nullable=False),
+    Column('right', types.Integer, nullable=False),
+    Column('content', types.Unicode, nullable=False),
+    Column('content_parsed', types.Unicode, nullable=False),
+    Column('content_short', types.Unicode, nullable=False),
+    mysql_engine='InnoDB'
+)
+
+news_comment_table = Table('news_comment', metadata,
+    Column('news_id', types.Integer, ForeignKey('news.id'), primary_key=True),
+    Column('comment_id', types.Integer, ForeignKey('comment.id'), primary_key=True),
+    mysql_engine='InnoDB'
+)
+
 # Tags
 
 tag_table = Table('tag', metadata,
@@ -810,6 +829,69 @@ class EditLogEntry(object):
         self.previous_text = previous_text
         self.previous_text_parsed = previous_text_parsed
 
+class Comment(object):
+    def add_to_nested_set(self, parent, discussion):
+        """Call on a new Comment to fix the affected nested set values.
+        
+        discussion paremeter is the news/journal/submission this comment
+        belongs to, so we don't have to hunt it down again.
+        """
+
+        # The new comment's left should be the parent's old right, as it's
+        # being inserted as the last descendant, and every left or right
+        # value to the right of that should be bumped up by two.
+        parent_right = parent.right
+
+        bridge_table = news_comment_table
+        join = sql.exists([1],
+            sql.and_(
+                bridge_table.c.news_id == discussion.id,
+                bridge_table.c.comment_id == comment_table.c.id,
+                )
+            )
+
+        for side in ['left', 'right']:
+            column = getattr(comment_table.c, side)
+            Session.execute(
+                comment_table.update(
+                    sql.and_(column >= parent_right, join),
+                    values={column: column + 2}
+                    )
+                )
+
+        self.left = parent_right
+        self.right = parent_right + 1
+
+        self._parent = parent
+        self._discussion = discussion
+
+        # Don't forget to actually add the new comment..
+        discussion.comments.append(self)
+
+    def get_discussion(self):
+        """Returns this comment's associated news/journal/submission."""
+        if not hasattr(self, '_discussion'):
+            self._discussion = Session.query(News).get(1)
+        return self._discussion
+
+    def get_parent(self):
+        """Returns this comment's parent."""
+        if not hasattr(self, '_parent'):
+            self._parent = Session.query(Comment) \
+                .with_parent(self.get_discussion(), property='comments') \
+                .filter(Comment.left < self.left) \
+                .filter(Comment.right > self.left) \
+                .order_by(Comment.left.desc()) \
+                .first()
+        return self._parent
+
+    def __init__(self, user, subject, content):
+        self.user_id = user.id
+        self.subject = subject
+        self.content = content
+        self.content_parsed = content
+        self.content_short = content
+
 class SubmissionTag(object):
     def __init__(self, tag):
         self.tag = tag
@@ -887,6 +969,7 @@ editlog_entry_mapper = mapper(EditLogEntry, editlog_entry_table, properties=dict
 news_mapper = mapper(News, news_table, properties=dict(
     author = relation(User),
     editlog = relation(EditLog),
+    comments = relation(Comment, secondary=news_comment_table, order_by=comment_table.c.left),
     )
 )
 
@@ -919,6 +1002,11 @@ role_mapper = mapper(Role, role_table, properties={
 
 journal_entry_mapper = mapper(JournalEntry, journal_entry_table, properties=dict(
     editlog = relation(EditLog)
+    )
+)
+
+comment_mapper = mapper(Comment, comment_table, properties=dict(
+    user = relation(User, backref='comments')
     )
 )
 

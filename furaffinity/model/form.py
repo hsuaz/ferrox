@@ -1,6 +1,7 @@
+import furaffinity.model as model
+
 import formencode
 from formencode import validators
-import furaffinity.model as model
 import urllib
 
 class FileUploadValidator(validators.FancyValidator):
@@ -143,3 +144,7 @@ class SendNoteForm(formencode.Schema):
                 )
 
         return formencode.Schema._to_python(self, value, state)
+
+class CommentForm(formencode.Schema):
+    subject = validators.String(not_empty=True)
+    content = validators.String(not_empty=True)

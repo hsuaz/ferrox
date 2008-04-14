@@ -42,6 +42,12 @@ def make_map():
     map.connect('/news/:id/editlog', controller='editlog', action='news')
     map.connect('/news/:id', controller='news', action='view')
 
+    map.connect('/*discussion_url/comments', controller='comments', action='view')
+    map.connect('/*discussion_url/comments/reply', controller='comments', action='reply')
+    map.connect('/*discussion_url/comments/:id', controller='comments', action='view')
+    map.connect('/*discussion_url/comments/:id/reply', controller='comments', action='reply')
+    map.connect('/*discussion_url/comments/:id/reply_commit', controller='comments', action='reply_commit')
+
     map.connect('/users/:username/notes', controller='notes', action='user_index')
     map.connect('/users/:username/notes/write', controller='notes', action='write')
     map.connect('/users/:username/notes/write_send', controller='notes', action='write_send', **require_post)
@@ -82,9 +88,6 @@ def make_map():
     map.connect('/view/:id', controller='back_compat', action='view_submission')
 
     # Defaults that we may or may not actually be using
-    map.connect(':controller/:action/:id', action='index', id=None)
     map.connect('*url', controller='template', action='view')
-    
-    
 
     return map

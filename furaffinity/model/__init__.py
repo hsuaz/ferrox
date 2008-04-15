@@ -10,7 +10,7 @@ import mimetypes
 import pylons
 
 from sqlalchemy import Column, MetaData, Table, ForeignKey, types, sql
-from sqlalchemy.orm import mapper, relation
+from sqlalchemy.orm import mapper, object_mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.databases.mysql import MSInteger, MSEnum
 from sqlalchemy.exceptions import InvalidRequestError
@@ -245,6 +245,18 @@ comment_table = Table('comment', metadata,
 
 news_comment_table = Table('news_comment', metadata,
     Column('news_id', types.Integer, ForeignKey('news.id'), primary_key=True),
+    Column('comment_id', types.Integer, ForeignKey('comment.id'), primary_key=True),
+    mysql_engine='InnoDB'
+)
+
+journal_entry_comment_table = Table('journal_entry_comment', metadata,
+    Column('journal_entry_id', types.Integer, ForeignKey('journal_entry.id'), primary_key=True),
+    Column('comment_id', types.Integer, ForeignKey('comment.id'), primary_key=True),
+    mysql_engine='InnoDB'
+)
+
+submission_comment_table = Table('submission_comment', metadata,
+    Column('submission_id', types.Integer, ForeignKey('submission.id'), primary_key=True),
     Column('comment_id', types.Integer, ForeignKey('comment.id'), primary_key=True),
     mysql_engine='InnoDB'
 )
@@ -871,10 +883,19 @@ class Comment(object):
         self.left = parent_right
         self.right = parent_right + 1
 
-        bridge_table = news_comment_table
+        # Sure wish this reflection stuff were documented
+        bridge_table = object_mapper(discussion) \
+                       .get_property('comments') \
+                       .secondary
+        foreign_column = None
+        for c in bridge_table.c:
+            if c.name != 'comment_id':
+                foreign_column = c
+                break
+
         join = sql.exists([1],
             sql.and_(
-                bridge_table.c.news_id == discussion.id,
+                foreign_column == discussion.id,
                 bridge_table.c.comment_id == comment_table.c.id,
                 )
             )
@@ -891,7 +912,9 @@ class Comment(object):
     def get_discussion(self):
         """Returns this comment's associated news/journal/submission."""
         if not hasattr(self, '_discussion'):
-            self._discussion = Session.query(News).get(1)
+            self._discussion = (self.news
+                                or self.journal_entry
+                                or self.submission)[0]
         return self._discussion
 
     def get_parent(self):
@@ -991,7 +1014,7 @@ editlog_entry_mapper = mapper(EditLogEntry, editlog_entry_table, properties=dict
 news_mapper = mapper(News, news_table, properties=dict(
     author = relation(User),
     editlog = relation(EditLog),
-    comments = relation(Comment, secondary=news_comment_table, order_by=comment_table.c.left),
+    comments = relation(Comment, secondary=news_comment_table, backref='news', order_by=comment_table.c.left),
     )
 )
 
@@ -1001,7 +1024,8 @@ user_submission_mapper = mapper(UserSubmission, user_submission_table, propertie
 )
 
 submission_mapper = mapper(Submission, submission_table, properties=dict(
-    editlog = relation(EditLog)
+    editlog = relation(EditLog),
+    comments = relation(Comment, secondary=submission_comment_table, backref='submission', order_by=comment_table.c.left),
     )
 )
 
@@ -1023,7 +1047,8 @@ role_mapper = mapper(Role, role_table, properties={
 })
 
 journal_entry_mapper = mapper(JournalEntry, journal_entry_table, properties=dict(
-    editlog = relation(EditLog)
+    editlog = relation(EditLog),
+    comments = relation(Comment, secondary=journal_entry_comment_table, backref='journal_entry', order_by=comment_table.c.left),
     )
 )
 

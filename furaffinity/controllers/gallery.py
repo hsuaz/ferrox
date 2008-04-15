@@ -43,17 +43,16 @@ halfview_size = 300
 
 def get_submission(id, eagerloads=[]):
     """Fetches a submission, and dies nicely if it can't be found."""
-    try:
-        q = model.Session.query(model.Submission)
-        for el in eagerloads:
-            q = q.options(eagerload(el))
-        submission = q.get(id)
-        c.tags = tagging.make_tags_into_string(submission.tags)
-        return submission
-    except sqlalchemy.exceptions.InvalidRequestError:
+    q = model.Session.query(model.Submission)
+    for el in eagerloads:
+        q = q.options(eagerload(el))
+    submission = q.get(id)
+    if not submission:
         c.error_text = 'Requested submission was not found.'
         c.error_title = 'Not Found'
         abort(404)
+    c.tags = tagging.make_tags_into_string(submission.tags)
+    return submission
 
 
 class GalleryController(BaseController):

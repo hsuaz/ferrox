@@ -49,8 +49,6 @@ def get_journal(id=None, eagerloads=[]):
 class JournalController(BaseController):
     def index(self, username=None):
         """Journal index for a user."""
-        import pylons
-        print pylons.config
         user_q = model.Session.query(model.User)
         try:
             c.page_owner = user_q.filter_by(username = username).one()

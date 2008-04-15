@@ -7,7 +7,6 @@ from pylons import config
 import formencode
 import logging
 
-
 from sqlalchemy import sql
 
 log = logging.getLogger(__name__)
@@ -22,11 +21,20 @@ class CommentsController(BaseController):
 
         if route['controller'] == 'news':
             table = model.News
+        elif route['controller'] == 'journal':
+            table = model.JournalEntry
+        elif route['controller'] == 'gallery':
+            table = model.Submission
         else:
             abort(404)
 
         # XXX validate that this item matches the comment
-        return model.Session.query(table).get(route['id'])
+        item = model.Session.query(table).get(route['id'])
+        print item
+        if item:
+            return item
+        else:
+            abort(404)
 
     def view(self, discussion_url, id=None):
         """View a comment subtree, or all comments if no id is given."""

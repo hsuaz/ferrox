@@ -1,4 +1,5 @@
 <%namespace name="lib" file="/lib.mako"/>
+<%namespace name="comments" file="/comments/lib.mako"/>
 <%inherit file="/base.mako" />
 
 <div class="basic-box">
@@ -8,5 +9,6 @@
     ${c.misc}
 </div>
 
-<%def name="title()">${c.journal_entry.title} by ${c.journal_entry.user.display_name}</%def>
+${comments.comment_tree(c.journal_entry.comments, h.url_for(**c.route))}
 
+<%def name="title()">${c.journal_entry.title} by ${c.journal_entry.user.display_name}</%def>

@@ -1,4 +1,5 @@
 <%namespace name="lib" file="/lib.mako"/>
+<%namespace name="comments" file="/comments/lib.mako"/>
 <%inherit file="base.mako" />
 
 <div class="basic-box FINISHME">
@@ -31,5 +32,8 @@
     <div class="description">
         ${c.submission.description_parsed}
     </div>
+</div>
+
+${comments.comment_tree(c.submission.comments, h.url_for(**c.route))}
 
 <%def name="title()">${c.submission.title} by ${c.submission.primary_artist.display_name}</%def>

@@ -115,9 +115,28 @@
     <p> No portions of furaffinity.net may be used without expressed, written permission. </p>
     <p> All artwork is copyrighted to the respective owner.  All rights reserved unless otherwise specified. </p>
     <div id="stats">
-        <div id="python-bar" style="width: 37%;">&nbsp;</div>
-        <p> Page generated in 0.425s; 37% SQL, 4 queries </p>
+<%
+    total_time = c.time_elapsed()
+    sql_time = c.query_log.time_elapsed()
+    sql_percent = sql_time / total_time * 100
+%>
+        <div id="python-bar" style="width: ${100 - sql_percent}%;">&nbsp;</div>
+        <p> Page generated in ${"%.4f" % total_time}s; ${"%.1f" % sql_percent}% SQL, ${len(c.query_log.queries)} quer${'y' if len(c.query_log.queries) == 1 else 'ies'} </p>
     </div>
+    % if c.auth_user.can('debug'):
+    <table id="query-log">
+    <tr>
+        <th>Time</th>
+        <th>Query</th>
+    </tr>
+    % for query, time in sorted(c.query_log.queries, key=lambda x: x[1], reverse=True):
+    <tr>
+        <td>${"%.6f" % time}</td>
+        <td>${query}</td>
+    </tr>
+    % endfor
+    </table>
+    % endif
 </div>
 </body>
 </html>

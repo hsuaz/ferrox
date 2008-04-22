@@ -38,6 +38,8 @@ def setup_config(command, filename, section, vars):
 
     admin_role = model.Role('Administrator', 'Administrator')
     admin_role.sigil = '@'
+    admin_perm = model.Permission('debug',
+                                  'Access to developer debugging tools.')
     admin_perm = model.Permission('administrate',
                                   'General access to administration tools.')
     admin_role.permissions.append(admin_perm)

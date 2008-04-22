@@ -14,11 +14,13 @@ from routes import request_config
 from furaffinity.lib.formgen import FormGenerator
 import furaffinity.lib.helpers as h
 import furaffinity.lib.hashing as hashing
+from furaffinity.lib.querylog import QueryLog
 import furaffinity.model as model
 import furaffinity.model.form as form
 
 from decorator import decorator
 from datetime import datetime
+from time import time
 
 def check_perm(permission):
     '''Decorator for checking permission on user before running a controller method'''
@@ -48,6 +50,14 @@ def check_perms(permissions):
 class BaseController(WSGIController):
 
     def __before__(self, action, **params):
+        # This is done as a closure so it can just be called from the footer
+        # in the template, putting off the final time() as late as possible
+        start_time = time()
+        def time_elapsed():
+            return time() - start_time
+        c.time_elapsed = time_elapsed
+        c.query_log = QueryLog()
+
         c.empty_form = FormGenerator()
         c.error_msgs = []
         c.route = request_config().mapper_dict
@@ -88,6 +98,10 @@ class BaseController(WSGIController):
             return WSGIController.__call__(self, environ, start_response)
         finally:
             model.Session.remove()
+
+            # For whatever reason, query log isn't reliably gc'd, so nuke
+            # it manually here
+            c.query_log = None
 
 # Include the '_' function in the public names
 __all__ = [__name for __name in locals().keys() if not __name.startswith('_') \

@@ -86,6 +86,11 @@
 <div id="right-column">
     <div class="basic-box">
         <h2>News</h2>
+        % if c.auth_user.can('administrate'):
+        <ul class="mini-linkbar">
+            <li class="admin">${h.link_to("%s Post news" % h.image_tag('/images/icons/document-new.png', ''), h.url(controller='news', action='post'))}</li>
+        </ul>
+        % endif
         % for item in c.news:
         ${lib.news_entry(item, True)}
         % endfor

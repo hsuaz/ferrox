@@ -47,6 +47,10 @@ class CommentsController(BaseController):
         else:
             # Parent and its children
             parent = model.Session.query(model.Comment).get(id)
+
+            if parent.get_discussion() != discussion:
+                abort(404)
+
             c.comments = model.Session.query(model.Comment) \
                 .with_parent(discussion, property='comments') \
                 .filter(model.Comment.left >= parent.left) \
@@ -61,6 +65,9 @@ class CommentsController(BaseController):
         c.form = FormGenerator()
         if id:
             c.comment = model.Session.query(model.Comment).get(id)
+
+            if c.comment.get_discussion() != discussion:
+                abort(404)
         else:
             c.comment = None
         return render('comments/reply.mako')
@@ -70,6 +77,9 @@ class CommentsController(BaseController):
         discussion = self._get_discussion(discussion_url)
         if id:
             c.parent = model.Session.query(model.Comment).get(id)
+
+            if c.parent.get_discussion() != discussion:
+                abort(404)
         else:
             c.parent = None
         validator = model.form.CommentForm()

@@ -5,6 +5,7 @@ from furaffinity.model import form
 
 import formencode
 import logging
+import sqlalchemy
 
 log = logging.getLogger(__name__)
 
@@ -22,9 +23,9 @@ class NewsController(BaseController):
     def view(self, id):
         page_link_var = 'p'
         page = request.params.get(page_link_var, 0)
-        news_q = model.Session.query(model.News)
-        news_q = news_q.filter_by(id=id)
-        c.news = news_q.one()
+        c.news = model.Session.query(model.News).get(id)
+        if not c.news:
+            abort(404)
         return render('news/view.mako')
 
     @check_perm('administrate')

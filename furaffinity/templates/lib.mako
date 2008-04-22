@@ -30,7 +30,7 @@
     % if c.auth_user.can('administrate'):
     ${c.empty_form.start(h.url(controller='news', action='edit', id=entry.id), method='post')}
     <ul class="inline admin">
-        <li>${h.link_to("Edit", h.url(controller='news', action='edit', id=entry.id))}</li>
+        <li>${h.link_to('Edit', h.url(controller='news', action='edit', id=entry.id))}</li>
         % if entry.is_deleted:
         <li>${c.empty_form.submit('Undelete')}</li>
         % else:
@@ -39,6 +39,12 @@
     </ul>
     ${c.empty_form.end()}
     % endif
+
+<% news_url = h.url_for(controller='news', action='view', id=entry.id) %>
+    <ul class="inline">
+        <li>${h.link_to('View comments', h.url(controller='comments', action='view', discussion_url=news_url))}</li>
+        <li>${h.link_to('Reply', h.url(controller='comments', action='reply', discussion_url=news_url))}</li>
+    </ul>
 </div>
 </%def>
 

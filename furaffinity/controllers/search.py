@@ -6,12 +6,12 @@ from furaffinity.lib.formgen import FormGenerator
 
 import formencode
 import re
-from sqlalchemy import or_, and_, not_
+
 import xapian
+from sqlalchemy import or_, and_, not_
 
 if xapian.major_version() < 1:
     raise ImportError("xapian needs >=1.0 found %s" % xapian.version_string())
-
 
 class SearchController(BaseController):
     def index(self):

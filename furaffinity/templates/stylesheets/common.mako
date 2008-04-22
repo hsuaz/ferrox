@@ -63,3 +63,9 @@ col.subject { width: auto; }
 
 /* remove before release */
 #PLACEHOLDER { border: 3px double #c04040; color: #c04040; font-weight: bold; font-size: 1.67em; padding: 0.5em; text-align: center; }
+
+/* query log in footer */
+#query-log { margin: 1em; }
+#query-log th { font-weight: bold; text-align: center; }
+#query-log td { font-family: monospace; padding: 0.33em; line-height: 1.2; }
+#query-log tr:hover { outline: 2px solid darkgray; background: white; }

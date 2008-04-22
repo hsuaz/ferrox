@@ -13,13 +13,18 @@ def make_map():
                  always_scan=config['debug'],
                  explicit=True)
 
+    map.sub_domains = True
+    map.sub_domains_ignore = ['www']
     # We do this a lot, so be epic lazy
     require_post = dict(conditions=dict(method=['POST']))
+    with_sub_domain = dict(conditions=dict(sub_domain=True))
 
     # The ErrorController route (handles 404/500 error pages); it should
     # likely stay at the top, ensuring it can always be resolved
     map.connect('error/:action/:id', controller='error')
 
+    map.connect('/', controller='user', action='view', **with_sub_domain)
+    
     map.connect('/', controller='index', action='index')
     map.connect('/login', controller='index', action='login')
     map.connect('/login_check', controller='index', action='login_check', **require_post)
@@ -30,9 +35,19 @@ def make_map():
     map.connect('/users/:username', controller='user', action='view')
     map.connect('/users/:username/settings', controller='user', action='settings')
 
+    map.connect('/news/post', controller='news', action='post')
+    map.connect('/news/do_post', controller='news', action='do_post')
     map.connect('/news/:id/edit', controller='news', action='edit')
     map.connect('/news/:id/edit_commit', controller='news', action='edit_commit', **require_post)
     map.connect('/news/:id/editlog', controller='editlog', action='news')
+    map.connect('/news/:id', controller='news', action='view')
+
+    map.connect('/*discussion_url/comments', controller='comments', action='view')
+    map.connect('/*discussion_url/comments/reply', controller='comments', action='reply')
+    map.connect('/*discussion_url/comments/reply_commit', controller='comments', action='reply_commit')
+    map.connect('/*discussion_url/comments/:id', controller='comments', action='view')
+    map.connect('/*discussion_url/comments/:id/reply', controller='comments', action='reply')
+    map.connect('/*discussion_url/comments/:id/reply_commit', controller='comments', action='reply_commit')
 
     map.connect('/users/:username/notes', controller='notes', action='user_index')
     map.connect('/users/:username/notes/write', controller='notes', action='write')
@@ -74,7 +89,6 @@ def make_map():
     map.connect('/view/:id', controller='back_compat', action='view_submission')
 
     # Defaults that we may or may not actually be using
-    map.connect(':controller/:action/:id', action='index', id=None)
     map.connect('*url', controller='template', action='view')
 
     return map

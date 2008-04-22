@@ -1,4 +1,4 @@
-<%inherit file="/base.mako" />
+<%inherit file="base.mako" />
 
 <div class="basic-box">
     <h2>Post Journal</h2>

@@ -38,6 +38,8 @@ def setup_config(command, filename, section, vars):
 
     admin_role = model.Role('Administrator', 'Administrator')
     admin_role.sigil = '@'
+    admin_perm = model.Permission('debug',
+                                  'Access to developer debugging tools.')
     admin_perm = model.Permission('administrate',
                                   'General access to administration tools.')
     admin_role.permissions.append(admin_perm)
@@ -76,9 +78,11 @@ def setup_config(command, filename, section, vars):
     u.role = normal_role
     model.Session.save(u)
 
+    '''
     n = model.News(u'headline', u'news content', u)
     model.Session.save(n)
-
+    '''
+    
     model.Session.commit()
 
     try:

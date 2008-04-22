@@ -6,6 +6,7 @@ syntax: glob
 data
 furaffinity.db
 my*.ini
+fakemogile/
 
 syntax: regexp
 ^build/

@@ -20,63 +20,30 @@
 ## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ## THE SOFTWARE.
 
-
+import time
+from datetime import datetime
 from sqlalchemy import types, exceptions
 
-class Enum(types.TypeDecorator):
-    impl = types.SmallInteger
+class DateTimeAsInteger(types.TypeDecorator):
+    impl = types.Integer
     
-    def __init__(self, values):
-        """Emulate an Enum type.
-
-        values:
-           A list of valid values for this column
+    def __init__(self):
+        """datetime in Python, INTEGER+epoch in SQL
         """
-
-        if values is None or len(values) is 0:
-            raise exceptions.AssertionError('Enum requires a list of values')
-        self.values = values[:]
-
-        
+        pass;
         
     def convert_bind_param(self, value, engine):
-        if value not in self.values:
-            raise exceptions.AssertionError('"%s" not in Enum.values' % value)
-        return self.values.index(value)
-        
+        return int(time.mktime(value.timetuple()))
         
     def convert_result_value(self, value, engine):
-        return self.values[value]
+        return datetime.fromtimestamp(value)
         
     def is_mutable(self):
         return False
         
     def compare_values(self, x, y):
-        if type(x) == type(str()):
+        if type(x) == type(datetime.now()):
             x = self.convert_bind_param(x, None)
-        if type(y) == type(str()):
+        if type(y) == type(datetime.now()):
             y = self.convert_bind_param(y, None)
         return x == y
-
-if __name__ == '__main__':
-    from sqlalchemy import *
-    t = Table('foo', MetaData('sqlite:///'),
-              Column('id', Integer, primary_key=True),
-              Column('e', Enum(['foobar', 'baz', 'quux', None])))
-    print " --- CREATE --- "
-    t.create()
-
-    print " --- foobar --- "
-    t.insert().execute(e='foobar')
-    print " --- baz --- "
-    t.insert().execute(e='baz')
-    print " --- quux --- "
-    t.insert().execute(e='quux')
-    print " --- None --- "
-    t.insert().execute(e=None)
-    # boom!
-    print " --- lala --- "
-    #t.insert().execute(e='lala')
-    
-    print list(t.select().execute())
-

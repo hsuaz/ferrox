@@ -1,4 +1,4 @@
-<%def name="news_entry(entry)">
+<%def name="news_entry(entry, short)">
 <%
     if entry.is_deleted:
         if not c.auth_user.can('administrate'):
@@ -21,12 +21,16 @@
         <div class="date">Date: ${h.format_time(entry.time)}</div>
     </div>
     <div class="content">
-        ${entry.content}
+        % if short:
+            ${entry.content_short}
+        % else:
+            ${entry.content_parsed}
+        % endif
     </div>
     % if c.auth_user.can('administrate'):
     ${c.empty_form.start(h.url(controller='news', action='edit', id=entry.id), method='post')}
     <ul class="inline admin">
-        <li>${h.link_to("Edit", h.url(controller='news', action='edit', id=entry.id))}</li>
+        <li>${h.link_to('Edit', h.url(controller='news', action='edit', id=entry.id))}</li>
         % if entry.is_deleted:
         <li>${c.empty_form.submit('Undelete')}</li>
         % else:
@@ -35,10 +39,16 @@
     </ul>
     ${c.empty_form.end()}
     % endif
+
+<% news_url = h.url_for(controller='news', action='view', id=entry.id) %>
+    <ul class="inline">
+        <li>${h.link_to('View comments', h.url(controller='comments', action='view', discussion_url=news_url))}</li>
+        <li>${h.link_to('Reply', h.url(controller='comments', action='reply', discussion_url=news_url))}</li>
+    </ul>
 </div>
 </%def>
 
-<%def name="journal_entry(entry)">
+<%def name="journal_entry(entry, short)">
 <%
     if entry.status == 'deleted':
         if not c.auth_user.can('administrate'):
@@ -55,7 +65,11 @@
         <div class="date">Date: ${h.format_time(entry.time)}</div>
     </div>
     <div class="content">
-        ${entry.content}
+        % if short:
+            ${entry.content_short}
+        % else:
+            ${entry.content_parsed}
+        % endif
     </div>
     % if c.auth_user.can('administrate'):
     ${c.empty_form.start(h.url(controller='journal', action='edit', username=entry.user.username, id=entry.id), method='post')}

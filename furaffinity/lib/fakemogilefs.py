@@ -8,6 +8,7 @@ If you need another mogilefs class or method implemented, do it yourself.
 
 import sys
 import os.path
+import os
 
 class Client:
     
@@ -32,6 +33,9 @@ class Client:
         return self.send_file(key, source, clas)
         
     def send_file(self, key, source, clas=None, blocksize=1024*1024):
+        if not os.access(self.domain, os.F_OK):
+            os.makedirs(self.domain)
+        
         opened = False
         if not hasattr(source, 'read'):
             source = open(source,'rb')
@@ -49,6 +53,8 @@ class Client:
         return True
     
     def new_file(self, key, clas=None, bytes=0):
+        if not os.access(self.domain, os.F_OK):
+            os.makedirs(self.domain)
         return open(os.path.join(self.domain, key), 'wb')
         
     def cat(self, key,fp=sys.stdout, big=False):

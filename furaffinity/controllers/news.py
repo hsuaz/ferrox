@@ -5,6 +5,7 @@ from furaffinity.model import form
 
 import formencode
 import logging
+import sqlalchemy
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +19,14 @@ class NewsController(BaseController):
         c.newspage = paginate.Page(news_q, page_nr=page, items_per_page=10)
         c.newsnav = c.newspage.navigator(link_var=page_link_var)
         return render('news/index.mako')
+
+    def view(self, id):
+        page_link_var = 'p'
+        page = request.params.get(page_link_var, 0)
+        c.news = model.Session.query(model.News).get(id)
+        if not c.news:
+            abort(404)
+        return render('news/view.mako')
 
     @check_perm('administrate')
     def post(self):
@@ -38,7 +47,8 @@ class NewsController(BaseController):
             return render('news/post.mako')
 
         title = h.escape_once(form_data['title'])
-        content = h.escape_once(form_data['content'])
+        #content = h.escape_once(form_data['content'])
+        content = form_data['content']
         news = model.News(title, content, c.auth_user)
         news.is_anonymous = form_data['is_anonymous']
         model.Session.save(news)
@@ -65,7 +75,8 @@ class NewsController(BaseController):
             return render('news/edit.mako')
 
         title = h.escape_once(form_data['title'])
-        content = h.escape_once(form_data['content'])
+        #content = h.escape_once(form_data['content'])
+        content = form_data['content']
         if c.item.title != title or c.item.content != content:
             if c.item.editlog == None:
                 c.item.editlog = model.EditLog(c.auth_user)
@@ -74,7 +85,7 @@ class NewsController(BaseController):
                                                c.item.content_parsed)
             c.item.editlog.update(editlog_entry)
             c.item.title = title
-            c.item.content = content
+            c.item.update_content(content)
         c.item.is_anonymous = form_data['is_anonymous']
         model.Session.commit()
         h.redirect_to('/news')

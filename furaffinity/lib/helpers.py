@@ -11,19 +11,6 @@ import struct
 import socket
 import time
 
-try:
-    import magic
-    def get_mime_type(fileobject):
-        ms = magic.open(magic.MAGIC_MIME)
-        ms.load()
-        type = ms.buffer(fileobject['content'])
-        ms.close()
-        return type
-except ImportError:
-    import mimetypes
-    def get_mime_type(fileobject):
-        return mimetypes.guess_type(fileobject['filename'])[0]
-
 def normalize_newlines(string):
     """Adjust all line endings to be the Linux line break, \\x0a."""
     return re.compile("\x0d\x0a|\x0d").sub("\x0a", string)
@@ -92,7 +79,11 @@ def ip_to_string(ip_integer):
 
 def format_time(datetime):
     """Format a datetime object standardly."""
-    return datetime.strftime('%m/%d/%y %I:%M %p')
+    format_string = '%m/%d/%y %I:%M %p'
+    if hasattr(datetime,'strftime'):
+        return datetime.strftime(format_string)
+    else:
+        return time.strftime(format_string,time.gmtime(datetime))
 
 def image_tag(source, alt=None, size=None, **options):
     """
@@ -132,3 +123,34 @@ check_box = form
 radio_buttom = form
 hidden_field = form
 file_field = form
+
+def indented_comments(comments):
+    """Given a list of comment rows, returns them with an indent property set
+    corresponding to the depth relative to the first (presumably the root).
+
+    The comments should be in order by left.  This will always put them in
+    the correct order.
+    """
+
+    last_comment = None
+    indent = 0
+    right_ancestry = []
+    for comment in comments:
+        if last_comment \
+           and comment.left < last_comment.right:
+            indent = indent + 1
+            right_ancestry.append(last_comment)
+
+        for i in xrange(len(right_ancestry) - 1, -1, -1):
+            if comment.left > right_ancestry[i].right:
+                indent = indent - 1
+                right_ancestry.pop(i)
+
+        if len(right_ancestry):
+            comment._parent = right_ancestry[-1]
+
+        comment.indent = indent
+
+        last_comment = comment
+
+    return comments

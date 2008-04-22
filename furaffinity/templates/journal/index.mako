@@ -12,7 +12,7 @@
     % endif
     % if c.journal_page:
     % for entry in c.journal_page:
-    ${lib.journal_entry(entry)}
+    ${lib.journal_entry(entry, True)}
     % endfor
     % else:
     <p> Journal is empty. </p>

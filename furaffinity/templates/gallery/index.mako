@@ -10,6 +10,8 @@
     % if c.page_owner != 'search':
     <h2>
         ${c.form.start(h.url(tags=None, commit=None), method='get')}
+        ${c.form.hidden_field('compiled_tags')}
+        ${c.form.hidden_field('original_tags')}
         Filter: ${c.form.text_field('tags')}${c.form.submit('Filter')}
         ${c.form.end()}
     </h2>
@@ -27,8 +29,8 @@
             </div>
             <div class="submission_info">
                 ${item.description_parsed}<br>
-                % if item.get_derived_index(['thumb']) != None:
-                <div class="submission_thumbnail">${h.image_tag(h.url_for(controller='gallery', action='file', filename=item.get_derived_by_type('thumb').metadata.get_filename()), item.title)}</div>
+                % if item.get_derived_by_type('thumb') != None:
+                <div class="submission_thumbnail">${h.image_tag(h.url_for(controller='gallery', action='file', filename=item.get_derived_by_type('thumb').mogile_key), item.title)}</div>
                 % endif
             </div>
         </div>

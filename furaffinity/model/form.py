@@ -1,6 +1,7 @@
+import furaffinity.model as model
+
 import formencode
 from formencode import validators
-import furaffinity.model as model
 import urllib
 
 class FileUploadValidator(validators.FancyValidator):
@@ -85,13 +86,19 @@ class NewsForm(formencode.Schema):
     content = validators.NotEmpty()
     is_anonymous = validators.Bool()
 
-class SubmitForm(formencode.Schema):
-    fullfile = FileUploadValidator(not_empty=True)
+class SubmitEditForm(formencode.Schema):
+    fullfile = FileUploadValidator()
     halffile = FileUploadValidator()
     thumbfile = FileUploadValidator()
     title = formencode.validators.String(not_empty=True)
     tags = formencode.validators.String(not_empty=True)
     description = formencode.validators.NotEmpty(not_empty=True)
+
+class SubmitForm(SubmitEditForm):
+    fullfile = FileUploadValidator(not_empty=True)
+
+class EditForm(SubmitEditForm):
+    fullfile = FileUploadValidator()
 
 class JournalForm(formencode.Schema):
     title = validators.String(not_empty=True)
@@ -110,6 +117,8 @@ class SearchForm(formencode.Schema):
     search_description = formencode.validators.Bool()
 
 class TagFilterForm(formencode.Schema):
+    original_tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
+    compiled_tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
     tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
 
 class ReplyValidator(validators.FormValidator):
@@ -137,3 +146,7 @@ class SendNoteForm(formencode.Schema):
                 )
 
         return formencode.Schema._to_python(self, value, state)
+
+class CommentForm(formencode.Schema):
+    subject = validators.String(if_empty='(no subject)')
+    content = validators.String(not_empty=True)

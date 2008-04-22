@@ -1,10 +1,11 @@
-import hashlib
-import random
-import cStringIO
-import os.path
-import mimetypes
+from __future__ import with_statement
 
 import pylons
+
+from furaffinity.lib.image import ImageClass
+from furaffinity.lib.mimetype import get_mime_type
+from furaffinity.lib import helpers as h
+import furaffinity.lib.bbcode_for_fa as bbcode
 
 from sqlalchemy import Column, MetaData, Table, ForeignKey, types, sql
 from sqlalchemy.orm import mapper, object_mapper, relation
@@ -12,21 +13,19 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.databases.mysql import MSInteger, MSEnum
 from sqlalchemy.exceptions import InvalidRequestError
 
-from datetime import datetime, timedelta
-from enum import *
-from datetimeasint import *
-import re
-
-import sys
 from binascii import crc32
-
-from furaffinity.lib.image import ImageClass
-from furaffinity.lib.mimetype import get_mime_type
-from furaffinity.lib import helpers as h
-import furaffinity.lib.bbcode_for_fa as bbcode
-
+import cStringIO
 import chardet
 import codecs
+from datetime import datetime, timedelta
+from datetimeasint import *
+from enum import *
+import hashlib
+import mimetypes
+import os.path
+import random
+import re
+import sys
 
 search_enabled = True
 try:

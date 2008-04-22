@@ -116,6 +116,8 @@ class SearchForm(formencode.Schema):
     search_description = formencode.validators.Bool()
 
 class TagFilterForm(formencode.Schema):
+    original_tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
+    compiled_tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
     tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
 
 class ReplyValidator(validators.FormValidator):

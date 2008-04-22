@@ -231,7 +231,7 @@ editlog_entry_table = Table('editlog_entry', metadata,
 # Tags
 
 tag_table = Table('tag', metadata,
-    Column('id', types.Integer, primary_key=True, autoincrement=False),
+    Column('id', types.Integer, primary_key=True, autoincrement=True),
     Column('text', types.String(length=20), index=True, unique=True),
     mysql_engine='InnoDB'
 )
@@ -263,7 +263,7 @@ class JournalEntry(object):
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
         self.content_plain = bbcode.parser_plaintext.parse(content)
-        
+
     def to_xapian(self):
         if search_enabled:
             xapian_document = xapian.Document()
@@ -492,7 +492,7 @@ class Submission(object):
             if self.user_submission[index].relationship == relationship:
                 users.append( self.user_submission[index].user )
         return users
-        
+
     def update_description (self, description):
         self.description = description
         self.description_parsed = bbcode.parser.parse(description)
@@ -501,8 +501,8 @@ class Submission(object):
     def to_xapian(self):
         if search_enabled:
             xapian_document = xapian.Document()
-            xapian_document.add_term("I%d" % self.id)
-            xapian_document.add_value(0, "I%d" % self.id)
+            xapian_document.add_term("I%s" % self.id)
+            xapian_document.add_value(0, "I%s" % self.id)
             xapian_document.add_term("A%s" % self.primary_artist.id)
 
             # tags
@@ -581,7 +581,6 @@ class Submission(object):
 
         self.mimetype = get_mime_type(file_object)
         self.type = self.get_submission_type()
-        print self.mimetype
 
         if self.type == 'image':
             toobig = None
@@ -592,7 +591,6 @@ class Submission(object):
             if toobig:
                 self.file_blob = toobig.get_data()
         elif self.type == 'text':
-            print self.mimetype
             detection_result = chardet.detect(self.file_blob)
             if detection_result['encoding'].lower() != 'utf-8' and detection_result['encoding'].lower() != 'ascii':
                 unicode_string = codecs.getdecoder(detection_result['encoding'])(self.file_blob)
@@ -758,8 +756,8 @@ class Submission(object):
                 blobstream.close()
 
 class UserSubmission(object):
-    def __init__(self, user_id, relationship, ownership_status, review_status):
-        self.user_id = user_id
+    def __init__(self, user, relationship, ownership_status, review_status):
+        self.user = user
         self.relationship = relationship
         self.ownership_status = ownership_status
         self.review_status = review_status
@@ -793,7 +791,7 @@ class News(object):
         self.content = h.escape_once(content)
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
-        
+
 class EditLog(object):
     def __init__(self,user):
         self.last_edited_by = user
@@ -818,9 +816,54 @@ class SubmissionTag(object):
         self.tag = tag
 
 class Tag(object):
+    cache_by_text = {}
+    cache_by_id = {}
+
+    @classmethod
+    def sanitize(cls, text):
+        rmex = re.compile(r'[^a-z0-9]')
+        return rmex.sub('', text)
+
+    @classmethod
+    def get_by_text(cls, text, create = False):
+        text = Tag.sanitize(text)
+        if not Tag.cache_by_text.has_key(text):
+            try:
+                tag = Session.query(Tag).filter(Tag.text == text).one()
+                Tag.cache_by_id[tag.id] = tag
+            except InvalidRequestError:
+                # Need to create tag.
+                if create:
+                    tag = Tag(text=text)
+                    Session.save(tag)
+                else:
+                    raise
+            Tag.cache_by_text[text] = tag
+        return Tag.cache_by_text[text]
+
+    @classmethod
+    def get_by_id(cls, id):
+        id = int(id)
+        if not Tag.cache_by_id.has_key(id):
+            tag = Session.query(Tag).filter(Tag.id == id).one()
+            Tag.cache_by_text[int(tag)] = tag
+            Tag.cache_by_id[int(tag)] = tag
+        return Tag.cache_by_id[id]
+
+    def cache_me(self):
+        if not Tag.cache_by_text.has_key(self.text):
+            Tag.cache_by_text[self.text] = self
+        if not Tag.cache_by_id.has_key(self.id):
+            Tag.cache_by_id[self.id] = self
+
     def __init__(self, text):
         self.text = text
-        self.id = crc32(text)
+
+    def __str__(self):
+        return self.text if self.text else ''
+
+    def __int__(self):
+        return self.id if self.id else 0
 
 class Note(object):
     def __init__(self, from_user_id, to_user_id, subject, content, original_note_id=None):
@@ -836,7 +879,7 @@ class Note(object):
     def update_content (self, content):
         self.content = h.escape_once(content)
         self.content_parsed = bbcode.parser.parse(content)
-        
+
     def latest_note(self, recipient):
         """
         Returns the latest note in this note's thread, preferring one that was

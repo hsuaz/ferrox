@@ -47,7 +47,8 @@ class NewsController(BaseController):
             return render('news/post.mako')
 
         title = h.escape_once(form_data['title'])
-        content = h.escape_once(form_data['content'])
+        #content = h.escape_once(form_data['content'])
+        content = form_data['content']
         news = model.News(title, content, c.auth_user)
         news.is_anonymous = form_data['is_anonymous']
         model.Session.save(news)
@@ -74,7 +75,8 @@ class NewsController(BaseController):
             return render('news/edit.mako')
 
         title = h.escape_once(form_data['title'])
-        content = h.escape_once(form_data['content'])
+        #content = h.escape_once(form_data['content'])
+        content = form_data['content']
         if c.item.title != title or c.item.content != content:
             if c.item.editlog == None:
                 c.item.editlog = model.EditLog(c.auth_user)
@@ -83,7 +85,7 @@ class NewsController(BaseController):
                                                c.item.content_parsed)
             c.item.editlog.update(editlog_entry)
             c.item.title = title
-            c.item.update_content(h.escape_once(content))
+            c.item.update_content(content)
         c.item.is_anonymous = form_data['is_anonymous']
         model.Session.commit()
         h.redirect_to('/news')

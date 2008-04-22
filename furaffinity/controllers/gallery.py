@@ -5,7 +5,6 @@ from pylons.decorators.secure import *
 from furaffinity.lib import filestore, tagging
 from furaffinity.lib.base import *
 from furaffinity.lib.formgen import FormGenerator
-from furaffinity.lib.thumbnailer import Thumbnailer
 from furaffinity.lib.mimetype import get_mime_type
 
 import formencode
@@ -37,9 +36,9 @@ else:
 
 log = logging.getLogger(__name__)
 
-fullfile_size = 1280
-thumbnail_size = 120
-halfview_size = 300
+#fullfile_size = 1280
+#thumbnail_size = 120
+#halfview_size = 300
 
 def get_submission(id, eagerloads=[]):
     """Fetches a submission, and dies nicely if it can't be found."""
@@ -51,9 +50,12 @@ def get_submission(id, eagerloads=[]):
         c.error_text = 'Requested submission was not found.'
         c.error_title = 'Not Found'
         abort(404)
-    c.tags = tagging.make_tags_into_string(submission.tags)
-    return submission
 
+    #c.tags = tagging.make_tags_into_string(submission.tags)
+    #tag_list = tagging.TagList()
+    #tag_list.parse_tag_object_array(submission.tags, negative=False)
+    c.tags = tagging.make_tag_string(submission.tags)
+    return submission
 
 class GalleryController(BaseController):
 
@@ -71,19 +73,55 @@ class GalleryController(BaseController):
         except formencode.Invalid, error:
             return error
 
-        (positive_tags, negative_tags) = tagging.get_neg_and_pos_tags_from_string(form_data['tags'])
-        c.form = FormGenerator()
-        c.form.defaults['tags'] = tagging.recreate_tag_string(positive_tags, negative_tags)
+        #(positive_tags, negative_tags) = tagging.get_neg_and_pos_tags_from_string(form_data['tags'])
+        #c.form = FormGenerator()
+        #c.form.defaults['tags'] = tagging.recreate_tag_string(positive_tags, negative_tags)
 
-        all_tags = negative_tags + positive_tags
-        fetched = tagging.cache_by_list(all_tags)
+        c.form = FormGenerator()
+        
+        positive_tags = []
+        negative_tags = []
+        if ( form_data['tags'] == form_data['original_tags'] ):
+            # use compiled tag string
+            (positive_tag_strings, negative_tag_strings) = tagging.break_apart_tag_string(form_data['compiled_tags'], include_negative=True)
+            
+            for x in positive_tag_strings:
+                try:
+                    positive_tags.append(model.Tag.get_by_id(x))
+                except sqlalchemy.exceptions.InvalidRequestError:
+                    pass
+            
+            for x in negative_tag_strings:
+                try:
+                    negative_tags.append(model.Tag.get_by_id(x))
+                except sqlalchemy.exceptions.InvalidRequestError:
+                    pass
+                    
+        else:
+            # recompile tag string
+            (positive_tag_strings, negative_tag_strings) = tagging.break_apart_tag_string(form_data['tags'], include_negative=True)
+            
+            for x in positive_tag_strings:
+                try:
+                    positive_tags.append(model.Tag.get_by_text(x))
+                except sqlalchemy.exceptions.InvalidRequestError:
+                    pass
+            
+            for x in negative_tag_strings:
+                try:
+                    negative_tags.append(model.Tag.get_by_text(x))
+                except sqlalchemy.exceptions.InvalidRequestError:
+                    pass
+        
+        c.form.defaults['compiled_tags'] = tagging.make_compiled_tag_string(positive_tags, negative_tags)
+        c.form.defaults['original_tags'] = c.form.defaults['tags'] = tagging.make_tag_string(positive_tags, negative_tags)
 
         q = model.Session.query(model.Submission)
 
         select_from_object = model.submission_table
 
-        for tag_text in positive_tags:
-            tag_id = tagging.get_id_by_text(tag_text)
+        for tag_object in positive_tags:
+            tag_id = int(tag_object)
             alias = model.submission_tag_table.alias()
             select_from_object = select_from_object.join(
                 alias,
@@ -94,8 +132,8 @@ class GalleryController(BaseController):
             )
 
         negative_aliases = []
-        for tag_text in negative_tags:
-            tag_id = tagging.get_id_by_text(tag_text)
+        for tag_object in negative_tags:
+            tag_id = int(tag_object)
             alias = model.submission_tag_table.alias()
             negative_aliases.append(alias)
             select_from_object = select_from_object.outerjoin(
@@ -141,7 +179,9 @@ class GalleryController(BaseController):
         c.form = FormGenerator()
         c.form.defaults['title'] = submission.title
         c.form.defaults['description'] = submission.description
-        c.form.defaults['tags'] = tagging.make_tags_into_string(submission.tags)
+        #tag_list = tagging.TagList()
+        #tag_list.parse_tag_object_array(submission.tags, negative=False)
+        c.form.defaults['tags'] = tagging.make_tag_string(submission.tags)
         return render('/gallery/submit.mako')
 
     @check_perms(['submit_art','administrate'])
@@ -199,9 +239,9 @@ class GalleryController(BaseController):
         model.Session.save(editlog_entry)
         submission.editlog.update(editlog_entry)
 
-        form_data['description'] = h.escape_once(form_data['description'])
+        #form_data['description'] = h.escape_once(form_data['description'])
         submission.title = h.escape_once(form_data['title'])
-        submission.description = form_data['description']
+        submission.update_description(form_data['description'])
         if form_data['fullfile']:
             submission.set_file(form_data['fullfile'])
             submission.generate_halfview()
@@ -209,6 +249,26 @@ class GalleryController(BaseController):
 
 
         # Tag shuffle
+        #tag_list = tagging.TagList()
+        #tag_list.parse_tag_string(form_data['tags'])
+        #submission.tags = tag_list.get_positive_tag_object_array()
+        
+        #for x in submission.tags:
+        #    x.cache_me()
+
+        old = list(set([str(x) for x in submission.tags]))
+        new = list(set(tagging.break_apart_tag_string(form_data['tags'])))
+        
+        to_append = []
+        for x in submission.tags:
+            if str(x) not in new:
+                submission.tags.remove(x)
+        for x in new:
+            if x not in old:
+                submission.tags.append(model.Tag.get_by_text(x, create=True))
+                
+        
+        '''
         form_data['tags'] = tagging.get_tags_from_string(form_data['tags'])
         for tag_object in submission.tags:
             if not (tag_object.text in form_data['tags']):
@@ -222,6 +282,7 @@ class GalleryController(BaseController):
             tag_object = tagging.get_by_text(tag, True)
             submission.tags.append(tag_object)
         #model.Session.save(submission)
+        '''
 
         model.Session.commit()
         submission.commit_mogile()
@@ -278,21 +339,18 @@ class GalleryController(BaseController):
 
         submission = model.Submission()
 
-        form_data['description'] = h.escape_once(form_data['description'])
+        #form_data['description'] = h.escape_once(form_data['description'])
         submission.title = h.escape_once(form_data['title'])
-        submission.description = form_data['description']
+        submission.update_description(form_data['description'])
         submission.set_file(form_data['fullfile'])
         submission.generate_thumbnail(form_data['thumbfile'])
         submission.generate_halfview()
 
-        form_data['tags'] = tagging.get_tags_from_string(form_data['tags'])
-        tagging.cache_by_list(form_data['tags'])
-        for tag in form_data['tags']:
-            tag_object = tagging.get_by_text(tag, True)
-            submission.tags.append(tag_object)
+        for tag_text in tagging.break_apart_tag_string(form_data['tags']):
+            submission.tags.append(model.Tag.get_by_text(tag_text, create=True))
 
         user_submission = model.UserSubmission(
-            user_id = session['user_id'],
+            user = c.auth_user,
             relationship = 'artist',
             ownership_status = 'primary',
             review_status = 'normal'

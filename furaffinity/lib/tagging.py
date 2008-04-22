@@ -12,99 +12,71 @@ class TagNotFound(TagException):
 
 cache_by_text = {}
 
-# for Tag objects
-def make_tags_into_string(tags):
-    tagstring = ''
-    for tag in tags:
-        tagstring = "%s %s" % (tagstring, tag.text)
-    return tagstring.strip()
 
-# returns array of strings
-def get_tags_from_string(tags_blob):
-    tags = []
-    rmex = re.compile(r'[^a-z0-9]')
-    for tag in tags_blob.lower().split(' '):
-        tags.append(rmex.sub('',tag))
-    return list(set(tags))
+"""
+Terms:
+tag_string = user input  (a b -c)
+compiled_tag_string = tag_string using ids instead of raw tag names (1 2 !3)
+tag_object_array = Array of model.Tag objects
+"""
 
-# returns two arrays of strings
-def get_neg_and_pos_tags_from_string(tags_blob):
-    pos_tags = []
-    neg_tags = []
-    #print "tagging %s %s"%(pos_tags,neg_tags)
-    rmex = re.compile(r'[^a-z0-9]')
-    if tags_blob != None:
-        for tag in tags_blob.lower().split(' '):
-            sanitized_tag = rmex.sub('',tag)
-            if len(sanitized_tag)>0:
-                if len(tag)>1 and tag[0] == '-':
-                    neg_tags.append(sanitized_tag)
-                elif len(tag)>0:
-                    pos_tags.append(sanitized_tag)
+def break_apart_tag_string(tag_string, include_negative=False):
+    negative = []
+    positive = []
 
-    pos_tags = list(set(pos_tags))
-    neg_tags = list(set(neg_tags))
+    rmex = re.compile(r'[^a-z0-9-]')
+    compiled_tag_string = ''
 
-    for tag in pos_tags:
-        try:
-            neg_tags.remove(tag)
-        except ValueError:
-            pass
+    for tag_text in tag_string.split(' '):
+        tag_text = rmex.sub('', tag_text)
+        if len(tag_text) > 1 and tag_text[0] == '-':
+            negative.append(tag_text[1:])
+        elif len(tag_text) > 0:
+            positive.append(tag_text)
+            
+    if include_negative:
+        return (positive, negative)
+    else:
+        return positive
+        
+def break_apart_compiled_tag_string(compiled_tag_string, include_negative=False):
+    negative = []
+    positive = []
+    
+    rmex = re.compile(r'[^0-9!]')
+    compiled_tag_string = ''
 
-    pos_tags.sort()
-    neg_tags.sort()
-    return (pos_tags,neg_tags)
+    for tag_id in tag_string.split(' '):
+        tag_id = rmex.sub('', tag_id)
+        if len(tag_id) > 1 and tag_id[0] == '-':
+            negative.append(int(tag_id[1:]))
+        elif len(tag_text) > 0:
+            positive.append(int(tag_id))
+            
+    if include_negative:
+        return (positive, negative)
+    else:
+        return positive
 
-# for array of tags
-def recreate_tag_string(positive_tags,negative_tags):
-    tagstring = ''
-    for tag in positive_tags:
-        tagstring = "%s %s" % (tagstring, tag)
-    for tag in negative_tags:
-        tagstring = "%s -%s" % (tagstring, tag)
-    return tagstring.strip()
+# postive and negative are tag_object_arrays
+def make_tag_string(positive, negative = []):
+    tag_string = ''
+    for x in positive:
+        tag_string += str(x) + ' '
+    for x in negative:
+        tag_string += "-%s "%str(x)
+    return tag_string.strip()
+    
+# postive and negative are tag_object_arrays
+def make_compiled_tag_string(positive, negative = []):
+    compiled_tag_string = ''
+    for x in positive:
+        if int(x) == 0:
+            raise Exception("Tag '%s' is not in the database yet. Try model.Session.commit()"%str(x))
+        compiled_tag_string += "%d "%x
+    for x in negative:
+        if int(x) == 0:
+            raise Exception("Tag '%s' is not in the database yet. Try model.Session.commit()"%str(x))
+        compiled_tag_string += "-%d "%x
+    return compiled_tag_string.strip()
 
-
-def get_id_by_text(text):
-    return crc32(text)
-
-def get_by_text(text, create=False):
-    if not cache_by_text.has_key(text):
-        tag_id = get_id_by_text(text)
-        try:
-            tag = model.Session.query(model.Tag).filter(model.Tag.id == tag_id).one()
-        except sqlalchemy.exceptions.InvalidRequestError:
-            # Need to create tag.
-            if create:
-                tag = model.Tag(text=text)
-                model.Session.save(tag)
-            else:
-                raise TagNotFound
-        cache_by_text[text] = tag
-    return cache_by_text[text]
-
-def cache_by_list(list):
-    if not list:
-        return []
-    list_of_tags_fetched = []
-    total_tags_to_fetch = 0
-    tag_query = model.Session.query(model.Tag)
-
-    query_eval = 'or_('
-    first = True
-    for text in list:
-        if not cache_by_text.has_key(text):
-            if first:
-                first = False
-            else:
-                query_eval += ','
-
-            query_eval += "model.Tag.id == %d"%get_id_by_text(text)
-            total_tags_to_fetch += 1
-    query_eval += ')'
-
-    tags = tag_query.filter(eval(query_eval)).all()
-    for tag in tags:
-        cache_by_text[tag.text] = tag
-        list_of_tags_fetched.append(tag.text)
-    return list_of_tags_fetched

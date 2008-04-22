@@ -10,6 +10,8 @@
     % if c.page_owner != 'search':
     <h2>
         ${c.form.start(h.url(tags=None, commit=None), method='get')}
+        ${c.form.hidden_field('compiled_tags')}
+        ${c.form.hidden_field('original_tags')}
         Filter: ${c.form.text_field('tags')}${c.form.submit('Filter')}
         ${c.form.end()}
     </h2>

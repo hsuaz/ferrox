@@ -86,12 +86,13 @@ class JournalController(BaseController):
             return render('/journal/post.mako')
 
         # -- put journal in database --
-        form_data['content'] = h.escape_once(form_data['content'])
+        #form_data['content'] = h.escape_once(form_data['content'])
         journal_entry = model.JournalEntry(
             user_id=c.auth_user.id,
             title=form_data['title'],
-            content=form_data['content']
+            content=''
         )
+        journal_entry.update_content(form_data['content'])
         model.Session.save(journal_entry)
         model.Session.commit()
 
@@ -132,7 +133,7 @@ class JournalController(BaseController):
         journal_entry = get_journal(id)
         self.is_my_journal(journal_entry, True)
 
-        form_data['content'] = h.escape_once(form_data['content'])
+        #form_data['content'] = h.escape_once(form_data['content'])
         # -- update journal in database --
         if journal_entry.title != form_data['title'] or \
            journal_entry.content != form_data['content']:

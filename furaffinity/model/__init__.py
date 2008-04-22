@@ -25,7 +25,7 @@ import re
 import sys
 from binascii import crc32
 
-from furaffinity.lib.thumbnailer import Thumbnailer
+from furaffinity.lib.image import ImageClass
 from furaffinity.lib.mimetype import get_mime_type
 from furaffinity.lib import helpers as h
 import furaffinity.lib.bbcode_for_fa as bbcode
@@ -264,7 +264,7 @@ submission_comment_table = Table('submission_comment', metadata,
 # Tags
 
 tag_table = Table('tag', metadata,
-    Column('id', types.Integer, primary_key=True, autoincrement=False),
+    Column('id', types.Integer, primary_key=True, autoincrement=True),
     Column('text', types.String(length=20), index=True, unique=True),
     mysql_engine='InnoDB'
 )
@@ -291,10 +291,12 @@ class JournalEntry(object):
         self.status = 'normal'
 
     def update_content (self, content):
-        self.content = content
+        self.content = h.escape_once(content)
+        #bbcode.parser_short.tag_handlers['cut'].link = h.url_for(controller='journal', action='view', id=self.id)
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
-        
+        self.content_plain = bbcode.parser_plaintext.parse(content)
+
     def to_xapian(self):
         if search_enabled:
             xapian_document = xapian.Document()
@@ -306,7 +308,7 @@ class JournalEntry(object):
             words = []
             rmex = re.compile(r'[^a-z0-9-]')
             for word in self.title.lower().split(' '):
-                words.append(rmex.sub('',word))
+                words.append(rmex.sub('',word[0:20]))
             words = set(words)
             for word in words:
                 xapian_document.add_term("T%s"%word)
@@ -314,8 +316,8 @@ class JournalEntry(object):
             # description
             words = []
             # FIX ME: needs bbcode parser. should be plain text representation.
-            for word in self.content.lower().split(' '):
-                words.append(rmex.sub('',word))
+            for word in self.content_plain.lower().split(' '):
+                words.append(rmex.sub('',word[0:20]))
             words = set(words)
             for word in words:
                 xapian_document.add_term("P%s"%word)
@@ -523,16 +525,17 @@ class Submission(object):
             if self.user_submission[index].relationship == relationship:
                 users.append( self.user_submission[index].user )
         return users
-        
+
     def update_description (self, description):
         self.description = description
         self.description_parsed = bbcode.parser.parse(description)
+        self.description_plain = bbcode.parser_plaintext.parse(description)
 
     def to_xapian(self):
         if search_enabled:
             xapian_document = xapian.Document()
-            xapian_document.add_term("I%d" % self.id)
-            xapian_document.add_value(0, "I%d" % self.id)
+            xapian_document.add_term("I%s" % self.id)
+            xapian_document.add_value(0, "I%s" % self.id)
             xapian_document.add_term("A%s" % self.primary_artist.id)
 
             # tags
@@ -543,7 +546,7 @@ class Submission(object):
             words = []
             rmex = re.compile(r'[^a-z0-9-]')
             for word in self.title.lower().split(' '):
-                words.append(rmex.sub('', word))
+                words.append(rmex.sub('', word[0:20]))
             words = set(words)
             for word in words:
                 xapian_document.add_term("T%s" % word)
@@ -551,8 +554,8 @@ class Submission(object):
             # description
             words = []
             # FIX ME: needs bbcode parser. should be plain text representation.
-            for word in self.description.lower().split(' '):
-                words.append(rmex.sub('', word))
+            for word in self.description_plain.lower().split(' '):
+                words.append(rmex.sub('', word[0:20]))
             words = set(words)
             for word in words:
                 xapian_document.add_term("P%s" % word)
@@ -611,18 +614,16 @@ class Submission(object):
 
         self.mimetype = get_mime_type(file_object)
         self.type = self.get_submission_type()
-        print self.mimetype
 
         if self.type == 'image':
             toobig = None
-            with Thumbnailer() as t:
-                t.parse(self.file_blob,self.mimetype)
-                toobig = t.generate(int(pylons.config['gallery.fullfile_size']))
+            with ImageClass() as t:
+                t.set_data(self.file_blob)
+                toobig = t.get_resized(int(pylons.config['gallery.fullfile_size']))
 
             if toobig:
-                self.file_blob = toobig['content']
+                self.file_blob = toobig.get_data()
         elif self.type == 'text':
-            print self.mimetype
             detection_result = chardet.detect(self.file_blob)
             if detection_result['encoding'].lower() != 'utf-8' and detection_result['encoding'].lower() != 'ascii':
                 unicode_string = codecs.getdecoder(detection_result['encoding'])(self.file_blob)
@@ -665,9 +666,9 @@ class Submission(object):
 
         if self.type == 'image':
             half_fileobject = None
-            with Thumbnailer() as t:
-                t.parse(self.file_blob, self.mimetype)
-                half_fileobject = t.generate(int(pylons.config['gallery.halfview_size']))
+            with ImageClass() as t:
+                t.set_data(self.file_blob)
+                half_fileobject = t.get_resized(int(pylons.config['gallery.halfview_size']))
 
             if half_fileobject:
                 new_derived_submission = False
@@ -677,7 +678,7 @@ class Submission(object):
                 filename_parts = os.path.splitext(self.mogile_key)
                 current.mogile_key = filename_parts[0] + '.half' + filename_parts[1]
                 current.mimetype = self.mimetype
-                current.file_blob = half_fileobject['content']
+                current.file_blob = half_fileobject.get_data()
                 current.old_mogile_key = old_mogile_key
                 if new_derived_submission:
                     self.derived_submission.append(current)
@@ -715,24 +716,24 @@ class Submission(object):
             #Session.delete(current)
 
         thumb_fileobject = None
-        with Thumbnailer() as t:
+        with ImageClass() as t:
             use_self = True
             dont_bother = False
             if proposed:
                 proposed_mimetype = get_mime_type(proposed)
                 proposed_type = self.get_submission_type(proposed_mimetype)
                 if proposed_type == 'image':
-                    t.parse(proposed['content'], proposed_mimetype)
+                    t.set_data(proposed['content'])
                     use_self = False
 
             if use_self:
                 if self.type == 'image' and self.file_blob:
-                    t.parse(self.file_blob, self.mimetype)
+                    t.set_data(self.file_blob)
                 else:
                     dont_bother = True
 
             if not dont_bother:
-                thumb_fileobject = t.generate(int(pylons.config['gallery.thumbnail_size']))
+                thumb_fileobject = t.get_resized(int(pylons.config['gallery.thumbnail_size']))
             else:
                 old_mogile_key = None
 
@@ -750,7 +751,7 @@ class Submission(object):
             filename_parts = os.path.splitext(self.mogile_key)
             current.mogile_key = filename_parts[0] + '.tn' + filename_parts[1]
             current.mimetype = self.mimetype
-            current.file_blob = thumb_fileobject['content']
+            current.file_blob = thumb_fileobject.get_data()
             #no more deleting
             #current.old_mogile_key = old_mogile_key
 
@@ -788,8 +789,8 @@ class Submission(object):
                 blobstream.close()
 
 class UserSubmission(object):
-    def __init__(self, user_id, relationship, ownership_status, review_status):
-        self.user_id = user_id
+    def __init__(self, user, relationship, ownership_status, review_status):
+        self.user = user
         self.relationship = relationship
         self.ownership_status = ownership_status
         self.review_status = review_status
@@ -820,10 +821,10 @@ class News(object):
         self.author = author
 
     def update_content (self, content):
-        self.content = content
+        self.content = h.escape_once(content)
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
-        
+
 class EditLog(object):
     def __init__(self,user):
         self.last_edited_by = user
@@ -942,9 +943,54 @@ class SubmissionTag(object):
         self.tag = tag
 
 class Tag(object):
+    cache_by_text = {}
+    cache_by_id = {}
+
+    @classmethod
+    def sanitize(cls, text):
+        rmex = re.compile(r'[^a-z0-9]')
+        return rmex.sub('', text)
+
+    @classmethod
+    def get_by_text(cls, text, create = False):
+        text = Tag.sanitize(text)
+        if not Tag.cache_by_text.has_key(text):
+            try:
+                tag = Session.query(Tag).filter(Tag.text == text).one()
+                Tag.cache_by_id[tag.id] = tag
+            except InvalidRequestError:
+                # Need to create tag.
+                if create:
+                    tag = Tag(text=text)
+                    Session.save(tag)
+                else:
+                    raise
+            Tag.cache_by_text[text] = tag
+        return Tag.cache_by_text[text]
+
+    @classmethod
+    def get_by_id(cls, id):
+        id = int(id)
+        if not Tag.cache_by_id.has_key(id):
+            tag = Session.query(Tag).filter(Tag.id == id).one()
+            Tag.cache_by_text[int(tag)] = tag
+            Tag.cache_by_id[int(tag)] = tag
+        return Tag.cache_by_id[id]
+
+    def cache_me(self):
+        if not Tag.cache_by_text.has_key(self.text):
+            Tag.cache_by_text[self.text] = self
+        if not Tag.cache_by_id.has_key(self.id):
+            Tag.cache_by_id[self.id] = self
+
     def __init__(self, text):
         self.text = text
-        self.id = crc32(text)
+
+    def __str__(self):
+        return self.text if self.text else ''
+
+    def __int__(self):
+        return self.id if self.id else 0
 
 class Note(object):
     def __init__(self, from_user_id, to_user_id, subject, content, original_note_id=None):
@@ -958,9 +1004,9 @@ class Note(object):
         self.time = datetime.now()
 
     def update_content (self, content):
-        self.content = content
+        self.content = h.escape_once(content)
         self.content_parsed = bbcode.parser.parse(content)
-        
+
     def latest_note(self, recipient):
         """
         Returns the latest note in this note's thread, preferring one that was

@@ -109,17 +109,21 @@ class DeleteForm(formencode.Schema):
     cancel = formencode.validators.PlainText(not_empty=False, if_missing=None)
 
 class SearchForm(formencode.Schema):
-    query_tags = formencode.validators.NotEmpty(not_empty=False)
+    query_tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
     query_main = formencode.validators.NotEmpty(not_empty=True)
-    query_author = formencode.validators.PlainText(not_empty=False)
+    query_author = formencode.validators.PlainText(not_empty=False, if_missing='')
     search_for = formencode.validators.PlainText()
     search_title = formencode.validators.Bool()
     search_description = formencode.validators.Bool()
+    page = formencode.validators.Int(not_empty=False, if_missing=1)
+    perpage = formencode.validators.Int(not_empty=False, if_missing=0)
 
 class TagFilterForm(formencode.Schema):
     original_tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
     compiled_tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
     tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
+    page = formencode.validators.Int(not_empty=False, if_missing=0)
+    perpage = formencode.validators.Int(not_empty=False, if_missing=0)
 
 class ReplyValidator(validators.FormValidator):
     validate_partial_form = True

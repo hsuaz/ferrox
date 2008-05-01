@@ -1,8 +1,10 @@
+import pylons.config
 from pylons.decorators.secure import *
 
 from furaffinity.lib import filestore, tagging
 from furaffinity.lib.base import *
 from furaffinity.lib.formgen import FormGenerator
+import furaffinity.lib.pagination as pagination
 
 import formencode
 import re
@@ -18,6 +20,7 @@ class SearchController(BaseController):
         """Form for full-text search."""
 
         c.form = FormGenerator()
+        c.form.defaults['perpage'] = int(pylons.config.get('gallery.default_perpage',12))
         return render('search/index.mako')
 
     def do(self):
@@ -29,6 +32,8 @@ class SearchController(BaseController):
         except formencode.Invalid, error:
             c.form = FormGenerator(form_error=error)
             return render('search/index.mako')
+        c.form = FormGenerator()
+        c.form.defaults = c.search_terms
 
         query_parser = xapian.QueryParser()
         query_parser.set_default_op(xapian.Query.OP_AND)
@@ -44,7 +49,7 @@ class SearchController(BaseController):
                                                  query_flags, 'G')
 
         author_query = None
-        if c.search_terms['query_author']:
+        if c.search_terms['query_author'] and c.search_terms['query_author'] != 'None':
             author_object = model.User.get_by_name(
                 c.search_terms['query_author'].strip())
             author_query = query_parser.parse_query(str(author_object.id),
@@ -83,10 +88,18 @@ class SearchController(BaseController):
         else:
             abort(400)
 
+        pageno = (c.search_terms['page'] if c.search_terms['page'] else 1)-1
+        perpage = c.search_terms['perpage'] if c.search_terms['perpage'] else int(pylons.config.get('gallery.default_perpage',12))
+        
         enquire = xapian.Enquire(xapian_database)
         enquire.set_query(main_query)
-        results = enquire.get_mset(0, 10)
-
+        results = enquire.get_mset(pageno*perpage, perpage, 10)
+        if pylons.config.has_key('paging.radius'):
+            paging_radius = int(pylons.config['paging.radius'])
+        else:
+            paging_radius = 3
+            
+        c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=results.get_matches_estimated(), perpage=perpage, radius=paging_radius)
         database_q = model.Session.query(table_class)
 
         limit = len(results)
@@ -99,10 +112,10 @@ class SearchController(BaseController):
 
         c.page_owner = 'search'
         if c.search_terms['search_for'] == 'submissions':
-            c.submissions = database_q.all()
+            c.submissions = database_q.all() if limit else []
             return render('/gallery/index.mako')
         elif c.search_terms['search_for'] == 'journals':
-            c.journal_page = database_q.all()
+            c.journal_page = database_q.all() if limit else []
             return render('/journal/index.mako')
 
-        return render(result_template)
+        abort(400);

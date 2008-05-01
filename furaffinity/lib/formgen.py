@@ -234,9 +234,11 @@ class FormGenerator(object):
 
         if disable_with:
             options["onclick"] = "this.disabled=true;this.value='%s';this.form.submit();%s" % (disable_with, options.get("onclick", ''))
+
         o = {'type': 'submit', 'value': value }
         o.update(options)
         return tag("input", **o)
+        
 
 __all__ = ['FormGenerator']
 

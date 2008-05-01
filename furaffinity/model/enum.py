@@ -46,6 +46,8 @@ class Enum(types.TypeDecorator):
         
         
     def convert_result_value(self, value, engine):
+        if value == None:
+            return None
         return self.values[value]
         
     def is_mutable(self):

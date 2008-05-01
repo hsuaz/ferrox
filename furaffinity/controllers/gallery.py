@@ -2,7 +2,8 @@ from __future__ import with_statement
 
 from pylons.decorators.secure import *
 
-from furaffinity.lib import filestore, tagging
+from furaffinity.lib import filestore, tagging, pagination
+import furaffinity.lib.browse_common as browse
 from furaffinity.lib.base import *
 from furaffinity.lib.formgen import FormGenerator
 from furaffinity.lib.mimetype import get_mime_type
@@ -16,8 +17,10 @@ import mimetypes
 from sqlalchemy import and_, or_, not_, sql
 import sqlalchemy.exceptions
 from sqlalchemy.orm import eagerload, eagerload_all
+#from sqlalchemy.sql.expression import prefix_with
 from tempfile import TemporaryFile
 import time
+import math
 
 search_enabled = True
 try:
@@ -61,6 +64,8 @@ class GalleryController(BaseController):
 
     def index(self, username=None):
         """Gallery index, either globally or for one user."""
+        
+        c.javascripts = ['gallery']
 
         if username != None:
             c.page_owner = model.User.get_by_name(username)
@@ -72,10 +77,6 @@ class GalleryController(BaseController):
             form_data = validator.to_python(request.params)
         except formencode.Invalid, error:
             return error
-
-        #(positive_tags, negative_tags) = tagging.get_neg_and_pos_tags_from_string(form_data['tags'])
-        #c.form = FormGenerator()
-        #c.form.defaults['tags'] = tagging.recreate_tag_string(positive_tags, negative_tags)
 
         c.form = FormGenerator()
         
@@ -113,17 +114,23 @@ class GalleryController(BaseController):
                 except sqlalchemy.exceptions.InvalidRequestError:
                     pass
         
+        pageno = (form_data['page'] if form_data['page'] else 1) - 1
+        perpage = form_data['perpage'] if form_data['perpage'] else int(pylons.config.get('gallery.default_perpage',12))
+        
         c.form.defaults['compiled_tags'] = tagging.make_compiled_tag_string(positive_tags, negative_tags)
         c.form.defaults['original_tags'] = c.form.defaults['tags'] = tagging.make_tag_string(positive_tags, negative_tags)
+        c.form.defaults['perpage'] = perpage
 
-        q = model.Session.query(model.Submission)
+        #q = model.Session.query(model.Submission)
 
-        select_from_object = model.submission_table
-
+        table_object = model.submission_table
+        
+        table_object = table_object.join(model.user_submission_table, model.user_submission_table.c.submission_id == model.submission_table.c.id)
+        
         for tag_object in positive_tags:
             tag_id = int(tag_object)
             alias = model.submission_tag_table.alias()
-            select_from_object = select_from_object.join(
+            table_object = table_object.join(
                 alias,
                 and_(
                     model.submission_table.c.id == alias.c.submission_id,
@@ -136,29 +143,59 @@ class GalleryController(BaseController):
             tag_id = int(tag_object)
             alias = model.submission_tag_table.alias()
             negative_aliases.append(alias)
-            select_from_object = select_from_object.outerjoin(
+            table_object = table_object.outerjoin(
                 alias,
                 and_(
                     model.submission_table.c.id == alias.c.submission_id,
                     alias.c.tag_id == tag_id
                     )
                 )
+        
+        #print str(q)
+        tag_where_object = and_(*[alias.c.tag_id == None for alias in negative_aliases]) if negative_aliases else 1
+        if c.page_owner:
+            owner_where_object = model.UserSubmission.c.user_id == c.page_owner.id
+        else:
+            owner_where_object = model.UserSubmission.c.ownership_status == 'primary'
+        review_status_where_object = model.UserSubmission.c.review_status == 'normal'
+        temp_where = model.derived_submission_table.c.id != None
+        
+        final_where_object = and_(tag_where_object, owner_where_object, review_status_where_object)
+            
+        
+        q = table_object.select(final_where_object, use_labels=True)
+        
+        if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
+            q = q.prefix_with('SQL_CALC_FOUND_ROWS')
+        
+        q = q.limit(perpage).offset(perpage*pageno)
+        
+        model.Session.bind.echo = True
+        orm_q = model.Session.query(model.Submission).from_statement(q)
+        orm_q = orm_q.options(eagerload('derived_submission'))
+        orm_q = orm_q.options(eagerload('user_submission'))
+        orm_q = orm_q.options(eagerload('user_submission.user'))
+        
+        c.submissions = orm_q.all()
+        model.Session.bind.echo = False
 
-        q = q.select_from(select_from_object)
-        for alias in negative_aliases:
-            q = q.filter(alias.c.tag_id == None)
-        q = q.options(
-            eagerload_all('user_submission.user'),
-            eagerload_all('derived_submission')
-            )
-
-        if c.page_owner != None:
-            q = q.filter(model.UserSubmission.c.user_id == c.page_owner.id)
-
-        q = q.filter(model.UserSubmission.c.review_status == 'normal')
-
-        c.submissions = q.all()
+        
+        if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
+            number_of_submissions = model.Session.execute(sqlalchemy.sql.text('SELECT FOUND_ROWS()')).fetchone()[0]
+        else:
+            number_of_submissions = 1000000
+        
+        num_pages = int(math.ceil(float(number_of_submissions) / float(perpage)))
+        
+        if pylons.config.has_key('paging.radius'):
+            paging_radius = int(pylons.config['paging.radius'])
+        else:
+            paging_radius = 3
+            
+        c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=num_pages, perpage=perpage, radius=paging_radius)
+        
         return render('/gallery/index.mako')
+        
 
     @check_perm('submit_art')
     def submit(self):

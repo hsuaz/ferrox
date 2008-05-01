@@ -142,6 +142,7 @@
 </html>
 
 <%def name="css_links()">
+    <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet='gallery')}"/>
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet='reset')}"/>
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet='common')}"/>
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet=c.auth_user.preference('style_sheet'), color=c.auth_user.preference('style_color'))}"/>

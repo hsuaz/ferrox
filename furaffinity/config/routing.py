@@ -35,6 +35,7 @@ def make_map():
     map.connect('/users/:username', controller='user', action='view')
     map.connect('/users/:username/settings', controller='user', action='settings')
 
+    map.connect('/news', controller='news', action='index')
     map.connect('/news/post', controller='news', action='post')
     map.connect('/news/do_post', controller='news', action='do_post')
     map.connect('/news/:id/edit', controller='news', action='edit')
@@ -85,6 +86,9 @@ def make_map():
     map.connect('/debug', controller='debug', action='index')
     map.connect('/debug/crash', controller='debug', action='crash')
 
+    map.connect('/search', controller='search', action='index')
+    map.connect('/search/do', controller='search', action='do')
+    
     # Backwards compatibility
     map.connect('/view/:id', controller='back_compat', action='view_submission')
 

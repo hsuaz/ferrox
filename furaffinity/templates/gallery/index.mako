@@ -6,12 +6,39 @@
     % if c.page_owner == 'search' and c.search_terms['query_tags'] != None:
     (With tags: ${h.escape_once(c.search_terms['query_tags'])})
     % endif
+    % if c.paging_links:
+        ${c.form.start(h.url(tags=None, commit=None), method='post')}
+        % if c.page_owner == 'search':
+            ${c.form.hidden_field('query_main')}
+            ${c.form.hidden_field('search_title')}
+            ${c.form.hidden_field('search_description')}
+            ${c.form.hidden_field('search_for')}
+            ${c.form.hidden_field('query_author')}
+            ${c.form.hidden_field('query_tags')}
+        % else:
+            ${c.form.hidden_field('compiled_tags')}
+            ${c.form.hidden_field('original_tags')}
+            ${c.form.hidden_field('tags')}
+        % endif
+        ${c.form.hidden_field('perpage')}
+        % for link in c.paging_links:
+            % if link[0] == '...':
+                ${link[1]}
+            % elif link[0] == 'submit':
+                ${c.form.submit(value=link[1], name='page')}
+            % else:
+                ${c.form.submit(value=link[1], name='page', disabled_='disabled')}
+            % endif
+        % endfor
+        ${c.form.end()}
+    % endif
     </h2>
     % if c.page_owner != 'search':
     <h2>
-        ${c.form.start(h.url(tags=None, commit=None), method='get')}
+        ${c.form.start(h.url(tags=None, commit=None), method='post')}
         ${c.form.hidden_field('compiled_tags')}
         ${c.form.hidden_field('original_tags')}
+        Return ${c.form.text_field('perpage', size=5)} results per page.<br>
         Filter: ${c.form.text_field('tags')}${c.form.submit('Filter')}
         ${c.form.end()}
     </h2>
@@ -21,20 +48,23 @@
     <p class="admin"> ${h.link_to('Submit Art', h.url(controller='gallery', action='submit', username=c.auth_user.username))} </p>
     % endif
     % if c.submissions:
+        <ul>
         % for item in c.submissions:
-        <div class="submission">
-            <div class="submission_header">
-                <div class="submission_title">${h.link_to(item.title, h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist.username))}</div>
-                <div class="submission_date">Date: ${h.format_time(item.time)}</div>
+        <li class="submission">
+            <div class="submission_popup" id="s${item.id}popup">
+                Description: ${item.description_parsed}<br>
+                Date: ${h.format_time(item.time)}
             </div>
-            <div class="submission_info">
-                ${item.description_parsed}<br>
-                % if item.get_derived_by_type('thumb') != None:
-                <div class="submission_thumbnail">${h.image_tag(h.url_for(controller='gallery', action='file', filename=item.get_derived_by_type('thumb').mogile_key), item.title)}</div>
-                % endif
-            </div>
-        </div>
+            % if item.get_derived_by_type('thumb') != None:
+            <div class="submission_thumbnail"  id="s${item.id}tn">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=item.get_derived_by_type('thumb').mogile_key), item.title), h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist.username ))}</div>
+            % endif
+            <div class="submission_title" id="s${item.id}title">${h.link_to(item.title, h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist.username))}</div>
+            % if c.page_owner == None or c.page_owner == 'search':
+            by ${h.link_to(item.primary_artist.display_name, h.url(controller='gallery', action='index', username=item.primary_artist.username))}
+            % endif
+        </li>
         % endfor
+        </ul>
     % else:
     <p> There are no submissions. </p>
     % endif

@@ -59,9 +59,11 @@ class JournalController(BaseController):
 
         page = request.params.get('page', 0)
         journal_q = model.Session.query(model.JournalEntry)
-        c.journals = journal_q.filter_by(user_id = c.page_owner.id).filter_by(status = 'normal')
-        c.journal_page = paginate.Page(journal_q, page_nr=page, items_per_page=2)
-        c.journal_nav = c.journal_page.navigator(link_var='page')
+        journals = journal_q.filter_by(user_id = c.page_owner.id).filter_by(status = 'normal')
+        num_journals = journals.count()
+        pages = paginate.Page(range(num_journals), page_nr=page, items_per_page=10)
+        c.journal_page = journals.limit(10).offset(pages.first_item).all()
+        c.journal_nav = pages.navigator(link_var='page')
 
         c.is_mine = (c.auth_user and (c.page_owner.id == c.auth_user.id))
         return render('/journal/index.mako')

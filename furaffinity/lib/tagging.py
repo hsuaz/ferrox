@@ -27,12 +27,13 @@ def break_apart_tag_string(tag_string, include_negative=False):
     rmex = re.compile(r'[^a-z0-9-]')
     compiled_tag_string = ''
 
-    for tag_text in tag_string.split(' '):
-        tag_text = rmex.sub('', tag_text)
-        if len(tag_text) > 1 and tag_text[0] == '-':
-            negative.append(tag_text[1:])
-        elif len(tag_text) > 0:
-            positive.append(tag_text)
+    if tag_string:
+        for tag_text in tag_string.split(' '):
+            tag_text = rmex.sub('', tag_text)
+            if len(tag_text) > 1 and tag_text[0] == '-':
+                negative.append(tag_text[1:])
+            elif len(tag_text) > 0:
+                positive.append(tag_text)
             
     if include_negative:
         return (positive, negative)

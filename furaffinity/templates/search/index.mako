@@ -21,6 +21,8 @@
         <dd>${c.form.text_field('query_tags')}</dd>
         <dt>Artist/Author</dt>
         <dd>${c.form.text_field('query_author')}</dd>
+        <dt>Results per page:</dt>
+        <dd>${c.form.text_field('perpage', size=5)}</dd>
     </dl>
 
     <p>${c.form.submit('Search')}</p>

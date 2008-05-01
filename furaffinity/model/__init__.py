@@ -59,6 +59,7 @@ derived_submission_derivetype_type = Enum(['thumb','halfview'])
 user_submission_ownership_status_type = Enum(['primary','normal'])
 user_submission_review_status_type = Enum(['normal','under_review','removed_by_admin','deleted'])
 user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin'])
+user_relationship_type = Enum(['watching_submissions','watching_journals','friend_to'])
 
 # Users
 
@@ -106,6 +107,13 @@ ip_log_table = Table('ip_log', metadata,
     Column('ip', ip_type, nullable=False),
     Column('start_time', DateTimeAsInteger, nullable=False, default=datetime.now),
     Column('end_time', DateTimeAsInteger, nullable=False, default=datetime.now),
+    mysql_engine='InnoDB'
+)
+
+user_relationship_table = Table('user_relationship', metadata,
+    Column('from_user_id', types.Integer, ForeignKey('user.id'), primary_key=True),
+    Column('to_user_id', types.Integer, ForeignKey('user.id'), primary_key=True),
+    Column('relationship', user_relationship_type, nullable=False),
     mysql_engine='InnoDB'
 )
 
@@ -472,6 +480,9 @@ class User(object):
             .order_by(Note.time.desc())
 
         return note_q
+
+class UserRelationship(object):
+    pass
 
 class IPLogEntry(object):
     def __init__(self, user_id, ip_integer):
@@ -1035,6 +1046,12 @@ user_mapper = mapper(User, user_table, properties=dict(
     preferences = relation(UserPreference, backref='user'),
     journals = relation(JournalEntry, backref='user'),
     user_submission = relation(UserSubmission, backref='user')
+    ),
+)
+
+user_relationship_mapper = mapper(UserRelationship, user_relationship_table, properties=dict(
+    user = relation(User, primaryjoin=user_relationship_table.c.from_user_id==user_table.c.id, backref='relationships'),
+    target = relation(User, primaryjoin=user_relationship_table.c.to_user_id==user_table.c.id),
     ),
 )
 

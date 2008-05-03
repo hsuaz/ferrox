@@ -284,6 +284,9 @@ class JournalEntry(object):
 
         self.status = 'normal'
 
+    def __str__(self):
+        return "Journal entry titled %s" % self.title
+    
     def update_content (self, content):
         self.content = h.escape_once(content)
         #bbcode.parser_short.tag_handlers['cut'].link = h.url_for(controller='journal', action='view', id=self.id)

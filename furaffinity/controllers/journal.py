@@ -1,7 +1,9 @@
 from pylons.decorators.secure import *
+import pylons.config
 
 from furaffinity.lib.base import *
 import furaffinity.lib.paginate as paginate
+from furaffinity.lib import pagination
 from furaffinity.lib.formgen import FormGenerator
 
 import formencode
@@ -12,6 +14,11 @@ import os
 import sqlalchemy.exceptions
 from sqlalchemy.orm import eagerload
 from tempfile import TemporaryFile
+import datetime
+
+import time, random
+import math
+import calendar
 
 search_enabled = True
 try:
@@ -47,25 +54,100 @@ def get_journal(id=None, eagerloads=[]):
 
 
 class JournalController(BaseController):
-    def index(self, username=None):
+    def index(self, username=None, month=None, year=None, day=None):
         """Journal index for a user."""
-        user_q = model.Session.query(model.User)
-        try:
-            c.page_owner = user_q.filter_by(username = username).one()
-        except sqlalchemy.exceptions.InvalidRequestError:
-            c.error_text = "User %s not found." % h.escape_once(username)
-            c.error_title = 'User not found'
-            abort(404)
+        if username:
+            user_q = model.Session.query(model.User)
+            try:
+                c.page_owner = user_q.filter_by(username = username).one()
+            except sqlalchemy.exceptions.InvalidRequestError:
+                c.error_text = "User %s not found." % h.escape_once(username)
+                c.error_title = 'User not found'
+                abort(404)
+        else:
+            c.page_owner = None
 
-        page = request.params.get('page', 0)
+        c.page_link_dict = dict(controller='journal', action='index')
+        if c.page_owner:
+            c.page_link_dict['username'] = c.page_owner.username
+        if year and month and day:
+            today = earliest = datetime.date(int(year), int(month), int(day))
+            latest = earliest + datetime.timedelta(days=1)
+            c.page_link_dict.update({'year':year, 'month':month, 'day':day})
+        elif month and year:
+            today = earliest = datetime.date(int(year), int(month), 1)
+            latest = datetime.date(earliest.year + (earliest.month / 12), (earliest.month + 1) % 12, 1)
+            c.page_link_dict.update({'year':year, 'month':month})
+        elif year:
+            today = earliest = datetime.date(int(year), 1, 1)
+            latest = datetime.date(earliest.year+1, earliest.month, earliest.day)
+            c.page_link_dict.update({'year':year})
+        else:
+            today = latest = datetime.date.today()
+            earliest = datetime.date(1970,1,1)
+            
+        max_per_page = int(pylons.config.get('journal.default_perpage',20))
+        pageno = int(request.params.get('page',1)) - 1
+        
         journal_q = model.Session.query(model.JournalEntry)
-        journals = journal_q.filter_by(user_id = c.page_owner.id).filter_by(status = 'normal')
-        num_journals = journals.count()
-        pages = paginate.Page(range(num_journals), page_nr=page, items_per_page=10)
-        c.journal_page = journals.limit(10).offset(pages.first_item).all()
-        c.journal_nav = pages.navigator(link_var='page')
+        if c.page_owner:
+            journal_q = journal_q.filter_by(user_id = c.page_owner.id)
+        journal_q = journal_q.filter_by(status = 'normal')
+        journal_q = journal_q.filter(model.JournalEntry.c.time >= earliest).filter(model.JournalEntry.c.time < latest)
+        journal_q = journal_q.order_by(model.JournalEntry.c.time.desc())
+        c.journals = journal_q.limit(max_per_page).offset(pageno * max_per_page).all()
+        num_journals = journal_q.count()
+        
+        c.title_only = False
+        c.is_mine = c.page_owner and (c.auth_user and (c.page_owner.id == c.auth_user.id))
+        
+        paging_radius = int(pylons.config.get('paging.radius',3))
+        c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=int(math.ceil(float(num_journals)/float(max_per_page))), perpage=max_per_page, radius=paging_radius)
 
-        c.is_mine = (c.auth_user and (c.page_owner.id == c.auth_user.id))
+        c.form = FormGenerator()
+        
+        c.by_date_base = dict(controller='journal', action='index')
+        if c.page_owner:
+            c.by_date_base['username'] = c.page_owner.username
+        
+        c.next_year = c.by_date_base.copy()
+        c.next_year['year'] = today.year + 1
+        
+        c.last_year = c.by_date_base.copy()
+        c.last_year['year'] = today.year - 1
+        
+        c.next_month = c.by_date_base.copy()
+        c.next_month['month'] = today.month + 1
+        c.next_month['year'] = today.year
+        if c.next_month['month'] > 12:
+            c.next_month['month'] -= 12
+            c.next_month['year'] += 1
+        
+        c.last_month = c.by_date_base.copy()
+        c.last_month['month'] = today.month - 1
+        c.last_month['year'] = today.year
+        if c.last_month['month'] < 1:
+            c.last_month['month'] += 12
+            c.last_month['year'] -= 1
+        
+        c.tomorrow = c.by_date_base.copy()
+        tomorrow = today + datetime.timedelta(days=1)
+        c.tomorrow['year'] = tomorrow.year
+        c.tomorrow['month'] = tomorrow.month
+        c.tomorrow['day'] = tomorrow.day
+        
+        c.yesterday = c.by_date_base.copy()
+        yesterday = today - datetime.timedelta(days=1)
+        c.yesterday['year'] = yesterday.year
+        c.yesterday['month'] = yesterday.month
+        c.yesterday['day'] = yesterday.day
+        
+        c.year, c.month, c.day = year, month, day
+        c.today = datetime.date.today()
+        
+        if month and year:
+            c.days_this_month = max([x for x in calendar.Calendar().itermonthdays(int(year),int(month))])
+            
         return render('/journal/index.mako')
 
     @check_perm('post_journal')
@@ -199,12 +281,10 @@ class JournalController(BaseController):
             h.redirect_to(h.url_for(controller='journal', action='view',
                                     id=journal_entry.id))
 
-    def view(self, id=None):
+    def view(self, id=None, month=None, day=None, year=None):
         """View a single journal entry."""
-        journal_entry = get_journal(id)
-        c.journal_entry = journal_entry
-
-        c.is_mine = self.is_my_journal(journal_entry.user)
+        c.journal_entry = get_journal(id)
+        c.is_mine = self.is_my_journal(c.journal_entry.user)
 
         return render('/journal/view.mako')
 
@@ -220,3 +300,28 @@ class JournalController(BaseController):
             else:
                 return False
         return True
+
+    def fill(self):
+        return 'go away'
+        time_sub = 94608000
+        
+        num_rows = 1000
+
+        f = open('/usr/share/dict/words','r')
+        lines = [x.strip() for x in f.readlines()]
+        numlines = len(lines)
+        randomwords = lambda x: ' '.join([lines[random.randint(0,numlines-1)] for x in xrange(x)])
+
+        cur_time = datetime.datetime.fromtimestamp(model.Session.query(model.JournalEntry).max(model.JournalEntry.c.time))
+        cur_time = datetime.datetime(2005,1,1) if cur_time < datetime.datetime(2005,1,1) else cur_time
+                
+        for i in xrange(num_rows):
+            entry = model.JournalEntry(random.randint(1,3), randomwords(random.randint(4,10)), randomwords(random.randint(10,50)))
+            entry.time = cur_time
+            cur_time += datetime.timedelta(seconds=random.randint(0,3600))
+            model.Session.save(entry)
+            
+        model.Session.commit()
+        return cur_time
+            
+            

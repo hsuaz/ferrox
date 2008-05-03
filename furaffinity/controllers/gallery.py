@@ -3,7 +3,6 @@ from __future__ import with_statement
 from pylons.decorators.secure import *
 
 from furaffinity.lib import filestore, tagging, pagination
-import furaffinity.lib.browse_common as browse
 from furaffinity.lib.base import *
 from furaffinity.lib.formgen import FormGenerator
 from furaffinity.lib.mimetype import get_mime_type

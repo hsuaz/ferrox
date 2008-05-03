@@ -72,14 +72,21 @@ def make_map():
     map.connect('/download/:filename', controller='gallery', action='file')
 
     map.connect('/users/:username/journals', controller='journal', action='index')
+    map.connect('/users/:username/journals/:year', controller='journal', action='index')
+    map.connect('/users/:username/journals/:year/:month', controller='journal', action='index')
+    map.connect('/users/:username/journals/:year/:month/:day', controller='journal', action='index')
+    map.connect('/users/:username/journals/:year/:month/:day/:id', controller='journal', action='view')
     map.connect('/users/:username/journals/post', controller='journal', action='post')
     map.connect('/users/:username/journals/post_commit', controller='journal', action='post_commit', **require_post)
-    map.connect('/users/:username/journals/:id', controller='journal', action='view')
-    map.connect('/users/:username/journals/:id/edit', controller='journal', action='edit')
-    map.connect('/users/:username/journals/:id/edit_commit', controller='journal', action='edit_commit', **require_post)
-    map.connect('/users/:username/journals/:id/delete', controller='journal', action='delete')
-    map.connect('/users/:username/journals/:id/delete_commit', controller='journal', action='delete_commit', **require_post)
-    map.connect('/users/:username/journals/:id/editlog', controller='editlog', action='journal')
+    map.connect('/users/:username/journals/:year/:month/:day/:id/edit', controller='journal', action='edit')
+    map.connect('/users/:username/journals/:year/:month/:day/:id/edit_commit', controller='journal', action='edit_commit', **require_post)
+    map.connect('/users/:username/journals/:year/:month/:day/:id/delete', controller='journal', action='delete')
+    map.connect('/users/:username/journals/:year/:month/:day/:id/delete_commit', controller='journal', action='delete_commit', **require_post)
+    map.connect('/users/:username/journals/:year/:month/:day/:id/editlog', controller='editlog', action='journal')
+    map.connect('/journals', controller='journal', action='index')
+    map.connect('/journals/:year', controller='journal', action='index')
+    map.connect('/journals/:year/:month', controller='journal', action='index')
+    map.connect('/journals/:year/:month/:day', controller='journal', action='index')
 
     map.connect('/stylesheets/:sheet/:color', controller='stylesheets', action='index', color=None)
 
@@ -88,6 +95,8 @@ def make_map():
 
     map.connect('/search', controller='search', action='index')
     map.connect('/search/do', controller='search', action='do')
+    
+    map.connect('/journals/fill', controller='journal', action='fill')
     
     # Backwards compatibility
     map.connect('/view/:id', controller='back_compat', action='view_submission')

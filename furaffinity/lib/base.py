@@ -80,7 +80,7 @@ class BaseController(WSGIController):
             ip_integer = h.ip_to_integer(request.environ['REMOTE_ADDR'])
             ip_log_q = model.Session.query(model.IPLogEntry)
             last_ip_record = ip_log_q.filter_by(user_id = user_id) \
-                .order_by(model.ip_log_table.c.end_time.desc()).first()
+                .order_by(model.IPLogEntry.end_time.desc()).first()
             if last_ip_record and int(last_ip_record.ip) == ip_integer:
                 last_ip_record.end_time = datetime.now()
             else:

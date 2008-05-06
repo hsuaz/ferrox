@@ -83,7 +83,7 @@ class JournalController(BaseController):
             latest = datetime.date(earliest.year+1, earliest.month, earliest.day)
             c.page_link_dict.update({'year':year})
         else:
-            today = latest = datetime.date.today()
+            today = latest = (datetime.date.today()+datetime.timedelta(days=1))
             earliest = datetime.date(1970,1,1)
             
         max_per_page = int(pylons.config.get('journal.default_perpage',20))
@@ -186,9 +186,13 @@ class JournalController(BaseController):
             xapian_document = journal_entry.to_xapian()
             xapian_database.add_document(xapian_document)
 
+        #return journal_entry.id
         h.redirect_to(h.url_for(controller='journal', action='view',
                                 username=c.auth_user.username,
-                                id=journal_entry.id))
+                                id=journal_entry.id,
+                                year=journal_entry.time.year,
+                                month=journal_entry.time.month,
+                                day=journal_entry.time.day))
 
     @check_perms(['post_journal','administrate'])
     def edit(self,id=None):

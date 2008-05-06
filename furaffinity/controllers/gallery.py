@@ -122,17 +122,17 @@ class GalleryController(BaseController):
 
         #q = model.Session.query(model.Submission)
 
-        table_object = model.submission_table
+        table_object = model.Submission.__table__
         
-        table_object = table_object.join(model.user_submission_table, model.user_submission_table.c.submission_id == model.submission_table.c.id)
+        table_object = table_object.join(model.UserSubmission.__table__, model.UserSubmission.__table__.c.submission_id == model.Submission.__table__.c.id)
         
         for tag_object in positive_tags:
             tag_id = int(tag_object)
-            alias = model.submission_tag_table.alias()
+            alias = model.SubmissionTag.__table__.alias()
             table_object = table_object.join(
                 alias,
                 and_(
-                    model.submission_table.c.id == alias.c.submission_id,
+                    model.Submission.__table__.c.id == alias.c.submission_id,
                     alias.c.tag_id == tag_id
                     )
             )
@@ -140,12 +140,12 @@ class GalleryController(BaseController):
         negative_aliases = []
         for tag_object in negative_tags:
             tag_id = int(tag_object)
-            alias = model.submission_tag_table.alias()
+            alias = model.SubmissionTag.__table__.alias()
             negative_aliases.append(alias)
             table_object = table_object.outerjoin(
                 alias,
                 and_(
-                    model.submission_table.c.id == alias.c.submission_id,
+                    model.Submission.__table__.c.id == alias.c.submission_id,
                     alias.c.tag_id == tag_id
                     )
                 )
@@ -157,7 +157,7 @@ class GalleryController(BaseController):
         else:
             owner_where_object = model.UserSubmission.c.ownership_status == 'primary'
         review_status_where_object = model.UserSubmission.c.review_status == 'normal'
-        temp_where = model.derived_submission_table.c.id != None
+        temp_where = model.DerivedSubmission.__table__.c.id != None
         
         final_where_object = and_(tag_where_object, owner_where_object, review_status_where_object)
             

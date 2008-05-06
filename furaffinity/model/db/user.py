@@ -121,7 +121,7 @@ class User(BaseTable):
     username        = Column(types.String(32), nullable=False)
     email           = Column(types.String(256), nullable=False)
     password        = Column(types.String(256), nullable=False)
-    display_name    = Column(types.Unicode, nullable=False)
+    display_name    = Column(types.UnicodeText, nullable=False)
     role_id         = Column(types.Integer, ForeignKey('role.id'), default=1)
 #    mysql_engine='InnoDB'
 
@@ -262,9 +262,9 @@ class Note(BaseTable):
     from_user_id    = Column(types.Integer, ForeignKey('user.id'))
     to_user_id      = Column(types.Integer, ForeignKey('user.id'))
     original_note_id= Column(types.Integer, ForeignKey('note.id'))
-    subject         = Column(types.Unicode, nullable=False)
-    content         = Column(types.Unicode, nullable=False)
-    content_parsed  = Column(types.Unicode, nullable=False)
+    subject         = Column(types.UnicodeText, nullable=False)
+    content         = Column(types.UnicodeText, nullable=False)
+    content_parsed  = Column(types.UnicodeText, nullable=False)
     status          = Column(note_status_type, nullable=False)
     time            = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
 #    mysql_engine='InnoDB'

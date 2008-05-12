@@ -43,7 +43,7 @@ dl.standard-form dt { float: left; position: relative; z-index: 2; width: 9.75em
 dl.standard-form dt:after { content: ':'; }
 dl.standard-form dt img { vertical-align: middle; }
 dl.standard-form:after,
-dl.standard-form dd:after { content: 'v'; display: block; clear: left; visibility: hidden; height: 1px; margin-top: -1px; }
+dl.standard-form dd:after { content: 'v'; display: block; clear: left; visibility: hidden; height: 0; }
 dl.standard-form dd { position: relative; z-index: 1; padding: 0.25em 0 0.25em 10em; margin: 0; }
 /* IE has a horrible float model */
 /* See http://www.howtocreate.co.uk/wrongWithIE/?chapter=Float+Model */

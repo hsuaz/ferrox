@@ -67,7 +67,6 @@ class Role(BaseTable):
     name            = Column(types.String(length=32), nullable=False)
     sigil           = Column(types.String(length=1), nullable=False)
     description     = Column(types.String(length=256), nullable=False)
-#    mysql_engine='InnoDB'
 
     @classmethod
     def get_by_name(cls, name):
@@ -86,7 +85,6 @@ class Permission(BaseTable):
     id              = Column(types.Integer, primary_key=True)
     name            = Column(types.String(length=32), nullable=False)
     description     = Column(types.String(length=256), nullable=False)
-#    mysql_engine='InnoDB'
 
     def __init__(self, name, description):
         self.name = name
@@ -96,7 +94,6 @@ class RolePermission(BaseTable):
     __tablename__   = 'role_permission'
     role_id         = Column(types.Integer, ForeignKey('role.id'), primary_key=True)
     permission_id   = Column(types.Integer, ForeignKey('permission.id'), primary_key=True)
-#    mysql_engine='InnoDB'
 
 Role.permissions = relation(Permission, secondary=RolePermission.__table__)
 
@@ -110,7 +107,6 @@ class User(BaseTable):
     password        = Column(types.String(256), nullable=False)
     display_name    = Column(types.UnicodeText, nullable=False)
     role_id         = Column(types.Integer, ForeignKey('role.id'), default=1)
-#    mysql_engine='InnoDB'
 
     role            = relation(Role)
 #    journals = relation(JournalEntry, backref='user')
@@ -220,7 +216,6 @@ class IPLogEntry(BaseTable):
     ip              = Column(ip_type, nullable=False)
     start_time      = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
     end_time        = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
-#    mysql_engine='InnoDB'
 
     user            = relation(User, backref='ip_log')
 
@@ -235,7 +230,7 @@ class UserPreference(BaseTable):
     user_id         = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
     key             = Column(types.String(length=32), primary_key=True)
     value           = Column(types.String(length=256), nullable=False)
-#    mysql_engine='InnoDB'
+
     user            = relation(User, backref='preferences')
 
     def __init__(self, user, key, value):
@@ -273,7 +268,6 @@ class Note(BaseTable):
     content_parsed  = Column(types.UnicodeText, nullable=False)
     status          = Column(note_status_type, nullable=False)
     time            = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
-#    mysql_engine='InnoDB'
 
     sender          = relation(User, primaryjoin=(from_user_id==User.id))
     recipient       = relation(User, primaryjoin=(to_user_id==User.id))

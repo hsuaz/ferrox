@@ -27,9 +27,9 @@ import random
 import re
 import sys
 
+from furaffinity.model.db import Session, metadata
 from furaffinity.model.db.user import *
 from furaffinity.model.db.blob import *
-from furaffinity.model.db import Session, metadata
 
 search_enabled = True
 try:
@@ -45,3 +45,6 @@ else:
 #This plays hell with websetup, so only use where needed.
 #from furaffinity.lib import filestore
 
+# Run through tables and set their mysql engines all to InnoDB
+for table in metadata.tables:
+    metadata.tables[table].kwargs['mysql_engine'] = 'InnoDB'

@@ -63,7 +63,6 @@ class EditLog(BaseTable):
     id                  = Column(types.Integer, primary_key=True)
     last_edited_at      = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
     last_edited_by_id   = Column(types.Integer, ForeignKey('user.id'))
-    #mysql_engine='InnoDB'
 
     def __init__(self,user):
         self.last_edited_by = user
@@ -106,7 +105,6 @@ class JournalEntry(BaseTable):
     time                = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
     status              = Column(journal_status_type, index=True )
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
-    #mysql_engine='InnoDB'
     
     def __init__(self, user_id, title, content):
         content = h.escape_once(content)
@@ -169,7 +167,6 @@ class News(BaseTable):
     is_anonymous        = Column(types.Boolean, nullable=False, default=False)
     is_deleted          = Column(types.Boolean, nullable=False, default=False)
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
-    #mysql_engine='InnoDB'
 
     def __init__(self, title, content, author):
         self.title = title
@@ -196,7 +193,6 @@ class Submission(BaseTable):
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
-    #mysql_engine='InnoDB'
 
     def __init__(self):
         self.title = ''
@@ -499,7 +495,6 @@ class DerivedSubmission(BaseTable):
     derivetype          = Column(derived_submission_derivetype_type, nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
-    #mysql_engine='InnoDB'
 
     def __init__(self, derivetype):
         self.derivetype = derivetype
@@ -512,7 +507,6 @@ class HistoricSubmission(BaseTable):
     mimetype            = Column(types.String(35), nullable=False)
     edited_at           = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
     edited_by_id        = Column(types.Integer, ForeignKey('user.id'))
-    #mysql_engine='InnoDB'
 
     def __init__(self, user):
         self.edited_by = user
@@ -533,7 +527,6 @@ class UserSubmission(BaseTable):
     relationship        = Column(user_submission_relationship_type, nullable=False)
     ownership_status    = Column(user_submission_ownership_status_type, nullable=False)
     review_status       = Column(user_submission_review_status_type, nullable=False)
-    #mysql_engine='InnoDB'
 
     def __init__(self, user, relationship, ownership_status, review_status):
         self.user = user
@@ -552,7 +545,6 @@ class Comment(BaseTable):
     content             = Column(types.UnicodeText, nullable=False)
     content_parsed      = Column(types.UnicodeText, nullable=False)
     content_short       = Column(types.UnicodeText, nullable=False)
-    #mysql_engine='InnoDB'
 
     def add_to_nested_set(self, parent, discussion):
         """Call on a new Comment to fix the affected nested set values.
@@ -652,26 +644,22 @@ class NewsComment(BaseTable):
     __tablename__       = 'news_comment'
     news_id             = Column(types.Integer, ForeignKey('news.id'), primary_key=True)
     comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
-    #mysql_engine='InnoDB'
 
 class JournalEntryComment(BaseTable):
     __tablename__       = 'journal_entry_comment'
     journal_entry_id    = Column(types.Integer, ForeignKey('journal_entry.id'), primary_key=True)
     comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
-    #mysql_engine='InnoDB'
 
 
 class SubmissionComment(BaseTable):
     __tablename__       = 'submission_comment'
     submission_id       = Column(types.Integer, ForeignKey('submission.id'), primary_key=True)
     comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
-    #mysql_engine='InnoDB'
     
 class Tag(BaseTable):
     __tablename__       = 'tag'
     id                  = Column(types.Integer, primary_key=True, autoincrement=True)
     text                = Column(types.String(length=20), index=True, unique=True)
-    #mysql_engine='InnoDB'
 
     cache_by_text = {}
     cache_by_id = {}
@@ -726,7 +714,6 @@ class SubmissionTag(BaseTable):
     __tablename__       = 'submission_tag'
     submission_id       = Column(types.Integer, ForeignKey('submission.id'), primary_key=True, autoincrement=False)
     tag_id              = Column(types.Integer, ForeignKey('tag.id'), primary_key=True, autoincrement=False)
-    #mysql_engine='InnoDB'
 
     def __init__(self, tag):
         self.tag = tag
@@ -736,7 +723,6 @@ class UserRelationship(BaseTable):
     from_user_id        = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
     to_user_id          = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
     relationship        = Column(user_relationship_type, nullable=False)
-    #mysql_engine='InnoDB'
 
 UserRelationship.user = relation(User, primaryjoin=UserRelationship.from_user_id==User.id, backref='relationships')
 UserRelationship.target = relation(User, primaryjoin=UserRelationship.to_user_id==User.id)

@@ -10,4 +10,3 @@ Session = scoped_session(sessionmaker(autoflush=True, transactional=True,
 metadata = MetaData()
 
 BaseTable = declarative_base(metadata=metadata)
-

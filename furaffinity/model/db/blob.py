@@ -74,7 +74,7 @@ class EditLog(BaseTable):
         self.entries.append(editlog_entry)
 
 class EditLogEntry(BaseTable):
-    __tablename__       = 'editlog_entry'
+    __tablename__       = 'editlog_entries'
     id                  = Column(types.Integer, primary_key=True)
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
     edited_at           = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
@@ -94,7 +94,7 @@ class EditLogEntry(BaseTable):
         self.previous_text_parsed = previous_text_parsed
 
 class JournalEntry(BaseTable):
-    __tablename__       = 'journal_entry'
+    __tablename__       = 'journal_entries'
     id                  = Column(types.Integer, primary_key=True)
     user_id             = Column(types.Integer, ForeignKey("user.id"))
     discussion_id       = Column(types.Integer, nullable=False)
@@ -181,7 +181,7 @@ class News(BaseTable):
         self.content_short = bbcode.parser_short.parse(content)
 
 class Submission(BaseTable):
-    __tablename__       = 'submission'
+    __tablename__       = 'submissions'
     id                  = Column(types.Integer, primary_key=True)
     title               = Column(types.String(length=128), nullable=False)
     description         = Column(types.UnicodeText, nullable=False)
@@ -489,7 +489,7 @@ class Submission(BaseTable):
 
 
 class DerivedSubmission(BaseTable):
-    __tablename__       = 'derived_submission'
+    __tablename__       = 'derived_submissions'
     id                  = Column(types.Integer, primary_key=True)
     submission_id       = Column(types.Integer, ForeignKey('submission.id'), nullable=False)
     derivetype          = Column(derived_submission_derivetype_type, nullable=False)
@@ -500,7 +500,7 @@ class DerivedSubmission(BaseTable):
         self.derivetype = derivetype
 
 class HistoricSubmission(BaseTable):
-    __tablename__       = 'historic_submission'
+    __tablename__       = 'historic_submissions'
     id                  = Column(types.Integer, primary_key=True)
     submission_id       = Column(types.Integer, ForeignKey("submission.id"), nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
@@ -520,7 +520,7 @@ class HistoricSubmission(BaseTable):
     previous_text_parsed = property(_get_previous_text_parsed)
 
 class UserSubmission(BaseTable):
-    __tablename__       = 'user_submission'
+    __tablename__       = 'user_submissions'
     id                  = Column(types.Integer, primary_key=True)
     user_id             = Column(types.Integer, ForeignKey("user.id"))
     submission_id       = Column(types.Integer, ForeignKey("submission.id"))
@@ -535,7 +535,7 @@ class UserSubmission(BaseTable):
         self.review_status = review_status
 
 class Comment(BaseTable):
-    __tablename__       = 'comment'
+    __tablename__       = 'comments'
     id                  = Column(types.Integer, primary_key=True)
     user_id             = Column(types.Integer, ForeignKey('user.id'))
     left                = Column(types.Integer, nullable=False)
@@ -641,23 +641,23 @@ class Comment(BaseTable):
 
 
 class NewsComment(BaseTable):
-    __tablename__       = 'news_comment'
+    __tablename__       = 'news_comments'
     news_id             = Column(types.Integer, ForeignKey('news.id'), primary_key=True)
     comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
 
 class JournalEntryComment(BaseTable):
-    __tablename__       = 'journal_entry_comment'
+    __tablename__       = 'journal_entry_comments'
     journal_entry_id    = Column(types.Integer, ForeignKey('journal_entry.id'), primary_key=True)
     comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
 
 
 class SubmissionComment(BaseTable):
-    __tablename__       = 'submission_comment'
+    __tablename__       = 'submission_comments'
     submission_id       = Column(types.Integer, ForeignKey('submission.id'), primary_key=True)
     comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
     
 class Tag(BaseTable):
-    __tablename__       = 'tag'
+    __tablename__       = 'tags'
     id                  = Column(types.Integer, primary_key=True, autoincrement=True)
     text                = Column(types.String(length=20), index=True, unique=True)
 
@@ -711,7 +711,7 @@ class Tag(BaseTable):
         return self.id if self.id else 0
 
 class SubmissionTag(BaseTable):
-    __tablename__       = 'submission_tag'
+    __tablename__       = 'submission_tags'
     submission_id       = Column(types.Integer, ForeignKey('submission.id'), primary_key=True, autoincrement=False)
     tag_id              = Column(types.Integer, ForeignKey('tag.id'), primary_key=True, autoincrement=False)
 
@@ -719,7 +719,7 @@ class SubmissionTag(BaseTable):
         self.tag = tag
 
 class UserRelationship(BaseTable):
-    __tablename__       = 'user_relationship'
+    __tablename__       = 'user_relationships'
     from_user_id        = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
     to_user_id          = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
     relationship        = Column(user_relationship_type, nullable=False)

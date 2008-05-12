@@ -62,7 +62,7 @@ class GuestUser(object):
 ### Roles and permissions
 
 class Role(BaseTable):
-    __tablename__   = 'role'
+    __tablename__   = 'roles'
     id              = Column(types.Integer, primary_key=True)
     name            = Column(types.String(length=32), nullable=False)
     sigil           = Column(types.String(length=1), nullable=False)
@@ -81,7 +81,7 @@ class Role(BaseTable):
         self.description = description
 
 class Permission(BaseTable):
-    __tablename__   = 'permission'
+    __tablename__   = 'permissions'
     id              = Column(types.Integer, primary_key=True)
     name            = Column(types.String(length=32), nullable=False)
     description     = Column(types.String(length=256), nullable=False)
@@ -91,7 +91,7 @@ class Permission(BaseTable):
         self.description = description
 
 class RolePermission(BaseTable):
-    __tablename__   = 'role_permission'
+    __tablename__   = 'role_permissions'
     role_id         = Column(types.Integer, ForeignKey('role.id'), primary_key=True)
     permission_id   = Column(types.Integer, ForeignKey('permission.id'), primary_key=True)
 
@@ -100,7 +100,7 @@ Role.permissions = relation(Permission, secondary=RolePermission.__table__)
 ### Main user tables
 
 class User(BaseTable):
-    __tablename__   = 'user'
+    __tablename__   = 'users'
     id              = Column(types.Integer, primary_key=True)
     username        = Column(types.String(32), nullable=False)
     email           = Column(types.String(256), nullable=False)
@@ -226,7 +226,7 @@ class IPLogEntry(BaseTable):
         self.end_time = datetime.now()
 
 class UserPreference(BaseTable):
-    __tablename__   = 'user_preference'
+    __tablename__   = 'user_preferences'
     user_id         = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
     key             = Column(types.String(length=32), primary_key=True)
     value           = Column(types.String(length=256), nullable=False)
@@ -241,7 +241,7 @@ class UserPreference(BaseTable):
 ### Metadata
 
 class UserMetadataField(BaseTable):
-    __tablename__   = 'user_metadata_field'
+    __tablename__   = 'user_metadata_fields'
     id              = Column(types.Integer, primary_key=True)
     key             = Column(types.Unicode(length=32), nullable=False)
     description     = Column(types.UnicodeText, nullable=False)
@@ -258,7 +258,7 @@ class UserMetadata(BaseTable):
 ### Notes
 
 class Note(BaseTable):
-    __tablename__   = 'note'
+    __tablename__   = 'notes'
     id              = Column(types.Integer, primary_key=True)
     from_user_id    = Column(types.Integer, ForeignKey('user.id'))
     to_user_id      = Column(types.Integer, ForeignKey('user.id'))

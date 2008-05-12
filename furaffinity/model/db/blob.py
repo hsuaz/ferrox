@@ -31,8 +31,6 @@ from furaffinity.model.db.user import *
 from furaffinity.model.datetimeasint import *
 from furaffinity.model.enum import *
 
-
-
 # -- This stuff is tied to class Submission --
 if pylons.config['mogilefs.tracker'] == 'FAKE':
     from furaffinity.lib import fakemogilefs as mogilefs
@@ -62,9 +60,9 @@ user_relationship_type = Enum(['watching_submissions','watching_journals','frien
 
 class EditLog(BaseTable):
     __tablename__       = 'editlog'
-    id                  = Column('id', types.Integer, primary_key=True)
-    last_edited_at      = Column('last_edited_at', DateTimeAsInteger, nullable=False, default=datetime.now)
-    last_edited_by_id   = Column('last_edited_by_id', types.Integer, ForeignKey('user.id'))
+    id                  = Column(types.Integer, primary_key=True)
+    last_edited_at      = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    last_edited_by_id   = Column(types.Integer, ForeignKey('user.id'))
     #mysql_engine='InnoDB'
 
     def __init__(self,user):
@@ -78,14 +76,14 @@ class EditLog(BaseTable):
 
 class EditLogEntry(BaseTable):
     __tablename__       = 'editlog_entry'
-    id                  = Column('id', types.Integer, primary_key=True)
-    editlog_id          = Column('editlog_id', types.Integer, ForeignKey('editlog.id'))
-    edited_at           = Column('edited_at', DateTimeAsInteger, nullable=False, default=datetime.now)
-    edited_by_id        = Column('edited_by_id', types.Integer, ForeignKey('user.id'))
-    reason              = Column('reason', types.String(length=250))
-    previous_title      = Column('previous_title', types.UnicodeText, nullable=False)
-    previous_text       = Column('previous_text', types.UnicodeText, nullable=False)
-    previous_text_parsed= Column('previous_text_parsed', types.UnicodeText, nullable=False)
+    id                  = Column(types.Integer, primary_key=True)
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    edited_at           = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    edited_by_id        = Column(types.Integer, ForeignKey('user.id'))
+    reason              = Column(types.String(length=250))
+    previous_title      = Column(types.UnicodeText, nullable=False)
+    previous_text       = Column(types.UnicodeText, nullable=False)
+    previous_text_parsed= Column(types.UnicodeText, nullable=False)
     #mysql_engine='InnoDB
 
     def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed):
@@ -98,16 +96,16 @@ class EditLogEntry(BaseTable):
 
 class JournalEntry(BaseTable):
     __tablename__       = 'journal_entry'
-    id                  = Column('id', types.Integer, primary_key=True)
-    user_id             = Column('user_id', types.Integer, ForeignKey("user.id"))
-    discussion_id       = Column('discussion_id', types.Integer, nullable=False)
-    title               = Column('title', types.UnicodeText, nullable=False)
-    content             = Column('content', types.UnicodeText, nullable=False)
-    content_parsed      = Column('content_parsed', types.UnicodeText, nullable=False)
-    content_short       = Column('content_short', types.UnicodeText, nullable=False)
-    time                = Column('time', DateTimeAsInteger, nullable=False, default=datetime.now)
-    status              = Column('status', journal_status_type, index=True )
-    editlog_id          = Column('editlog_id', types.Integer, ForeignKey('editlog.id'))
+    id                  = Column(types.Integer, primary_key=True)
+    user_id             = Column(types.Integer, ForeignKey("user.id"))
+    discussion_id       = Column(types.Integer, nullable=False)
+    title               = Column(types.UnicodeText, nullable=False)
+    content             = Column(types.UnicodeText, nullable=False)
+    content_parsed      = Column(types.UnicodeText, nullable=False)
+    content_short       = Column(types.UnicodeText, nullable=False)
+    time                = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    status              = Column(journal_status_type, index=True )
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
     #mysql_engine='InnoDB'
     
     def __init__(self, user_id, title, content):
@@ -161,16 +159,16 @@ class JournalEntry(BaseTable):
 
 class News(BaseTable):
     __tablename__       = 'news'
-    id                  = Column('id', types.Integer, primary_key=True)
-    author_user_id      = Column('author_user_id', types.Integer, ForeignKey("user.id"))
-    title               = Column('title', types.UnicodeText, nullable=False)
-    content             = Column('content', types.UnicodeText, nullable=False)
-    content_parsed      = Column('content_parsed', types.UnicodeText, nullable=False)
-    content_short       = Column('content_short', types.UnicodeText, nullable=False)
-    time                = Column('time', DateTimeAsInteger, nullable=False, default=datetime.now)
-    is_anonymous        = Column('is_anonymous', types.Boolean, nullable=False, default=False)
-    is_deleted          = Column('is_deleted', types.Boolean, nullable=False, default=False)
-    editlog_id          = Column('editlog_id', types.Integer, ForeignKey('editlog.id'))
+    id                  = Column(types.Integer, primary_key=True)
+    author_user_id      = Column(types.Integer, ForeignKey("user.id"))
+    title               = Column(types.UnicodeText, nullable=False)
+    content             = Column(types.UnicodeText, nullable=False)
+    content_parsed      = Column(types.UnicodeText, nullable=False)
+    content_short       = Column(types.UnicodeText, nullable=False)
+    time                = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    is_anonymous        = Column(types.Boolean, nullable=False, default=False)
+    is_deleted          = Column(types.Boolean, nullable=False, default=False)
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
     #mysql_engine='InnoDB'
 
     def __init__(self, title, content, author):
@@ -187,17 +185,17 @@ class News(BaseTable):
 
 class Submission(BaseTable):
     __tablename__       = 'submission'
-    id                  = Column('id', types.Integer, primary_key=True)
-    title               = Column('title', types.String(length=128), nullable=False)
-    description         = Column('description', types.UnicodeText, nullable=False)
-    description_parsed  = Column('description_parsed', types.UnicodeText, nullable=False)
-    type                = Column('type', submission_type_type, nullable=False)
-    discussion_id       = Column('discussion_id', types.Integer, nullable=False)
-    time                = Column('time', DateTimeAsInteger, nullable=False, default=datetime.now)
-    status              = Column('status', submission_status_type, index=True, nullable=False)
-    mogile_key          = Column('mogile_key', types.String(150), nullable=False)
-    mimetype            = Column('mimetype', types.String(35), nullable=False)
-    editlog_id          = Column('editlog_id', types.Integer, ForeignKey('editlog.id'))
+    id                  = Column(types.Integer, primary_key=True)
+    title               = Column(types.String(length=128), nullable=False)
+    description         = Column(types.UnicodeText, nullable=False)
+    description_parsed  = Column(types.UnicodeText, nullable=False)
+    type                = Column(submission_type_type, nullable=False)
+    discussion_id       = Column(types.Integer, nullable=False)
+    time                = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    status              = Column(submission_status_type, index=True, nullable=False)
+    mogile_key          = Column(types.String(150), nullable=False)
+    mimetype            = Column(types.String(35), nullable=False)
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
     #mysql_engine='InnoDB'
 
     def __init__(self):
@@ -217,14 +215,6 @@ class Submission(BaseTable):
             if self.user_submission[index].ownership_status == 'primary':
                 return self.user_submission[index].user
     primary_artist = property(_get_primary_artist)
-
-    # Deprecated. Use get_derived_by_type instead.
-    def get_derived_index (self,types):
-        for index in xrange(0,len(self.derived_submission)):
-            for type in types:
-                if self.derived_submission[index].derivetype == type:
-                    return index
-        return None
 
     def get_derived_by_type (self, type):
         for index in xrange(0,len(self.derived_submission)):
@@ -504,11 +494,11 @@ class Submission(BaseTable):
 
 class DerivedSubmission(BaseTable):
     __tablename__       = 'derived_submission'
-    id                  = Column('id', types.Integer, primary_key=True)
-    submission_id       = Column('submission_id', types.Integer, ForeignKey("submission.id"), nullable=False)
-    derivetype          = Column('derivetype', derived_submission_derivetype_type, nullable=False)
-    mogile_key          = Column('mogile_key', types.String(150), nullable=False)
-    mimetype            = Column('mimetype', types.String(35), nullable=False)
+    id                  = Column(types.Integer, primary_key=True)
+    submission_id       = Column(types.Integer, ForeignKey('submission.id'), nullable=False)
+    derivetype          = Column(derived_submission_derivetype_type, nullable=False)
+    mogile_key          = Column(types.String(150), nullable=False)
+    mimetype            = Column(types.String(35), nullable=False)
     #mysql_engine='InnoDB'
 
     def __init__(self, derivetype):
@@ -516,12 +506,12 @@ class DerivedSubmission(BaseTable):
 
 class HistoricSubmission(BaseTable):
     __tablename__       = 'historic_submission'
-    id                  = Column('id', types.Integer, primary_key=True)
-    submission_id       = Column('submission_id', types.Integer, ForeignKey("submission.id"), nullable=False)
-    mogile_key          = Column('mogile_key', types.String(150), nullable=False)
-    mimetype            = Column('mimetype', types.String(35), nullable=False)
-    edited_at           = Column('edited_at', DateTimeAsInteger, nullable=False, default=datetime.now)
-    edited_by_id        = Column('edited_by_id', types.Integer, ForeignKey('user.id'))
+    id                  = Column(types.Integer, primary_key=True)
+    submission_id       = Column(types.Integer, ForeignKey("submission.id"), nullable=False)
+    mogile_key          = Column(types.String(150), nullable=False)
+    mimetype            = Column(types.String(35), nullable=False)
+    edited_at           = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    edited_by_id        = Column(types.Integer, ForeignKey('user.id'))
     #mysql_engine='InnoDB'
 
     def __init__(self, user):
@@ -537,12 +527,12 @@ class HistoricSubmission(BaseTable):
 
 class UserSubmission(BaseTable):
     __tablename__       = 'user_submission'
-    id                  = Column('id', types.Integer, primary_key=True)
-    user_id             = Column('user_id', types.Integer, ForeignKey("user.id"))
-    submission_id       = Column('submission_id', types.Integer, ForeignKey("submission.id"))
-    relationship        = Column('relationship', user_submission_relationship_type, nullable=False)
-    ownership_status    = Column('ownership_status', user_submission_ownership_status_type, nullable=False)
-    review_status       = Column('review_status', user_submission_review_status_type, nullable=False)
+    id                  = Column(types.Integer, primary_key=True)
+    user_id             = Column(types.Integer, ForeignKey("user.id"))
+    submission_id       = Column(types.Integer, ForeignKey("submission.id"))
+    relationship        = Column(user_submission_relationship_type, nullable=False)
+    ownership_status    = Column(user_submission_ownership_status_type, nullable=False)
+    review_status       = Column(user_submission_review_status_type, nullable=False)
     #mysql_engine='InnoDB'
 
     def __init__(self, user, relationship, ownership_status, review_status):
@@ -553,15 +543,15 @@ class UserSubmission(BaseTable):
 
 class Comment(BaseTable):
     __tablename__       = 'comment'
-    id                  = Column('id', types.Integer, primary_key=True)
-    user_id             = Column('user_id', types.Integer, ForeignKey('user.id'))
-    left                = Column('left', types.Integer, nullable=False)
-    right               = Column('right', types.Integer, nullable=False)
-    subject             = Column('subject', types.UnicodeText, nullable=False)
-    time                = Column('time', DateTimeAsInteger, nullable=False, default=datetime.now)
-    content             = Column('content', types.UnicodeText, nullable=False)
-    content_parsed      = Column('content_parsed', types.UnicodeText, nullable=False)
-    content_short       = Column('content_short', types.UnicodeText, nullable=False)
+    id                  = Column(types.Integer, primary_key=True)
+    user_id             = Column(types.Integer, ForeignKey('user.id'))
+    left                = Column(types.Integer, nullable=False)
+    right               = Column(types.Integer, nullable=False)
+    subject             = Column(types.UnicodeText, nullable=False)
+    time                = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    content             = Column(types.UnicodeText, nullable=False)
+    content_parsed      = Column(types.UnicodeText, nullable=False)
+    content_short       = Column(types.UnicodeText, nullable=False)
     #mysql_engine='InnoDB'
 
     def add_to_nested_set(self, parent, discussion):
@@ -659,28 +649,28 @@ class Comment(BaseTable):
 
 
 class NewsComment(BaseTable):
-    __tablename__           = 'news_comment'
-    news_id                 = Column('news_id', types.Integer, ForeignKey('news.id'), primary_key=True)
-    comment_id              = Column('comment_id', types.Integer, ForeignKey('comment.id'), primary_key=True)
+    __tablename__       = 'news_comment'
+    news_id             = Column(types.Integer, ForeignKey('news.id'), primary_key=True)
+    comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
     #mysql_engine='InnoDB'
 
 class JournalEntryComment(BaseTable):
-    __tablename__           = 'journal_entry_comment'
-    journal_entry_id        = Column('journal_entry_id', types.Integer, ForeignKey('journal_entry.id'), primary_key=True)
-    comment_id              = Column('comment_id', types.Integer, ForeignKey('comment.id'), primary_key=True)
+    __tablename__       = 'journal_entry_comment'
+    journal_entry_id    = Column(types.Integer, ForeignKey('journal_entry.id'), primary_key=True)
+    comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
     #mysql_engine='InnoDB'
 
 
 class SubmissionComment(BaseTable):
-    __tablename__           ='submission_comment'
-    submission_id           = Column('submission_id', types.Integer, ForeignKey('submission.id'), primary_key=True)
-    comment_id              = Column('comment_id', types.Integer, ForeignKey('comment.id'), primary_key=True)
+    __tablename__       = 'submission_comment'
+    submission_id       = Column(types.Integer, ForeignKey('submission.id'), primary_key=True)
+    comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
     #mysql_engine='InnoDB'
     
 class Tag(BaseTable):
     __tablename__       = 'tag'
-    id                  = Column('id', types.Integer, primary_key=True, autoincrement=True)
-    text                = Column('text', types.String(length=20), index=True, unique=True)
+    id                  = Column(types.Integer, primary_key=True, autoincrement=True)
+    text                = Column(types.String(length=20), index=True, unique=True)
     #mysql_engine='InnoDB'
 
     cache_by_text = {}
@@ -734,8 +724,8 @@ class Tag(BaseTable):
 
 class SubmissionTag(BaseTable):
     __tablename__       = 'submission_tag'
-    submission_id       = Column('submission_id', types.Integer, ForeignKey('submission.id'), primary_key=True, autoincrement=False)
-    tag_id              = Column('tag_id', types.Integer, ForeignKey('tag.id'), primary_key=True, autoincrement=False)
+    submission_id       = Column(types.Integer, ForeignKey('submission.id'), primary_key=True, autoincrement=False)
+    tag_id              = Column(types.Integer, ForeignKey('tag.id'), primary_key=True, autoincrement=False)
     #mysql_engine='InnoDB'
 
     def __init__(self, tag):
@@ -743,14 +733,13 @@ class SubmissionTag(BaseTable):
 
 class UserRelationship(BaseTable):
     __tablename__       = 'user_relationship'
-    from_user_id        = Column('from_user_id', types.Integer, ForeignKey('user.id'), primary_key=True)
-    to_user_id          = Column('to_user_id', types.Integer, ForeignKey('user.id'), primary_key=True)
-    relationship        = Column('relationship', user_relationship_type, nullable=False)
+    from_user_id        = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
+    to_user_id          = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
+    relationship        = Column(user_relationship_type, nullable=False)
     #mysql_engine='InnoDB'
-    pass
 
-UserRelationship.user = relation(User, primaryjoin=UserRelationship.__table__.c.from_user_id==User.id, backref='relationships')
-UserRelationship.target = relation(User, primaryjoin=UserRelationship.__table__.c.to_user_id==User.id)
+UserRelationship.user = relation(User, primaryjoin=UserRelationship.from_user_id==User.id, backref='relationships')
+UserRelationship.target = relation(User, primaryjoin=UserRelationship.to_user_id==User.id)
 
 EditLog.last_edited_by = relation(User)
 
@@ -759,13 +748,13 @@ EditLogEntry.edited_by = relation(User)
 
 News.author = relation(User)
 News.editlog = relation(EditLog)
-News.comments = relation(Comment, secondary=NewsComment.__table__, backref='news', order_by=Comment.__table__.c.left)
+News.comments = relation(Comment, secondary=NewsComment.__table__, backref='news', order_by=Comment.left)
 
 UserSubmission.submission = relation(Submission, backref='user_submission')
 UserSubmission.user = relation(User, backref='user_submission')
 
 Submission.editlog = relation(EditLog)
-Submission.comments = relation(Comment, secondary=SubmissionComment.__table__, backref='submission', order_by=Comment.__table__.c.left)
+Submission.comments = relation(Comment, secondary=SubmissionComment.__table__, backref='submission', order_by=Comment.left)
 
 DerivedSubmission.submission = relation(Submission, backref='derived_submission', lazy=False)
 
@@ -773,7 +762,7 @@ HistoricSubmission.submission = relation(Submission, backref='historic_submissio
 HistoricSubmission.edited_by = relation(User)
 
 JournalEntry.editlog = relation(EditLog)
-JournalEntry.comments = relation(Comment, secondary=JournalEntryComment.__table__, backref='journal_entry', order_by=Comment.__table__.c.left)
+JournalEntry.comments = relation(Comment, secondary=JournalEntryComment.__table__, backref='journal_entry', order_by=Comment.left)
 JournalEntry.user = relation(User, backref='journals')
 
 Comment.user = relation(User, backref='comments')

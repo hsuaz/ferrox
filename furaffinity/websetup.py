@@ -11,15 +11,21 @@ log = logging.getLogger(__name__)
 
 def setup_config(command, filename, section, vars):
     """Place any commands to setup furaffinity here"""
+
     conf = appconfig('config:' + filename)
     load_environment(conf.global_conf, conf.local_conf)
-    from furaffinity import model
-    print "Creating tables"
-    model.metadata.create_all(bind=config['pylons.g'].sa_engine)
-    print "Successfully setup"
 
-    print "Creating base data"
-    null_role = model.Role('Unverified', 'User who has not verified eir email')
+    from furaffinity import model
+    print "Creating tables."
+    model.metadata.create_all(bind=config['pylons.g'].sa_engine)
+
+    print "Creating base data..."
+
+    ### Roles
+
+    print "    ...roles"
+    null_role = model.Role('Unverified',
+                           'User who has not verified eir email')
     null_role.sigil = ' '
     model.Session.save(null_role)
 
@@ -48,7 +54,19 @@ def setup_config(command, filename, section, vars):
     admin_role.permissions.append(journal_perm)
     model.Session.save(admin_role)
 
-    print "Creating test data"
+    print "    ...user metadata"
+    metadata_fields = (
+        ('bio',         'Short bio'),
+    )
+    for key, description in metadata_fields:
+        model.Session.save(
+            model.UserMetadataField(key=key, description=description)
+            )
+
+    print "Done."
+    print "Creating test data..."
+
+    print "    ...users"
     u = model.User('fender', 'asdf')
     u.display_name = u'Fender'
     u.email = u'nobody@furaffinity.net'
@@ -78,11 +96,7 @@ def setup_config(command, filename, section, vars):
     u.role = normal_role
     model.Session.save(u)
 
-    '''
-    n = model.News(u'headline', u'news content', u)
-    model.Session.save(n)
-    '''
-    
+    print "Done."
     model.Session.commit()
 
     try:
@@ -92,8 +106,7 @@ def setup_config(command, filename, section, vars):
 
     try:
         import xapian
-        xapian.WritableDatabase('submission.xapian',xapian.DB_CREATE_OR_OVERWRITE)
-        xapian.WritableDatabase('journal.xapian',xapian.DB_CREATE_OR_OVERWRITE)
+        xapian.WritableDatabase('submission.xapian', xapian.DB_CREATE_OR_OVERWRITE)
+        xapian.WritableDatabase('journal.xapian', xapian.DB_CREATE_OR_OVERWRITE)
     except ImportError:
         print 'WARNING: Unable to load Xapian bindings. Search disabled.'
-

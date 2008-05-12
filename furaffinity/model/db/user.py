@@ -243,6 +243,25 @@ class UserPreference(BaseTable):
         self.key = key
         self.value = value
 
+### Metadata
+
+class UserMetadataField(BaseTable):
+    __tablename__   = 'user_metadata_field'
+    id              = Column(types.Integer, primary_key=True)
+    key             = Column(types.Unicode(length=32), nullable=False)
+    description     = Column(types.UnicodeText, nullable=False)
+
+class UserMetadata(BaseTable):
+    __tablename__   = 'user_metadata'
+    user_id         = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
+    field_id        = Column(types.Integer, ForeignKey('user_metadata_field.id'), primary_key=True)
+    value           = Column(types.Unicode(length=255), nullable=False)
+    
+    user            = relation(User, backref='metadata')
+    field           = relation(UserMetadataField, lazy=False)
+
+### Notes
+
 class Note(BaseTable):
     __tablename__   = 'note'
     id              = Column(types.Integer, primary_key=True)

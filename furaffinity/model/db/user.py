@@ -92,8 +92,8 @@ class Permission(BaseTable):
 
 class RolePermission(BaseTable):
     __tablename__   = 'role_permissions'
-    role_id         = Column(types.Integer, ForeignKey('role.id'), primary_key=True)
-    permission_id   = Column(types.Integer, ForeignKey('permission.id'), primary_key=True)
+    role_id         = Column(types.Integer, ForeignKey('roles.id'), primary_key=True)
+    permission_id   = Column(types.Integer, ForeignKey('permissions.id'), primary_key=True)
 
 Role.permissions = relation(Permission, secondary=RolePermission.__table__)
 
@@ -106,7 +106,7 @@ class User(BaseTable):
     email           = Column(types.String(256), nullable=False)
     password        = Column(types.String(256), nullable=False)
     display_name    = Column(types.UnicodeText, nullable=False)
-    role_id         = Column(types.Integer, ForeignKey('role.id'), default=1)
+    role_id         = Column(types.Integer, ForeignKey('roles.id'), default=1)
 
     role            = relation(Role)
 #    journals = relation(JournalEntry, backref='user')
@@ -212,7 +212,7 @@ class User(BaseTable):
 class IPLogEntry(BaseTable):
     __tablename__   = 'ip_log'
     id              = Column(types.Integer, primary_key=True)
-    user_id         = Column(types.Integer, ForeignKey('user.id'), nullable=False)
+    user_id         = Column(types.Integer, ForeignKey('users.id'), nullable=False)
     ip              = Column(ip_type, nullable=False)
     start_time      = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
     end_time        = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
@@ -227,7 +227,7 @@ class IPLogEntry(BaseTable):
 
 class UserPreference(BaseTable):
     __tablename__   = 'user_preferences'
-    user_id         = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
+    user_id         = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
     key             = Column(types.String(length=32), primary_key=True)
     value           = Column(types.String(length=256), nullable=False)
 
@@ -248,8 +248,8 @@ class UserMetadataField(BaseTable):
 
 class UserMetadata(BaseTable):
     __tablename__   = 'user_metadata'
-    user_id         = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
-    field_id        = Column(types.Integer, ForeignKey('user_metadata_field.id'), primary_key=True)
+    user_id         = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
+    field_id        = Column(types.Integer, ForeignKey('user_metadata_fields.id'), primary_key=True)
     value           = Column(types.Unicode(length=255), nullable=False)
     
     user            = relation(User, backref='metadata')
@@ -260,9 +260,9 @@ class UserMetadata(BaseTable):
 class Note(BaseTable):
     __tablename__   = 'notes'
     id              = Column(types.Integer, primary_key=True)
-    from_user_id    = Column(types.Integer, ForeignKey('user.id'))
-    to_user_id      = Column(types.Integer, ForeignKey('user.id'))
-    original_note_id= Column(types.Integer, ForeignKey('note.id'))
+    from_user_id    = Column(types.Integer, ForeignKey('users.id'))
+    to_user_id      = Column(types.Integer, ForeignKey('users.id'))
+    original_note_id= Column(types.Integer, ForeignKey('notes.id'))
     subject         = Column(types.UnicodeText, nullable=False)
     content         = Column(types.UnicodeText, nullable=False)
     content_parsed  = Column(types.UnicodeText, nullable=False)

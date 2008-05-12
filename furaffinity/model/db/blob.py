@@ -62,7 +62,7 @@ class EditLog(BaseTable):
     __tablename__       = 'editlog'
     id                  = Column(types.Integer, primary_key=True)
     last_edited_at      = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
-    last_edited_by_id   = Column(types.Integer, ForeignKey('user.id'))
+    last_edited_by_id   = Column(types.Integer, ForeignKey('users.id'))
 
     def __init__(self,user):
         self.last_edited_by = user
@@ -78,7 +78,7 @@ class EditLogEntry(BaseTable):
     id                  = Column(types.Integer, primary_key=True)
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
     edited_at           = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
-    edited_by_id        = Column(types.Integer, ForeignKey('user.id'))
+    edited_by_id        = Column(types.Integer, ForeignKey('users.id'))
     reason              = Column(types.String(length=250))
     previous_title      = Column(types.UnicodeText, nullable=False)
     previous_text       = Column(types.UnicodeText, nullable=False)
@@ -96,7 +96,7 @@ class EditLogEntry(BaseTable):
 class JournalEntry(BaseTable):
     __tablename__       = 'journal_entries'
     id                  = Column(types.Integer, primary_key=True)
-    user_id             = Column(types.Integer, ForeignKey("user.id"))
+    user_id             = Column(types.Integer, ForeignKey('users.id'))
     discussion_id       = Column(types.Integer, nullable=False)
     title               = Column(types.UnicodeText, nullable=False)
     content             = Column(types.UnicodeText, nullable=False)
@@ -158,7 +158,7 @@ class JournalEntry(BaseTable):
 class News(BaseTable):
     __tablename__       = 'news'
     id                  = Column(types.Integer, primary_key=True)
-    author_user_id      = Column(types.Integer, ForeignKey("user.id"))
+    author_user_id      = Column(types.Integer, ForeignKey('users.id'))
     title               = Column(types.UnicodeText, nullable=False)
     content             = Column(types.UnicodeText, nullable=False)
     content_parsed      = Column(types.UnicodeText, nullable=False)
@@ -491,7 +491,7 @@ class Submission(BaseTable):
 class DerivedSubmission(BaseTable):
     __tablename__       = 'derived_submissions'
     id                  = Column(types.Integer, primary_key=True)
-    submission_id       = Column(types.Integer, ForeignKey('submission.id'), nullable=False)
+    submission_id       = Column(types.Integer, ForeignKey('submissions.id'), nullable=False)
     derivetype          = Column(derived_submission_derivetype_type, nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
@@ -502,11 +502,11 @@ class DerivedSubmission(BaseTable):
 class HistoricSubmission(BaseTable):
     __tablename__       = 'historic_submissions'
     id                  = Column(types.Integer, primary_key=True)
-    submission_id       = Column(types.Integer, ForeignKey("submission.id"), nullable=False)
+    submission_id       = Column(types.Integer, ForeignKey('submissions.id'), nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
     edited_at           = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
-    edited_by_id        = Column(types.Integer, ForeignKey('user.id'))
+    edited_by_id        = Column(types.Integer, ForeignKey('users.id'))
 
     def __init__(self, user):
         self.edited_by = user
@@ -522,8 +522,8 @@ class HistoricSubmission(BaseTable):
 class UserSubmission(BaseTable):
     __tablename__       = 'user_submissions'
     id                  = Column(types.Integer, primary_key=True)
-    user_id             = Column(types.Integer, ForeignKey("user.id"))
-    submission_id       = Column(types.Integer, ForeignKey("submission.id"))
+    user_id             = Column(types.Integer, ForeignKey('users.id'))
+    submission_id       = Column(types.Integer, ForeignKey('submissions.id'))
     relationship        = Column(user_submission_relationship_type, nullable=False)
     ownership_status    = Column(user_submission_ownership_status_type, nullable=False)
     review_status       = Column(user_submission_review_status_type, nullable=False)
@@ -537,7 +537,7 @@ class UserSubmission(BaseTable):
 class Comment(BaseTable):
     __tablename__       = 'comments'
     id                  = Column(types.Integer, primary_key=True)
-    user_id             = Column(types.Integer, ForeignKey('user.id'))
+    user_id             = Column(types.Integer, ForeignKey('users.id'))
     left                = Column(types.Integer, nullable=False)
     right               = Column(types.Integer, nullable=False)
     subject             = Column(types.UnicodeText, nullable=False)
@@ -643,17 +643,17 @@ class Comment(BaseTable):
 class NewsComment(BaseTable):
     __tablename__       = 'news_comments'
     news_id             = Column(types.Integer, ForeignKey('news.id'), primary_key=True)
-    comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
+    comment_id          = Column(types.Integer, ForeignKey('comments.id'), primary_key=True)
 
 class JournalEntryComment(BaseTable):
     __tablename__       = 'journal_entry_comments'
-    journal_entry_id    = Column(types.Integer, ForeignKey('journal_entry.id'), primary_key=True)
+    journal_entry_id    = Column(types.Integer, ForeignKey('journal_entries.id'), primary_key=True)
     comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
 
 
 class SubmissionComment(BaseTable):
     __tablename__       = 'submission_comments'
-    submission_id       = Column(types.Integer, ForeignKey('submission.id'), primary_key=True)
+    submission_id       = Column(types.Integer, ForeignKey('submissions.id'), primary_key=True)
     comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
     
 class Tag(BaseTable):
@@ -712,16 +712,16 @@ class Tag(BaseTable):
 
 class SubmissionTag(BaseTable):
     __tablename__       = 'submission_tags'
-    submission_id       = Column(types.Integer, ForeignKey('submission.id'), primary_key=True, autoincrement=False)
-    tag_id              = Column(types.Integer, ForeignKey('tag.id'), primary_key=True, autoincrement=False)
+    submission_id       = Column(types.Integer, ForeignKey('submissions.id'), primary_key=True, autoincrement=False)
+    tag_id              = Column(types.Integer, ForeignKey('tags.id'), primary_key=True, autoincrement=False)
 
     def __init__(self, tag):
         self.tag = tag
 
 class UserRelationship(BaseTable):
     __tablename__       = 'user_relationships'
-    from_user_id        = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
-    to_user_id          = Column(types.Integer, ForeignKey('user.id'), primary_key=True)
+    from_user_id        = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
+    to_user_id          = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
     relationship        = Column(user_relationship_type, nullable=False)
 
 UserRelationship.user = relation(User, primaryjoin=UserRelationship.from_user_id==User.id, backref='relationships')

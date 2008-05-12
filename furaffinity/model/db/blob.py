@@ -648,13 +648,13 @@ class NewsComment(BaseTable):
 class JournalEntryComment(BaseTable):
     __tablename__       = 'journal_entry_comments'
     journal_entry_id    = Column(types.Integer, ForeignKey('journal_entries.id'), primary_key=True)
-    comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
+    comment_id          = Column(types.Integer, ForeignKey('comments.id'), primary_key=True)
 
 
 class SubmissionComment(BaseTable):
     __tablename__       = 'submission_comments'
     submission_id       = Column(types.Integer, ForeignKey('submissions.id'), primary_key=True)
-    comment_id          = Column(types.Integer, ForeignKey('comment.id'), primary_key=True)
+    comment_id          = Column(types.Integer, ForeignKey('comments.id'), primary_key=True)
     
 class Tag(BaseTable):
     __tablename__       = 'tags'

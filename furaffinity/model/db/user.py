@@ -157,14 +157,38 @@ class User(BaseTable):
         return perm_q.count() > 0
 
     def preference(self, pref):
-        try:
-            return self._preference_cache[pref]
-        except AttributeError:
+        if not hasattr(self, '_preference_cache'):
             self._preference_cache = dict()
             self._preference_cache.update(GuestUser.preferences)
             for row in self.preferences:
                 self._preference_cache[row.key] = row.value
-            return self._preference_cache[pref]
+        return self._preference_cache[pref]
+
+    def metadatum(self, datum):
+        """Returns an item from this user's metadata, with caching (so don't
+        worry about calling this method repeatedly).
+
+        Return value is a dict with 'description' and 'value' keys.
+        """
+        if not hasattr(self, '_metadata_cache'):
+            self._metadata_cache = dict()
+            for row in self.metadata:
+                self._metadata_cache[row.field.key] = dict(
+                    description=row.field.description,
+                    value=row.value,
+                    )
+
+        if not datum in self._metadata_cache:
+            print datum
+            datum_row = Session.query(UserMetadataField) \
+                        .filter_by(key=datum) \
+                        .one()
+            self._metadata_cache[datum] = dict(
+                description=datum_row.description,
+                value='',
+            )
+
+        return self._metadata_cache[datum]
 
     def unread_note_count(self):
         """

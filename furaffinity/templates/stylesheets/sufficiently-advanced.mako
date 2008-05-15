@@ -70,8 +70,8 @@ a:hover { color: ${c.colors['link_hover']}; }
 
 
 /*** pair of objects that float left and right ***/
-.lr-left { float: left; }
-.lr-right { float: right; }
+.lr-left { float: left; width: 50%; }
+.lr-right { float: right; width: 50%; }
 
 
 /*** forms ***/
@@ -123,15 +123,22 @@ input[type='radio'] { cursor: pointer; }
 table.bare-table tbody tr:hover { background: ${c.colors['background_hover']}; }
 
 /* sub-link-bar */
-.mini-linkbar { display: table /* shrinkwrap */; margin: 0.25em auto; background: ${c.colors['background_alt']}; border: 1px solid ${c.colors['border']}; }
-.mini-linkbar li { display: inline-block; }
-.mini-linkbar li + li { border-left: 1px dotted ${c.colors['border']}; }
+.mini-linkbar { display: table /* shrinkwrap */; margin: 0.25em auto; }
+.mini-linkbar li { display: table-cell; vertical-align: middle; border: 1px solid ${c.colors['border']}; border-left-style: dotted; border-right-width: 0; border-left-style: dotted; background: ${c.colors['background_alt']}; }
+.mini-linkbar li:first-child { border-left-style: solid; }
+.mini-linkbar li:last-child { border-right-width: 1px; }
 .mini-linkbar li a { display: block; text-align: center; padding: 0.5em; }
 .mini-linkbar li img { margin: 0 auto; vertical-align: text-bottom; }
 .mini-linkbar li:hover { background: ${c.colors['background_hover']}; }
 .mini-linkbar li.admin:before,
 .mini-linkbar li.admin:after { content: none; }
 .mini-linkbar li.admin { margin: -1px; border: 1px dotted #e87400; }
+.mini-linkbar li.not-link { padding: 0.5em; background: transparent; border-top-color: transparent; border-bottom-color: transparent; }
+.mini-linkbar li.not-link a { display: inline; padding: 0; }
+.mini-linkbar li.not-link + li,
+.mini-linkbar li + li.not-link { border-left-style: solid; }
+.mini-linkbar li.not-link:first-child { border-left-width: 0; }
+.mini-linkbar li.not-link:last-child { border-right-width: 0; }
 
 /* basic-box linkbar, all in a row */
 .micro-linkbar { background: ${c.colors['background_alt']}; border-top: 1px dotted ${c.colors['border']}; }

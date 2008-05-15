@@ -87,6 +87,8 @@ class NotesController(BaseController):
     def write(self, username):
         """Form for sending a new note."""
         c.form = FormGenerator()
+        if 'recipient' in request.params:
+            c.form.defaults['recipient'] = request.params['recipient']
         return render('notes/send.mako')
 
     def reply(self, username, id):

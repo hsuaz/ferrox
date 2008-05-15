@@ -146,3 +146,20 @@
 -->
     </span>
 </%def>
+
+<%def name="user_linkbar(user)">
+<ul class="mini-linkbar">
+    <li class="not-link">${user.display_name}:</li>
+    <li>${h.link_to('Overview', h.url_for(controller='user', action='view', username=user.username))}</li>
+    <li>${h.link_to('Profile', h.url_for(controller='user', action='profile', username=user.username))}</li>
+    <li>${h.link_to('Gallery', h.url_for(controller='gallery', action='index', username=user.username))}</li>
+    <li>${h.link_to('Journal', h.url_for(controller='journal', action='index', username=user.username))}</li>
+    % if c.auth_user:
+    <li class="not-link"></li>
+    <li><a class="FINISHME">${h.image_tag('/images/icons/list-add.png', 'Watch')}</a></li>
+    <li>${h.link_to(h.image_tag('/images/icons/mail-message-new.png', 'Send note'), h.url_for(controller='notes', action='write', username=c.auth_user.username, recipient=user.username))}</li>
+    <li><a class="FINISHME">${h.image_tag('/images/icons/process-stop.png', 'Block')}</a></li>
+    % endif
+</ul>
+
+</%def>

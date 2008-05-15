@@ -56,7 +56,23 @@ def setup_config(command, filename, section, vars):
 
     print "    ...user metadata"
     metadata_fields = (
-        ('bio',         'Short bio'),
+        (u'bio',            u'Short bio'),
+        (u'artist_type',    u'Artist type'),
+        (u'location',       u'Location'),
+        (u'interests',      u'Interests'),
+        (u'occupation',     u'Occupation'),
+        (u'age',            u'Age'),
+        (u'nerd_shell',     u'Shell'),
+        (u'nerd_os',        u'Operating system'),
+        (u'nerd_browser',   u'Browser'),
+        (u'fav_quote',      u'Favorite quote'),
+        (u'fav_movie',      u'Favorite movie'),
+        (u'fav_game',       u'Favorite game'),
+        (u'fav_player',     u'Favorite music player'),
+        (u'fav_artist',     u'Favorite artist'),
+        (u'fav_animal',     u'Favorite animal'),
+        (u'fav_site',       u'Favorite Web site'),
+        (u'fav_food',       u'Favorite food'),
     )
     for key, description in metadata_fields:
         model.Session.save(

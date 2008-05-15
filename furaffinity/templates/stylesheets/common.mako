@@ -3,6 +3,7 @@
 /*** layout things that should never change ***/
 
 #skip-to-content { display: none; }
+.float-clear-hack { clear: both; }
 
 /*** forms ***/
 
@@ -48,6 +49,17 @@ dl.standard-form dd { position: relative; z-index: 1; padding: 0.25em 0 0.25em 1
 /* IE has a horrible float model */
 /* See http://www.howtocreate.co.uk/wrongWithIE/?chapter=Float+Model */
 dl.standard-form dd { ~padding-left: 0.25em; }
+
+/* similar to the above, but with a wide bold <dt>, suited for profiles etc */
+dl.two-column-list dt { float: left; position: relative; z-index: 2; width: 14.25em; padding: 0.25em 0.75em 0 0; text-align: right; font-weight: bold; }
+dl.two-column-list dt:after { content: ':'; }
+dl.two-column-list dt img { vertical-align: middle; }
+dl.two-column-list:after,
+dl.two-column-list dd:after { content: 'v'; display: block; clear: left; visibility: hidden; height: 0; }
+dl.two-column-list dd { position: relative; z-index: 1; padding: 0.25em 0 0.25em 15em; margin: 0; }
+/* IE has a horrible float model */
+/* See http://www.howtocreate.co.uk/wrongWithIE/?chapter=Float+Model */
+dl.two-column-list dd { ~padding-left: 0.25em; }
 
 /* standard table fields */
 table.bare-table,

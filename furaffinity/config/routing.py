@@ -99,9 +99,11 @@ def make_map():
     
     map.connect('/users/:username/relationships', controller='user', action='relationships')
     map.connect('/users/:username/watch', controller='user', action='watch')
-    map.connect('/users/:username/watch_commit', controller='user', action='watch_commit')
-    map.connect('/users/:username/block', controller='user', action='block', confirm=None)
-    map.connect('/users/:username/friend', controller='user', action='friend', confirm=None)
+    map.connect('/users/:username/watch_confirm', controller='user', action='watch_confirm')
+    map.connect('/users/:username/block', controller='user', action='block')
+    map.connect('/users/:username/block_confirm', controller='user', action='block_confirm')
+    map.connect('/users/:username/friend', controller='user', action='friend')
+    map.connect('/users/:username/friend_confirm', controller='user', action='friend_confirm')
     #map.connect('/journals/fill', controller='journal', action='fill')
     
     # Backwards compatibility

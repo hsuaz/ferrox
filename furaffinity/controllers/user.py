@@ -39,7 +39,7 @@ class UserController(BaseController):
             abort(404)
         return render('user/watch.mako')
 
-    def watch_commit(self, username=None, sub_domain=None):
+    def watch_confirm(self, username=None, sub_domain=None):
         c.user = model.User.get_by_name(username)
         if not c.user:
             abort(404)
@@ -51,23 +51,13 @@ class UserController(BaseController):
             return error
 
         
-        r = None
-        for r in c.auth_user.relationships:
-            if r.target == c.user:
-                break
-        
-        if not r:
-            r = model.UserRelationship()
-            r.target = c.user
-            model.Session.save(r)
-            c.auth_user.relationships.append(r)
-            #r.user = c.auth_user
+        r = c.auth_user.get_or_create_relationship(c.user)
 
         if form_data['submissions']:
             r.relationship = r.relationship.union(['watching_submissions'])
         if form_data['journals']:
             r.relationship = r.relationship.union(['watching_journals'])
-
+        
         model.Session.update(r)
         model.Session.commit()
 
@@ -78,13 +68,59 @@ class UserController(BaseController):
         c.user = model.User.get_by_name(username)
         if not c.user:
             abort(404)
-        return render('user/block.mako')
+
+        c.text = "Are you sure you want to block the user %s?"%c.user.display_name
+        c.url = h.url(controller='user', action='block_confirm', username=c.user.username)
+        c.fields = {}
+        return render('/confirm.mako')
+
+    def block_confirm(self, username=None, sub_domain=None):
+        c.user = model.User.get_by_name(username)
+        if not c.user:
+            abort(404)
+            
+        validator = model.form.DeleteForm()
+        try:
+            form_data = validator.to_python(request.params)
+        except formencode.Invalid, error:
+            return error
+        
+        if form_data['confirm']:
+            r = c.auth_user.get_or_create_relationship(c.user)
+            r.relationship = r.relationship.union(['blocking'])
+            model.Session.update(r)
+            model.Session.commit()
+
+        h.redirect_to(h.url_for(controller='user', action='view', username=c.user.username))
 
     def friend(self, username=None, sub_domain=None):
         c.user = model.User.get_by_name(username)
         if not c.user:
             abort(404)
-        return render('user/friend.mako')
+
+        c.text = "Are you sure you want to add the user %s to your friend list?"%c.user.display_name
+        c.url = h.url(controller='user', action='friend_confirm', username=c.user.username)
+        c.fields = {}
+        return render('/confirm.mako')
+
+    def friend_confirm(self, username=None, sub_domain=None):
+        c.user = model.User.get_by_name(username)
+        if not c.user:
+            abort(404)
+            
+        validator = model.form.DeleteForm()
+        try:
+            form_data = validator.to_python(request.params)
+        except formencode.Invalid, error:
+            return error
+        
+        if form_data['confirm']:
+            r = c.auth_user.get_or_create_relationship(c.user)
+            r.relationship = r.relationship.union(['friend_to'])
+            model.Session.update(r)
+            model.Session.commit()
+
+        h.redirect_to(h.url_for(controller='user', action='view', username=c.user.username))
 
     def settings(self):
         """Form for editing user settings.  Eventually."""

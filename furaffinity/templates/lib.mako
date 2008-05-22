@@ -156,9 +156,10 @@
     <li>${h.link_to('Journal', h.url_for(controller='journal', action='index', username=user.username))}</li>
     % if c.auth_user:
     <li class="not-link"></li>
-    <li><a class="FINISHME">${h.image_tag('/images/icons/list-add.png', 'Watch')}</a></li>
+    <li>${h.link_to(h.image_tag('/images/icons/list-add.png', 'Watch'), h.url_for(controller='user', action='watch', username=user.username)) }</li>
     <li>${h.link_to(h.image_tag('/images/icons/mail-message-new.png', 'Send note'), h.url_for(controller='notes', action='write', username=c.auth_user.username, recipient=user.username))}</li>
-    <li><a class="FINISHME">${h.image_tag('/images/icons/process-stop.png', 'Block')}</a></li>
+    <li>${h.link_to(h.image_tag('/images/icons/process-stop.png', 'Block'), h.url_for(controller='user', action='block', username=user.username)) }</li>
+    <li>${h.link_to(h.image_tag('/images/icons/list-add.png', 'Befriend'), h.url_for(controller='user', action='friend', username=user.username)) }</li>
     % endif
 </ul>
 

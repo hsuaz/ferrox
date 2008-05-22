@@ -34,12 +34,23 @@ class UserController(BaseController):
 
     def watch(self, username=None, sub_domain=None):
         c.form = FormGenerator()
+
+        if username == c.auth_user.username:
+            c.error_title = '''You can't watch yourself!'''
+            c.error_text = 'You have attempted to watch yourself. How very narcissistic of you.'
+            return render('/error.mako')
+        
         c.user = model.User.get_by_name(username)
         if not c.user:
             abort(404)
         return render('user/watch.mako')
 
     def watch_confirm(self, username=None, sub_domain=None):
+        if username == c.auth_user.username:
+            c.error_title = '''You can't watch yourself!'''
+            c.error_text = 'You have attempted to watch yourself. How very narcissistic of you.'
+            return render('/error.mako')
+        
         c.user = model.User.get_by_name(username)
         if not c.user:
             abort(404)
@@ -65,6 +76,11 @@ class UserController(BaseController):
 
 
     def block(self, username=None, sub_domain=None):
+        if username == c.auth_user.username:
+            c.error_title = '''You can't block yourself!'''
+            c.error_text = 'Despite the fact the you hate apparently yourself, there are far more effective ways to deprive us of your company.'
+            return render('/error.mako')
+        
         c.user = model.User.get_by_name(username)
         if not c.user:
             abort(404)
@@ -75,6 +91,11 @@ class UserController(BaseController):
         return render('/confirm.mako')
 
     def block_confirm(self, username=None, sub_domain=None):
+        if username == c.auth_user.username:
+            c.error_title = '''You can't block yourself!'''
+            c.error_text = 'Despite the fact the you hate apparently yourself, there are far more effective ways to deprive us of your company.'
+            return render('/error.mako')
+        
         c.user = model.User.get_by_name(username)
         if not c.user:
             abort(404)
@@ -94,6 +115,11 @@ class UserController(BaseController):
         h.redirect_to(h.url_for(controller='user', action='view', username=c.user.username))
 
     def friend(self, username=None, sub_domain=None):
+        if username == c.auth_user.username:
+            c.error_title = '''You can't befriend yourself!'''
+            c.error_text = 'You have attempted to befriend youself. Might I recommend any of a number of treatments for multiple personality disorder?'
+            return render('/error.mako')
+        
         c.user = model.User.get_by_name(username)
         if not c.user:
             abort(404)
@@ -104,6 +130,11 @@ class UserController(BaseController):
         return render('/confirm.mako')
 
     def friend_confirm(self, username=None, sub_domain=None):
+        if username == c.auth_user.username:
+            c.error_title = '''You can't befriend yourself!'''
+            c.error_text = 'You have attempted to befriend youself. Might I recommend any of a number of treatments for multiple personality disorder?'
+            return render('/error.mako')
+        
         c.user = model.User.get_by_name(username)
         if not c.user:
             abort(404)
@@ -122,6 +153,14 @@ class UserController(BaseController):
 
         h.redirect_to(h.url_for(controller='user', action='view', username=c.user.username))
 
+    def fuck(self, username=None, sub_domain=None):
+        if username == c.auth_user.username:
+            c.error_title = '''You have attempted to fuck yourself.'''
+            c.error_text = 'You have either attempted to fuck yourself, or have been given the suggestion to do so. Congratulations.<br><br>&hearts; net-cat'
+            return render('/error.mako')
+        
+        abort(404)
+    
     def settings(self):
         """Form for editing user settings.  Eventually."""
         return render('/PLACEHOLDER.mako')

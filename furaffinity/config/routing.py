@@ -104,6 +104,7 @@ def make_map():
     map.connect('/users/:username/block_confirm', controller='user', action='block_confirm')
     map.connect('/users/:username/friend', controller='user', action='friend')
     map.connect('/users/:username/friend_confirm', controller='user', action='friend_confirm')
+    map.connect('/users/:username/fuck', controller='user', action='fuck')
     #map.connect('/journals/fill', controller='journal', action='fill')
     
     # Backwards compatibility

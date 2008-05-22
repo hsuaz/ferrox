@@ -13,6 +13,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.databases.mysql import MSInteger, MSEnum
 from sqlalchemy.exceptions import InvalidRequestError
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import and_
 
 from binascii import crc32
 import cStringIO
@@ -30,6 +31,8 @@ from furaffinity.model.db import BaseTable, Session
 from furaffinity.model.db.user import *
 from furaffinity.model.datetimeasint import *
 from furaffinity.model.enum import *
+from furaffinity.model.set import *
+
 
 # -- This stuff is tied to class Submission --
 if pylons.config['mogilefs.tracker'] == 'FAKE':
@@ -55,7 +58,7 @@ derived_submission_derivetype_type = Enum(['thumb','halfview'])
 user_submission_ownership_status_type = Enum(['primary','normal'])
 user_submission_review_status_type = Enum(['normal','under_review','removed_by_admin','deleted'])
 user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin'])
-user_relationship_type = Enum(['watching_submissions','watching_journals','friend_to'])
+user_relationship_type = Set(['watching_submissions','watching_journals','friend_to','blocking'])
 
 
 class EditLog(BaseTable):
@@ -724,8 +727,16 @@ class UserRelationship(BaseTable):
     to_user_id          = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
     relationship        = Column(user_relationship_type, nullable=False)
 
+    def __init__(self):
+        self.relationship = set()
+
 UserRelationship.user = relation(User, primaryjoin=UserRelationship.from_user_id==User.id, backref='relationships')
 UserRelationship.target = relation(User, primaryjoin=UserRelationship.to_user_id==User.id)
+
+#User.blocking = relation(User, primaryjoin=and_(UserRelationship.from_user_id==User.id, UserRelationship.relationship=='blocking'), secondaryjoin=and_(UserRelationship.to_user_id==User.id, UserRelationship.relationship=='blocking'), backref='blockedby')
+#User.watching_journals(User, primaryjoin=and_(UserRelationship.from_user_id==User.id, UserRelationship.relationship=='watching_journals'), secondaryjoin=UserRelationship.to_user_id==User.id, backref='watchedby_journals')
+#User.watching_submissions(User, primaryjoin=and_(UserRelationship.from_user_id==User.id, UserRelationship.relationship=='watching_submissions'), secondaryjoin=UserRelationship.to_user_id==User.id, backref='watchedby_submissions')
+#User.friends(User, primaryjoin=and_(UserRelationship.from_user_id==User.id, UserRelationship.relationship=='friend_to'), secondaryjoin=UserRelationship.to_user_id==User.id, backref='friended_by')
 
 EditLog.last_edited_by = relation(User)
 

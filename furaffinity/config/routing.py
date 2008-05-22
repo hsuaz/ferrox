@@ -97,7 +97,12 @@ def make_map():
     map.connect('/search', controller='search', action='index')
     map.connect('/search/do', controller='search', action='do')
     
-    map.connect('/journals/fill', controller='journal', action='fill')
+    map.connect('/users/:username/relationships', controller='user', action='relationships')
+    map.connect('/users/:username/watch', controller='user', action='watch')
+    map.connect('/users/:username/watch_commit', controller='user', action='watch_commit')
+    map.connect('/users/:username/block', controller='user', action='block', confirm=None)
+    map.connect('/users/:username/friend', controller='user', action='friend', confirm=None)
+    #map.connect('/journals/fill', controller='journal', action='fill')
     
     # Backwards compatibility
     map.connect('/view/:id', controller='back_compat', action='view_submission')

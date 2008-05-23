@@ -13,6 +13,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.databases.mysql import MSInteger, MSEnum
 from sqlalchemy.exceptions import InvalidRequestError
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import and_
 
 from binascii import crc32
 import cStringIO
@@ -30,6 +31,7 @@ from furaffinity.model.db import BaseTable, Session
 from furaffinity.model.db.user import *
 from furaffinity.model.datetimeasint import *
 from furaffinity.model.enum import *
+
 
 # -- This stuff is tied to class Submission --
 if pylons.config['mogilefs.tracker'] == 'FAKE':
@@ -55,7 +57,6 @@ derived_submission_derivetype_type = Enum(['thumb','halfview'])
 user_submission_ownership_status_type = Enum(['primary','normal'])
 user_submission_review_status_type = Enum(['normal','under_review','removed_by_admin','deleted'])
 user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin'])
-user_relationship_type = Enum(['watching_submissions','watching_journals','friend_to'])
 
 
 class EditLog(BaseTable):
@@ -718,14 +719,9 @@ class SubmissionTag(BaseTable):
     def __init__(self, tag):
         self.tag = tag
 
-class UserRelationship(BaseTable):
-    __tablename__       = 'user_relationships'
-    from_user_id        = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
-    to_user_id          = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
-    relationship        = Column(user_relationship_type, nullable=False)
 
-UserRelationship.user = relation(User, primaryjoin=UserRelationship.from_user_id==User.id, backref='relationships')
-UserRelationship.target = relation(User, primaryjoin=UserRelationship.to_user_id==User.id)
+
+
 
 EditLog.last_edited_by = relation(User)
 

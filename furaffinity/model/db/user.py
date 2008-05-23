@@ -16,6 +16,7 @@ import re
 from furaffinity.model.db import BaseTable, Session
 from furaffinity.model.datetimeasint import *
 from furaffinity.model.enum import *
+from furaffinity.model.set import *
 
 ### Custom types
 
@@ -25,6 +26,7 @@ else:
     ip_type = types.String(length=11)
 
 note_status_type = Enum(['unread','read'])
+user_relationship_type = Set(['watching_submissions','watching_journals','friend_to','blocking'])
 
 ### Dummy classes
 
@@ -232,6 +234,38 @@ class User(BaseTable):
             .order_by(Note.time.desc())
 
         return note_q
+
+    def get_or_create_relationship(self, user):
+        need_new_r = True
+        r = None
+        for r in self.relationships:
+            if r.target == user:
+                need_new_r = False
+                print 'found relationship'
+                break
+
+        if need_new_r:
+            print 'did not find relationship'
+            r = UserRelationship()
+            r.target = user
+            Session.save(r)
+            self.relationships.append(r)
+            Session.update(self)
+
+        print r
+        return r
+
+class UserRelationship(BaseTable):
+    __tablename__       = 'user_relationships'
+    from_user_id        = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
+    to_user_id          = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
+    relationship        = Column(user_relationship_type, nullable=False)
+
+    def __init__(self):
+        self.relationship = set()
+
+UserRelationship.user = relation(User, primaryjoin=UserRelationship.from_user_id==User.id, backref='relationships')
+UserRelationship.target = relation(User, primaryjoin=UserRelationship.to_user_id==User.id)
 
 class IPLogEntry(BaseTable):
     __tablename__   = 'ip_log'

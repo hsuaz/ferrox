@@ -154,3 +154,8 @@ class SendNoteForm(formencode.Schema):
 class CommentForm(formencode.Schema):
     subject = validators.String(if_empty='(no subject)')
     content = validators.String(not_empty=True)
+
+class WatchForm(formencode.Schema):
+    journals = validators.Bool(if_empty=True, if_missing=False)
+    submissions = validators.Bool(if_empty=True, if_mission=False)
+

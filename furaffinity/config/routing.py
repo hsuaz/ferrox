@@ -98,6 +98,7 @@ def make_map():
     map.connect('/search/do', controller='search', action='do')
     
     map.connect('/users/:username/relationships', controller='user', action='relationships')
+    map.connect('/users/:username/relationships_change', controller='user', action='relationships_change')
     map.connect('/users/:username/watch', controller='user', action='watch')
     map.connect('/users/:username/watch_confirm', controller='user', action='watch_confirm')
     map.connect('/users/:username/block', controller='user', action='block')

@@ -27,10 +27,51 @@ class UserController(BaseController):
 
     def relationships(self, username=None, sub_domain=None):
         """Show (and possibly manage) user's relationships"""
-        c.user = model.User.get_by_name(username)
+        c.user = c.auth_user if username==c.auth_user.username else model.User.get_by_name(username)
         if not c.user:
             abort(404)
         return render('user/relationships.mako')
+
+    def relationships_change(self, username=None, sub_domain=None):
+        """Show (and possibly manage) user's relationships"""
+        c.user = None
+        if c.auth_user.username == username:
+            c.user = c.auth_user
+        else:
+            abort(403)
+            c.user = model.User.get_by_name(username)
+
+        if not c.user:
+            abort(404)
+            
+        """ This form doesn't need a validator. All we're doing is checking for field presence and the form is very dynamic. """
+        
+        for r in c.user.relationships:
+            if request.params.has_key("ws_%d"%r.target.id):
+                r.relationship = r.relationship.union(['watching_submissions'])
+            else:
+                r.relationship = r.relationship.difference(['watching_submissions'])
+
+            if request.params.has_key("wj_%d"%r.target.id):
+                r.relationship = r.relationship.union(['watching_journals'])
+            else:
+                r.relationship = r.relationship.difference(['watching_journals'])
+
+            if request.params.has_key("b_%d"%r.target.id):
+                r.relationship = r.relationship.union(['blocking'])
+            else:
+                r.relationship = r.relationship.difference(['blocking'])
+
+            if request.params.has_key("f_%d"%r.target.id):
+                r.relationship = r.relationship.union(['friend_to'])
+            else:
+                r.relationship = r.relationship.difference(['friend_to'])
+
+            if not r.relationship:
+                model.Session.delete(r)
+        
+        model.Session.commit()
+        h.redirect_to(h.url_for(controller='user', action='relationships', username=c.user.username))
 
     def watch(self, username=None, sub_domain=None):
         c.form = FormGenerator()
@@ -66,9 +107,17 @@ class UserController(BaseController):
 
         if form_data['submissions']:
             r.relationship = r.relationship.union(['watching_submissions'])
+        else:
+            r.relationship = r.relationship.difference(['watching_submissions'])
+
         if form_data['journals']:
             r.relationship = r.relationship.union(['watching_journals'])
-        
+        else:
+            r.relationship = r.relationship.difference(['watching_journals'])
+     
+        if not r.relationship:
+            model.Session.delete(r)
+
         model.Session.update(r)
         model.Session.commit()
 
@@ -85,7 +134,12 @@ class UserController(BaseController):
         if not c.user:
             abort(404)
 
-        c.text = "Are you sure you want to block the user %s?"%c.user.display_name
+        r = c.auth_user.get_or_create_relationship(c.user)
+        if 'blocking' in r.relationship:
+            c.text = "Are you sure you want to unblock the user %s?"%c.user.display_name
+        else:
+            c.text = "Are you sure you want to block the user %s?"%c.user.display_name
+            
         c.url = h.url(controller='user', action='block_confirm', username=c.user.username)
         c.fields = {}
         return render('/confirm.mako')
@@ -108,7 +162,12 @@ class UserController(BaseController):
         
         if form_data['confirm']:
             r = c.auth_user.get_or_create_relationship(c.user)
-            r.relationship = r.relationship.union(['blocking'])
+            if 'blocking' in r.relationship:
+                r.relationship = r.relationship.difference(['blocking'])
+                if not r.relationship:
+                    model.Session.delete(r)
+            else:
+                r.relationship = r.relationship.union(['blocking'])
             model.Session.update(r)
             model.Session.commit()
 
@@ -124,7 +183,11 @@ class UserController(BaseController):
         if not c.user:
             abort(404)
 
-        c.text = "Are you sure you want to add the user %s to your friend list?"%c.user.display_name
+        r = c.auth_user.get_or_create_relationship(c.user)
+        if 'friend_to' in r.relationship:
+            c.text = "Are you sure you want to remove the user %s from your friend list?"%c.user.display_name
+        else:
+            c.text = "Are you sure you want to add the user %s to your friend list?"%c.user.display_name
         c.url = h.url(controller='user', action='friend_confirm', username=c.user.username)
         c.fields = {}
         return render('/confirm.mako')
@@ -147,7 +210,12 @@ class UserController(BaseController):
         
         if form_data['confirm']:
             r = c.auth_user.get_or_create_relationship(c.user)
-            r.relationship = r.relationship.union(['friend_to'])
+            if 'friend_to' in r.relationship:
+                r.relationship = r.relationship.difference(['friend_to'])
+                if not r.relationship:
+                    model.Session.delete(r)
+            else:
+                r.relationship = r.relationship.union(['friend_to'])
             model.Session.update(r)
             model.Session.commit()
 

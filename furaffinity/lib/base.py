@@ -46,6 +46,18 @@ def check_perms(permissions):
                     return func(*args, **kwargs)
             return render('/denied.mako')
     return check
+    
+def authed_admin():
+    @decorator
+    def check(func, *args, **kwargs):
+        session_timeout = int(config.get('admin.session_timeout', 15*60))
+        if int(session.get('admin_last_used', 0)) > int(time() - session_timeout):
+            session['admin_last_used'] = int(time())
+            session.save()
+            return func(*args, **kwargs)
+        h.redirect_to(h.url_for(controller='admin', action='auth'))
+        return None
+    return check
 
 class BaseController(WSGIController):
 

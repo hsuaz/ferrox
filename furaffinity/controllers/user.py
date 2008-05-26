@@ -1,5 +1,6 @@
 from furaffinity.lib.base import *
-import furaffinity.lib.paginate as paginate
+#import furaffinity.lib.paginate as paginate
+from furaffinity.lib import pagination
 from furaffinity.model import form
 from furaffinity.lib.formgen import FormGenerator
 
@@ -228,6 +229,21 @@ class UserController(BaseController):
             return render('/error.mako')
         
         abort(404)
+
+    def memberlist(self, pageno=1):
+        q = model.Session.query(model.User)
+        #c.num_users = q.count()
+
+        q = q.order_by(model.User.__table__.c.username)
+
+
+        #pageno = (form_data['page'] if form_data['page'] else 1) - 1
+        #perpage = form_data['perpage'] if form_data['perpage'] else int(pylons.config.get('userlist.default_perpage',12))
+        c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=num_pages, perpage=perpage, radius=paging_radius)
+
+        c.users = q.all()
+
+        return render('/user/memberlist.mako')
     
     def settings(self):
         """Form for editing user settings.  Eventually."""

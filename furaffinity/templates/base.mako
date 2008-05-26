@@ -40,7 +40,7 @@
             <li>${h.link_to("Submit Art", h.url(controller='gallery', action='submit', username=c.auth_user.username))}</li>
         </ul>
         % if c.auth_user.can('administrate'):
-        <p id="superpowers">${h.link_to("Activate Superpowers", h.url(controller='admin'), class_='admin')}</p>
+        <p id="superpowers">${h.link_to("Activate Superpowers", h.url(controller='admin', action='auth'), class_='admin')}</p>
         % endif
         <ul id="messages">
         <% note_count = c.auth_user.unread_note_count() %>

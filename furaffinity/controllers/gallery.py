@@ -125,6 +125,8 @@ class GalleryController(BaseController):
         table_object = model.Submission.__table__
         
         table_object = table_object.join(model.UserSubmission.__table__, model.UserSubmission.__table__.c.submission_id == model.Submission.__table__.c.id)
+        table_object = table_object.join(model.User.__table__, model.UserSubmission.__table__.c.user_id == model.User.__table__.c.id)
+        #table_object = table_object.join(model.DerivedSubmission.__table__, model.DerivedSubmission.__table__.c.submission_id == model.Submission.__table__.c.id)
         
         for tag_object in positive_tags:
             tag_id = int(tag_object)
@@ -150,6 +152,7 @@ class GalleryController(BaseController):
                     )
                 )
         
+        table_object = table_object.outerjoin(model.DerivedSubmission.__table__, and_(model.Submission.__table__.c.id==model.DerivedSubmission.__table__.c.submission_id, model.DerivedSubmission.__table__.c.derivetype == 'thumb'))
         #print str(q)
         tag_where_object = and_(*[alias.c.tag_id == None for alias in negative_aliases]) if negative_aliases else 1
         if c.page_owner:
@@ -157,31 +160,41 @@ class GalleryController(BaseController):
         else:
             owner_where_object = model.UserSubmission.c.ownership_status == 'primary'
         review_status_where_object = model.UserSubmission.c.review_status == 'normal'
-        temp_where = model.DerivedSubmission.__table__.c.id != None
         
         final_where_object = and_(tag_where_object, owner_where_object, review_status_where_object)
             
         
-        q = table_object.select(final_where_object, use_labels=True)
+        q = table_object.select(final_where_object, use_labels=True).apply_labels()
         
         if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
             q = q.prefix_with('SQL_CALC_FOUND_ROWS')
         
         q = q.limit(perpage).offset(perpage*pageno)
         
+        results = model.Session.execute(q)
+
+        out = '<pre>'
+        for r in results:
+            out += "%s\n"%r
+        return "%s</pre>"%out
+
+        '''
         model.Session.bind.echo = True
         orm_q = model.Session.query(model.Submission).from_statement(q)
-        orm_q = orm_q.options(eagerload('derived_submission'))
-        orm_q = orm_q.options(eagerload('user_submission'))
-        orm_q = orm_q.options(eagerload('user_submission.user'))
-        
+        #orm_q = orm_q.options(eagerload('derived_submission'))
+        #orm_q = orm_q.options(eagerload('user_submission'))
+        #orm_q = orm_q.options(eagerload('user_submission.user'))
+       
+        orm_q = orm_q.options(eagerload('thumbnail'))
         c.submissions = orm_q.all()
-        model.Session.bind.echo = False
+        #model.Session.bind.echo = False
+        '''
 
         
         if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
             number_of_submissions = model.Session.execute(sqlalchemy.sql.text('SELECT FOUND_ROWS()')).fetchone()[0]
         else:
+            # If you want to use a non-MySQL database in production, FIX THIS.
             number_of_submissions = 1000000
         
         num_pages = int(math.ceil(float(number_of_submissions) / float(perpage)))
@@ -193,6 +206,13 @@ class GalleryController(BaseController):
             
         c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=num_pages, perpage=perpage, radius=paging_radius)
         
+        out = ''
+        for s in c.submissions:
+            out += "%s %s\n" % (s.id, False and s.thumbnail.derivetype)
+        blah = len(c.query_log.queries)
+        for s in c.submissions:
+            out += "%s %s\n" % (s.id, s.thumbnail.derivetype)
+        #return "<pre>%s\n\n%d\n%d</pre>"%(out,blah,len(c.query_log.queries))
         return render('/gallery/index.mako')
         
 

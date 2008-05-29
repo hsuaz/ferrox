@@ -737,6 +737,7 @@ UserSubmission.user = relation(User, backref='user_submission')
 
 Submission.editlog = relation(EditLog)
 Submission.comments = relation(Comment, secondary=SubmissionComment.__table__, backref='submission', order_by=Comment.left)
+#Submission.thumbnail = relation(DerivedSubmission, primaryjoin=and_(Submission.__table__.c.id==DerivedSubmission.__table__.c.submission_id, DerivedSubmission.__table__.c.derivetype == 'thumb'), uselist=False)
 
 DerivedSubmission.submission = relation(Submission, backref='derived_submission', lazy=False)
 
@@ -750,4 +751,5 @@ JournalEntry.user = relation(User, backref='journals')
 Comment.user = relation(User, backref='comments')
 
 Tag.submissions = relation(Submission, backref='tags', secondary=SubmissionTag.__table__)
+
 

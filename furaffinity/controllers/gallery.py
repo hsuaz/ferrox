@@ -62,8 +62,11 @@ def get_submission(id, eagerloads=[]):
 class GalleryController(BaseController):
 
     def index(self, username=None):
-        """Gallery index, either globally or for one user."""
+        """Gallery index, either globally or for one user.
         
+        This is huge, so I'mma comment it."""
+        
+        # Preliminaries
         c.javascripts = ['gallery']
 
         if username != None:
@@ -79,10 +82,14 @@ class GalleryController(BaseController):
 
         c.form = FormGenerator()
         
+        pageno = (form_data['page'] if form_data['page'] else 1) - 1
+        perpage = form_data['perpage'] if form_data['perpage'] else int(pylons.config.get('gallery.default_perpage',12))
+        
+        # Retrieve tags from the database, if needed
         positive_tags = []
         negative_tags = []
         if ( form_data['tags'] == form_data['original_tags'] ):
-            # use compiled tag string
+            # use compiled tag string (faster because it's by tag.id)
             (positive_tag_strings, negative_tag_strings) = tagging.break_apart_tag_string(form_data['compiled_tags'], include_negative=True)
             
             for x in positive_tag_strings:
@@ -98,7 +105,7 @@ class GalleryController(BaseController):
                     pass
                     
         else:
-            # recompile tag string
+            # recompile tag string (slower because it's by tag.text)
             (positive_tag_strings, negative_tag_strings) = tagging.break_apart_tag_string(form_data['tags'], include_negative=True)
             
             for x in positive_tag_strings:
@@ -112,20 +119,22 @@ class GalleryController(BaseController):
                     negative_tags.append(model.Tag.get_by_text(x))
                 except sqlalchemy.exceptions.InvalidRequestError:
                     pass
-        
-        pageno = (form_data['page'] if form_data['page'] else 1) - 1
-        perpage = form_data['perpage'] if form_data['perpage'] else int(pylons.config.get('gallery.default_perpage',12))
-        
+
+        # Done making tag strings, print them out to the form.
         c.form.defaults['compiled_tags'] = tagging.make_compiled_tag_string(positive_tags, negative_tags)
         c.form.defaults['original_tags'] = c.form.defaults['tags'] = tagging.make_tag_string(positive_tags, negative_tags)
         c.form.defaults['perpage'] = perpage
 
-        #q = model.Session.query(model.Submission)
-
+        # The big query that better by bleeping efficient.
+        # It's not using sqlalchemy.orm because we can't quite get it to be efficient.
         table_object = model.Submission.__table__
         
+        #   ... join user_submissions and users. Will filter later.
         table_object = table_object.join(model.UserSubmission.__table__, model.UserSubmission.__table__.c.submission_id == model.Submission.__table__.c.id)
-        
+        table_object = table_object.join(model.User.__table__, model.UserSubmission.__table__.c.user_id == model.User.__table__.c.id)
+
+        #   ... for every positive tag, join the submission_tags table
+        # JOIN submission_tags st ON submission.id = st.submission_id AND st.tag_id == (tag id from list)
         for tag_object in positive_tags:
             tag_id = int(tag_object)
             alias = model.SubmissionTag.__table__.alias()
@@ -137,6 +146,8 @@ class GalleryController(BaseController):
                     )
             )
 
+        #   ... for every negative tag, outer join the submission_tags table. Will filter later.
+        # LEFT OUTER JOIN submission_tags st ON submission.id = st.submission_id AND st.tag_id == (tag id from list)
         negative_aliases = []
         for tag_object in negative_tags:
             tag_id = int(tag_object)
@@ -149,50 +160,90 @@ class GalleryController(BaseController):
                     alias.c.tag_id == tag_id
                     )
                 )
-        
-        #print str(q)
+
+        #   ... outer join the derived submission table, but only on thumbnail.
+        # outer join because the submission isn't garunteed to have a thumbnail.
+        table_object = table_object.outerjoin(model.DerivedSubmission.__table__, and_(model.Submission.__table__.c.id==model.DerivedSubmission.__table__.c.submission_id, model.DerivedSubmission.__table__.c.derivetype == 'thumb'))
+
+        #   ... filter out negative tags. This is why it has to be outer join.
+        # Since it's outer join, tags that aren't present will be NULL. Since these are tags we don't want, WHERE st.tag_id == NULL
         tag_where_object = and_(*[alias.c.tag_id == None for alias in negative_aliases]) if negative_aliases else 1
+        
+        #   ... filter out other extra user_submissions.
+        # Since the users:user_submissions relationship is one:many, we need to insure that we only get one back.
         if c.page_owner:
             owner_where_object = model.UserSubmission.c.user_id == c.page_owner.id
         else:
             owner_where_object = model.UserSubmission.c.ownership_status == 'primary'
+
+        #   ... also limit by deletion status check deletion status
         review_status_where_object = model.UserSubmission.c.review_status == 'normal'
-        temp_where = model.DerivedSubmission.__table__.c.id != None
         
+        #   ... finally, bring all the where clauses into one object
         final_where_object = and_(tag_where_object, owner_where_object, review_status_where_object)
             
-        
-        q = table_object.select(final_where_object, use_labels=True)
+        #   ... construct and execute the query. (And count the total number of images that the query would return without LIMIT/OFFSET.)
+        q = table_object.select(final_where_object, use_labels=True).apply_labels()
         
         if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
             q = q.prefix_with('SQL_CALC_FOUND_ROWS')
         
         q = q.limit(perpage).offset(perpage*pageno)
         
-        model.Session.bind.echo = True
-        orm_q = model.Session.query(model.Submission).from_statement(q)
-        orm_q = orm_q.options(eagerload('derived_submission'))
-        orm_q = orm_q.options(eagerload('user_submission'))
-        orm_q = orm_q.options(eagerload('user_submission.user'))
-        
-        c.submissions = orm_q.all()
-        model.Session.bind.echo = False
+        results = model.Session.execute(q)
 
-        
         if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
             number_of_submissions = model.Session.execute(sqlalchemy.sql.text('SELECT FOUND_ROWS()')).fetchone()[0]
         else:
+            # If you want to use a non-MySQL database in production, FIX THIS.
             number_of_submissions = 1000000
         
+        # Now that we have all the paging data, we can do the final number crunch.
         num_pages = int(math.ceil(float(number_of_submissions) / float(perpage)))
         
-        if pylons.config.has_key('paging.radius'):
-            paging_radius = int(pylons.config['paging.radius'])
-        else:
-            paging_radius = 3
+        paging_radius = int(pylons.config.get('paging.radius', 3))
             
         c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=num_pages, perpage=perpage, radius=paging_radius)
+
+        # Since this isn't the only action to use /gallery/index.mako and all the other actions that use it use sqlalchemy.orm, 
+        # we're going to make rows look like objects using some good, old fashion Pythonic magic.
+        # This isn't a pretty hack. Do yourself a favor and don't read it.
+        class ObjectEmulator:
+            def __init__(self, row, prefix):
+                self.row = row
+                self.prefix = prefix
+
+            def __eq__(self, other):
+                # this can only compare to None
+                if other == None:
+                    return self.id == None
+                else:
+                    raise ValueError('You must override __eq__ and __ne__ to compare to anything other than id == None')
+
+            def __ne__(self, other):
+                return not self.__eq__(other)
+
+            def __getattr__(self, name):
+                return self.row["%s_%s"%(self.prefix, name)]
+
+        class SubmissionEmulator(ObjectEmulator):
+            def __init__(self, row, prefix):
+                ObjectEmulator.__init__(self, row, prefix)
+
+            def get_derived_by_type(self, type):
+                if type=='thumb':
+                    return ObjectEmulator(self.row, model.DerivedSubmission.__table__.name)
+
+            def __getattr__(self, name):
+                if name == 'primary_artist':
+                    return ObjectEmulator(self.row, model.User.__table__.name)
+                elif name == 'thumbnail':
+                    return None
+                else:
+                    return ObjectEmulator.__getattr__(self, name)
         
+        # And finally, convert our results to "objects" and stuff them into the template.
+        c.submissions = [SubmissionEmulator(r, model.Submission.__table__.name) for r in results]
         return render('/gallery/index.mako')
         
 

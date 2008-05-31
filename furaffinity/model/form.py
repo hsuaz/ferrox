@@ -159,3 +159,7 @@ class WatchForm(formencode.Schema):
     journals = validators.Bool(if_empty=True, if_missing=False)
     submissions = validators.Bool(if_empty=True, if_mission=False)
 
+class MemberListPagingForm(formencode.Schema):
+    page = formencode.validators.Int(not_empty=False, if_missing=0)
+    perpage = formencode.validators.Int(not_empty=False, if_missing=0)
+

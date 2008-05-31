@@ -4,7 +4,10 @@ from furaffinity.lib import pagination
 from furaffinity.model import form
 from furaffinity.lib.formgen import FormGenerator
 
+import pylons.config
 import logging
+import math
+import formencode
 
 log = logging.getLogger(__name__)
 
@@ -231,16 +234,23 @@ class UserController(BaseController):
         abort(404)
 
     def memberlist(self, pageno=1):
+        validator = model.form.MemberListPagingForm()
+        try:
+            form_data = validator.to_python(request.params)
+        except formencode.Invalid, error:
+            return error
+
         q = model.Session.query(model.User)
-        #c.num_users = q.count()
+        num_users = q.count()
 
         q = q.order_by(model.User.__table__.c.username)
 
 
-        #pageno = (form_data['page'] if form_data['page'] else 1) - 1
-        #perpage = form_data['perpage'] if form_data['perpage'] else int(pylons.config.get('userlist.default_perpage',12))
-        c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=num_pages, perpage=perpage, radius=paging_radius)
+        pageno = (form_data['page'] if form_data['page'] else 1) - 1
+        perpage = form_data['perpage'] if form_data['perpage'] else int(pylons.config.get('userlist.default_perpage',12))
+        c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=int(math.ceil(float(num_users)/float(perpage))), perpage=perpage, radius=int(pylons.config.get('paging.radius', 3)))
 
+        q = q.limit(perpage).offset(perpage*pageno)
         c.users = q.all()
 
         return render('/user/memberlist.mako')

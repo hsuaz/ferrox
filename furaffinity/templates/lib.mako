@@ -121,7 +121,7 @@
 </div>
 </%def>
 
-<%def name="user_link(user)">
+<%def name="user_link(user, care_about_online=True)">
     <span class="userlink">
         <a href="${h.url_for(controller='user', action='view', username=user.username)}"><img src="/images/foxy.gif" alt="[user]"/></a>
         <a href="${h.url_for(controller='user', action='view', username=user.username)}">${user.username}</a>
@@ -137,7 +137,7 @@
                 <a href="${h.url_for(controller='gallery', action='index', username=user.username)}">Gallery</a> |
                 <a href="${h.url_for(controller='journal', action='index', username=user.username)}">Journal</a>
             </div>
-            % if user.is_online():
+            % if not care_about_online or user.is_online():
             <div class="online">online</div>
             % else:
             <div class="offline">offline</div>

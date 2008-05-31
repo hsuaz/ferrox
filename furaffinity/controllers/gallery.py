@@ -201,10 +201,7 @@ class GalleryController(BaseController):
         # Now that we have all the paging data, we can do the final number crunch.
         num_pages = int(math.ceil(float(number_of_submissions) / float(perpage)))
         
-        if pylons.config.has_key('paging.radius'):
-            paging_radius = int(pylons.config['paging.radius'])
-        else:
-            paging_radius = 3
+        paging_radius = int(pylons.config.get('paging.radius', 3))
             
         c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=num_pages, perpage=perpage, radius=paging_radius)
 

@@ -98,7 +98,7 @@ def get_submission(id, eagerloads=[]):
 
 class GalleryController(BaseController):
 
-    def index(self, username=None, watchstream=False):
+    def index(self, username=None, watchstream=False, favorites=False):
         """Gallery index, either globally or for one user.
         
         This is huge, so I'mma comment it."""
@@ -208,7 +208,7 @@ class GalleryController(BaseController):
         
         #   ... filter out other extra user_submissions.
         # Since the users:user_submissions relationship is one:many, we need to insure that we only get one back.
-        if c.page_owner and not watchstream:
+        if c.page_owner and not watchstream and not favorites:
             owner_where_object = model.UserSubmission.c.user_id == c.page_owner.id
         else:
             owner_where_object = model.UserSubmission.c.ownership_status == 'primary'
@@ -234,6 +234,14 @@ class GalleryController(BaseController):
                 # We don't even need to bother querying.
                 c.submission = []
                 return render('/gallery/index.mako')
+            
+        #   ... grab c.page_owner's relationships and add them to the where clause
+        if favorites:
+            table_object = table_object.join(model.FavoriteSubmission.__table__, and_(
+                model.Submission.c.id == model.FavoriteSubmission.c.submission_id,
+                model.User.c.id == model.FavoriteSubmission.c.user_id
+                )
+            )
             
         #   ... construct and execute the query. (And count the total number of images that the query would return without LIMIT/OFFSET.)
         q = table_object.select(final_where_object, use_labels=True).apply_labels()
@@ -267,14 +275,12 @@ class GalleryController(BaseController):
     #@check_perm('can_favorite')
     def favorite(self, id=None, username=None):
         submission = get_submission(id)
-        favorite_submission = submission.is_favorite_submission(c.auth_user)
 
-        if favorite_submission:
-            model.Session.delete(favorite_submission)
+        if submission in c.auth_user.favorite_submissions:
+            c.auth_user.favorite_submissions.remove(submission)
         else:
-            favorite_submission = model.FavoriteSubmission(c.auth_user, submission)
-            model.Session.save(favorite_submission)
-        
+            c.auth_user.favorite_submissions.append(submission)
+
         model.Session.commit()
         h.redirect_to(h.url_for(controller='gallery', action='view', id=id, username=username))
     

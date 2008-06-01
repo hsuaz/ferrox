@@ -7,7 +7,15 @@
 
     <div class="time">Submitted on ${h.format_time(c.submission.time)}</div>
     <div class="artist">by ${lib.user_link(c.submission.primary_artist)}</div>
-    <div class="buttons FINISHME">buttons here lol</div>
+    <div class="buttons">
+    % if c.auth_user:
+        % if c.submission in c.auth_user.favorite_submissions:
+            ${h.link_to('Remove from favorites', h.url_for(controller='gallery', action='favorite', id=c.submission.id, username=c.submission.primary_artist.username))}
+        % else:
+            ${h.link_to('Add to favorites', h.url_for(controller='gallery', action='favorite', id=c.submission.id, username=c.submission.primary_artist.username))}
+        % endif
+    % endif
+    </div>
     <div class="tags">
     % for tag in c.submission.tags:
         ${tag.text}

@@ -60,6 +60,7 @@ def make_map():
     map.connect('/users/:username/notes/:id/forward', controller='notes', action='forward')
 
     map.connect('/users/:username/gallery/watchstream', controller='gallery', action='index', watchstream=True)
+    map.connect('/users/:username/gallery/favorites', controller='gallery', action='index', favorites=True)
     map.connect('/users/:username/gallery', controller='gallery', action='index')
     map.connect('/users/:username/gallery/submit', controller='gallery', action='submit')
     map.connect('/users/:username/gallery/submit_upload', controller='gallery', action='submit_upload', **require_post)

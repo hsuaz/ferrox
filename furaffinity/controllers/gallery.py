@@ -42,6 +42,43 @@ log = logging.getLogger(__name__)
 #thumbnail_size = 120
 #halfview_size = 300
 
+# Since this isn't the only action to use /gallery/index.mako and all the other actions that use it use sqlalchemy.orm, 
+# we're going to make rows look like objects using some good, old fashion Pythonic magic.
+# This isn't a pretty hack. Do yourself a favor and don't read it.
+class ObjectEmulator:
+    def __init__(self, row, prefix):
+        self.row = row
+        self.prefix = prefix
+
+    def __eq__(self, other):
+        # this can only compare to None
+        if other == None:
+            return self.id == None
+        else:
+            raise ValueError('You must override __eq__ and __ne__ to compare to anything other than id == None')
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __getattr__(self, name):
+        return self.row["%s_%s"%(self.prefix, name)]
+
+class SubmissionEmulator(ObjectEmulator):
+    def __init__(self, row, prefix):
+        ObjectEmulator.__init__(self, row, prefix)
+
+    def get_derived_by_type(self, type):
+        if type=='thumb':
+            return ObjectEmulator(self.row, model.DerivedSubmission.__table__.name)
+
+    def __getattr__(self, name):
+        if name == 'primary_artist':
+            return ObjectEmulator(self.row, model.User.__table__.name)
+        elif name == 'thumbnail':
+            return None
+        else:
+            return ObjectEmulator.__getattr__(self, name)
+
 def get_submission(id, eagerloads=[]):
     """Fetches a submission, and dies nicely if it can't be found."""
     q = model.Session.query(model.Submission)
@@ -61,7 +98,7 @@ def get_submission(id, eagerloads=[]):
 
 class GalleryController(BaseController):
 
-    def index(self, username=None):
+    def index(self, username=None, watchstream=False):
         """Gallery index, either globally or for one user.
         
         This is huge, so I'mma comment it."""
@@ -171,20 +208,38 @@ class GalleryController(BaseController):
         
         #   ... filter out other extra user_submissions.
         # Since the users:user_submissions relationship is one:many, we need to insure that we only get one back.
-        if c.page_owner:
+        if c.page_owner and not watchstream:
             owner_where_object = model.UserSubmission.c.user_id == c.page_owner.id
         else:
             owner_where_object = model.UserSubmission.c.ownership_status == 'primary'
 
+
+
         #   ... also limit by deletion status check deletion status
         review_status_where_object = model.UserSubmission.c.review_status == 'normal'
-        
+       
         #   ... finally, bring all the where clauses into one object
         final_where_object = and_(tag_where_object, owner_where_object, review_status_where_object)
+        
+        #   ... grab c.page_owner's relationships and add them to the where clause
+        if watchstream:
+            watchstream_where = []
+            for r in c.page_owner.relationships:
+                if 'watching_submissions' in r.relationship:
+                    watchstream_where.append(model.UserSubmission.c.user_id == r.to_user_id)
+            if watchstream_where:
+                final_where_object = and_(final_where_object, or_(*watchstream_where))
+            else:
+                # This means that c.page_owner isn't watching anyone.
+                # We don't even need to bother querying.
+                c.submission = []
+                return render('/gallery/index.mako')
             
         #   ... construct and execute the query. (And count the total number of images that the query would return without LIMIT/OFFSET.)
         q = table_object.select(final_where_object, use_labels=True).apply_labels()
         
+        q = q.order_by(model.Submission.c.time.desc())
+
         if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
             q = q.prefix_with('SQL_CALC_FOUND_ROWS')
         
@@ -204,48 +259,11 @@ class GalleryController(BaseController):
         paging_radius = int(pylons.config.get('paging.radius', 3))
             
         c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=num_pages, perpage=perpage, radius=paging_radius)
-
-        # Since this isn't the only action to use /gallery/index.mako and all the other actions that use it use sqlalchemy.orm, 
-        # we're going to make rows look like objects using some good, old fashion Pythonic magic.
-        # This isn't a pretty hack. Do yourself a favor and don't read it.
-        class ObjectEmulator:
-            def __init__(self, row, prefix):
-                self.row = row
-                self.prefix = prefix
-
-            def __eq__(self, other):
-                # this can only compare to None
-                if other == None:
-                    return self.id == None
-                else:
-                    raise ValueError('You must override __eq__ and __ne__ to compare to anything other than id == None')
-
-            def __ne__(self, other):
-                return not self.__eq__(other)
-
-            def __getattr__(self, name):
-                return self.row["%s_%s"%(self.prefix, name)]
-
-        class SubmissionEmulator(ObjectEmulator):
-            def __init__(self, row, prefix):
-                ObjectEmulator.__init__(self, row, prefix)
-
-            def get_derived_by_type(self, type):
-                if type=='thumb':
-                    return ObjectEmulator(self.row, model.DerivedSubmission.__table__.name)
-
-            def __getattr__(self, name):
-                if name == 'primary_artist':
-                    return ObjectEmulator(self.row, model.User.__table__.name)
-                elif name == 'thumbnail':
-                    return None
-                else:
-                    return ObjectEmulator.__getattr__(self, name)
         
         # And finally, convert our results to "objects" and stuff them into the template.
         c.submissions = [SubmissionEmulator(r, model.Submission.__table__.name) for r in results]
         return render('/gallery/index.mako')
-        
+
 
     @check_perm('submit_art')
     def submit(self):

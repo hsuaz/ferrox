@@ -235,16 +235,15 @@ class User(BaseTable):
 
         return note_q
 
-    def get_or_create_relationship(self, user):
+    def get_or_create_relationship(self, user, nocreate=False):
         need_new_r = True
         r = None
         for r in self.relationships:
             if r.target == user:
                 need_new_r = False
-                print 'found relationship'
                 break
 
-        if need_new_r:
+        if need_new_r and not nocreate:
             print 'did not find relationship'
             r = UserRelationship()
             r.target = user
@@ -252,7 +251,6 @@ class User(BaseTable):
             self.relationships.append(r)
             Session.update(self)
 
-        print r
         return r
 
 class UserRelationship(BaseTable):

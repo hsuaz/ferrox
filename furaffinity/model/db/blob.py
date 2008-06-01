@@ -488,6 +488,24 @@ class Submission(BaseTable):
                 store.send_file(d.mogile_key, blobstream)
                 blobstream.close()
 
+    '''
+    def is_favorite_submission(self, user):
+        q = Session.query(FavoriteSubmission)
+        q =  q.filter(User.c.id == user.id)
+        q =  q.filter(Submission.c.id == self.id)
+        try:
+            return q.one()
+        except InvalidRequestError:
+            return None
+    '''
+        
+
+class FavoriteSubmission(BaseTable):
+    __tablename__       = 'favorite_submissions'
+    user_id             = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
+    submission_id       = Column(types.Integer, ForeignKey('submissions.id'), primary_key=True)
+
+Submission.favorited_by = relation(User, secondary=FavoriteSubmission.__table__, backref='favorite_submissions')
 
 class DerivedSubmission(BaseTable):
     __tablename__       = 'derived_submissions'

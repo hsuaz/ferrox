@@ -15,6 +15,7 @@ import sqlalchemy.exceptions
 from sqlalchemy.orm import eagerload
 from tempfile import TemporaryFile
 import datetime
+from sqlalchemy import and_, or_, not_
 
 import time, random
 import math
@@ -54,7 +55,7 @@ def get_journal(id=None, eagerloads=[]):
 
 
 class JournalController(BaseController):
-    def index(self, username=None, month=None, year=None, day=None):
+    def index(self, username=None, month=None, year=None, day=None, watchstream=False):
         """Journal index for a user."""
         if username:
             user_q = model.Session.query(model.User)
@@ -90,12 +91,35 @@ class JournalController(BaseController):
         pageno = int(request.params.get('page',1)) - 1
         
         journal_q = model.Session.query(model.JournalEntry)
-        if c.page_owner:
+        if c.page_owner and not watchstream:
             journal_q = journal_q.filter_by(user_id = c.page_owner.id)
         journal_q = journal_q.filter_by(status = 'normal')
         journal_q = journal_q.filter(model.JournalEntry.c.time >= earliest).filter(model.JournalEntry.c.time < latest)
+
+
+        #   ... grab c.page_owner's relationships and add them to the where clause
+        if watchstream:
+            watchstream_where = []
+            for r in c.page_owner.relationships:
+                print r.target.display_name,
+                if 'watching_journals' in r.relationship:
+                    print '  yes'
+                    watchstream_where.append(model.UserSubmission.c.user_id == r.to_user_id)
+                else:
+                    print '   no'
+            if watchstream_where:
+                journal_q = journal_q.filter(or_(*watchstream_where))
+            else:
+                # This means that c.page_owner isn't watching anyone.
+                # We don't even need to bother querying.
+                c.error_text = 'No journals found.'
+                c.error_title = "No journals found. User '%s' isn't watching anyone."%c.page_owner.display_name
+                return render('/error.mako')
+
         journal_q = journal_q.order_by(model.JournalEntry.c.time.desc())
+        model.Session.bind.echo = True
         c.journals = journal_q.limit(max_per_page).offset(pageno * max_per_page).all()
+        model.Session.bind.echo = False
         num_journals = journal_q.count()
         
         c.title_only = False

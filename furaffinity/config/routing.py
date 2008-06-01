@@ -59,6 +59,8 @@ def make_map():
     map.connect('/users/:username/notes/:id/reply', controller='notes', action='reply')
     map.connect('/users/:username/notes/:id/forward', controller='notes', action='forward')
 
+    map.connect('/users/:username/gallery/watchstream', controller='gallery', action='index', watchstream=True)
+    map.connect('/users/:username/gallery/favorites', controller='gallery', action='index', favorites=True)
     map.connect('/users/:username/gallery', controller='gallery', action='index')
     map.connect('/users/:username/gallery/submit', controller='gallery', action='submit')
     map.connect('/users/:username/gallery/submit_upload', controller='gallery', action='submit_upload', **require_post)
@@ -68,10 +70,12 @@ def make_map():
     map.connect('/users/:username/gallery/:id/delete', controller='gallery', action='delete')
     map.connect('/users/:username/gallery/:id/delete_commit', controller='gallery', action='delete_commit', **require_post)
     map.connect('/users/:username/gallery/:id/editlog', controller='editlog', action='submission')
+    map.connect('/users/:username/gallery/:id/favorite', controller='gallery', action='favorite')
 
     map.connect('/gallery', controller='gallery', action='index')
     map.connect('/download/:filename', controller='gallery', action='file')
 
+    map.connect('/users/:username/journals/watchstream', controller='journal', action='index', watchstream=True)
     map.connect('/users/:username/journals', controller='journal', action='index')
     map.connect('/users/:username/journals/post', controller='journal', action='post')
     map.connect('/users/:username/journals/post_commit', controller='journal', action='post_commit', **require_post)

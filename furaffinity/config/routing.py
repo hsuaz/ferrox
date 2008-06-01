@@ -73,6 +73,7 @@ def make_map():
     map.connect('/gallery', controller='gallery', action='index')
     map.connect('/download/:filename', controller='gallery', action='file')
 
+    map.connect('/users/:username/journals/watchstream', controller='journal', action='index', watchstream=True)
     map.connect('/users/:username/journals', controller='journal', action='index')
     map.connect('/users/:username/journals/post', controller='journal', action='post')
     map.connect('/users/:username/journals/post_commit', controller='journal', action='post_commit', **require_post)

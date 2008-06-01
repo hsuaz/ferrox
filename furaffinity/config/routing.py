@@ -69,6 +69,7 @@ def make_map():
     map.connect('/users/:username/gallery/:id/delete', controller='gallery', action='delete')
     map.connect('/users/:username/gallery/:id/delete_commit', controller='gallery', action='delete_commit', **require_post)
     map.connect('/users/:username/gallery/:id/editlog', controller='editlog', action='submission')
+    map.connect('/users/:username/gallery/:id/favorite', controller='gallery', action='favorite')
 
     map.connect('/gallery', controller='gallery', action='index')
     map.connect('/download/:filename', controller='gallery', action='file')

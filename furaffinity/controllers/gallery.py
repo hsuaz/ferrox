@@ -264,7 +264,20 @@ class GalleryController(BaseController):
         c.submissions = [SubmissionEmulator(r, model.Submission.__table__.name) for r in results]
         return render('/gallery/index.mako')
 
+    #@check_perm('can_favorite')
+    def favorite(self, id=None, username=None):
+        submission = get_submission(id)
+        favorite_submission = submission.is_favorite_submission(c.auth_user)
 
+        if favorite_submission:
+            model.Session.delete(favorite_submission)
+        else:
+            favorite_submission = model.FavoriteSubmission(c.auth_user, submission)
+            model.Session.save(favorite_submission)
+        
+        model.Session.commit()
+        h.redirect_to(h.url_for(controller='gallery', action='view', id=id, username=username))
+    
     @check_perm('submit_art')
     def submit(self):
         """Form for uploading new art."""

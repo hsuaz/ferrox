@@ -221,19 +221,15 @@ class GalleryController(BaseController):
         #   ... finally, bring all the where clauses into one object
         final_where_object = and_(tag_where_object, owner_where_object, review_status_where_object)
         
-        #   ... grab c.page_owner's relationships and add them to the where clause
+        #   ... JOIN the relationship table to get people on c.page_owner's watch list.
         if watchstream:
-            watchstream_where = []
-            for r in c.page_owner.relationships:
-                if 'watching_submissions' in r.relationship:
-                    watchstream_where.append(model.UserSubmission.c.user_id == r.to_user_id)
-            if watchstream_where:
-                final_where_object = and_(final_where_object, or_(*watchstream_where))
-            else:
-                # This means that c.page_owner isn't watching anyone.
-                # We don't even need to bother querying.
-                c.submission = []
-                return render('/gallery/index.mako')
+            #return "<pre>%s</pre>"%dir(model.UserRelationship.c.relationship.type)
+            table_object = table_object.join(model.UserRelationship.__table__, and_(
+                model.UserSubmission.c.user_id == model.UserRelationship.c.to_user_id,
+                c.page_owner.id == model.UserRelationship.c.from_user_id,
+                "(%s & %d) > 0"%(model.UserRelationship.c.relationship, model.UserRelationship.c.relationship.type.bitfield('watching_submissions'))
+                )
+            )
             
         #   ... grab c.page_owner's relationships and add them to the where clause
         if favorites:

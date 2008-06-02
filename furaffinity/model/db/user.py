@@ -5,7 +5,7 @@ import furaffinity.lib.bbcode_for_fa as bbcode
 
 from sqlalchemy import Column, ForeignKey, types, sql
 from sqlalchemy.orm import relation
-from sqlalchemy.databases.mysql import MSInteger
+from sqlalchemy.databases.mysql import MSInteger, MSSet
 from sqlalchemy.exceptions import InvalidRequestError
 
 from datetime import datetime, timedelta
@@ -27,6 +27,7 @@ else:
 
 note_status_type = Enum(['unread','read'])
 user_relationship_type = Set(['watching_submissions','watching_journals','friend_to','blocking'])
+#user_relationship_type = MSSet("'watching_submissions'","'watching_journals'","'friend_to'","'blocking'")
 
 ### Dummy classes
 

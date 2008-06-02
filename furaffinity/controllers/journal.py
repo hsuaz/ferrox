@@ -117,9 +117,7 @@ class JournalController(BaseController):
                 return render('/error.mako')
 
         journal_q = journal_q.order_by(model.JournalEntry.c.time.desc())
-        model.Session.bind.echo = True
         c.journals = journal_q.limit(max_per_page).offset(pageno * max_per_page).all()
-        model.Session.bind.echo = False
         num_journals = journal_q.count()
         
         c.title_only = False

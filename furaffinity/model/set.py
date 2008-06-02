@@ -66,4 +66,13 @@ class Set(types.TypeDecorator):
     
         return x == y
 
+    def bitfield(self, *args):
+        test_bitfield = 0
+        for value in args:
+            if value not in self.values:
+                raise exceptions.AssertionError('"%s" not in Set.values' % v)
+            test_bitfield |= 1 << self.values.index(value)
+        return test_bitfield
+
+
 

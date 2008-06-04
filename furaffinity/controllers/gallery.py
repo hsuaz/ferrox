@@ -16,7 +16,6 @@ import mimetypes
 from sqlalchemy import and_, or_, not_, sql
 import sqlalchemy.exceptions
 from sqlalchemy.orm import eagerload, eagerload_all
-#from sqlalchemy.sql.expression import prefix_with
 from tempfile import TemporaryFile
 import time
 import math
@@ -37,10 +36,6 @@ else:
 
 
 log = logging.getLogger(__name__)
-
-#fullfile_size = 1280
-#thumbnail_size = 120
-#halfview_size = 300
 
 # Since this isn't the only action to use /gallery/index.mako and all the other actions that use it use sqlalchemy.orm, 
 # we're going to make rows look like objects using some good, old fashion Pythonic magic.
@@ -98,29 +93,67 @@ def get_submission(id, eagerloads=[]):
 
 class GalleryController(BaseController):
 
-    def index(self, username=None, watchstream=False, favorites=False):
-        """Gallery index, either globally or for one user.
+    def _display(self, joined_tables=None, where=None):
+        """Generic backend for viewing a gallery.
         
-        This is huge, so I'mma comment it."""
+        Handles default tag filtering, as well as a set of default controls
+        like further filtering, sorting, and pagination.
         
-        # Preliminaries
-        c.javascripts = ['gallery']
+        Pass a pre-joined `joined_tables` sqla.sql object to filter further
+        before this method does its mucking around."""
 
-        if username != None:
-            c.page_owner = model.User.get_by_name(username)
-        else:
-            c.page_owner = None
+        ### SQL
+        # Join whatever we're given to some other necessary tables
+        if not joined_tables:
+            joined_tables = model.Submission.__table__
 
+        # Form validation
+        c.form = FormGenerator()
         validator = model.form.TagFilterForm()
         try:
             form_data = validator.to_python(request.params)
         except formencode.Invalid, error:
             return error
 
-        c.form = FormGenerator()
+        # Pagination
+        pageno = form_data.get('page', 1) - 1
+        perpage = form_data.get('perpage',
+                      pylons.config.get('gallery.default_perpage', 12))
+
+        #q = joined_tables.select(where) \
+        q = sql.select([model.Submission.id], where, from_obj=joined_tables) \
+            .order_by(model.Submission.time.desc()) \
+            .limit(perpage).offset(perpage * pageno)
+
+        if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
+            q = q.prefix_with('SQL_CALC_FOUND_ROWS')
+
+        submission_ids = [row.id for row in model.Session.execute(q)]
+
+        if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
+            submission_ct = model.Session.execute(
+                                sqlalchemy.sql.text('SELECT FOUND_ROWS()')) \
+                            .fetchone()[0]
+
+        print "sub_ct: ", submission_ct
+
+        # Actually fetch submissions
+        # XXX TODO eager loads
+        c.submissions = model.Session.query(model.Submission) \
+                        .filter(model.Submission.id.in_(submission_ids))
+
+        # Preliminaries
+        c.javascripts = ['gallery']
+
+
+
+        return render('/gallery/index.mako')
+
+
+
+
+
         
-        pageno = (form_data['page'] if form_data['page'] else 1) - 1
-        perpage = form_data['perpage'] if form_data['perpage'] else int(pylons.config.get('gallery.default_perpage',12))
         
         # Retrieve tags from the database, if needed
         positive_tags = []
@@ -164,12 +197,7 @@ class GalleryController(BaseController):
 
         # The big query that better by bleeping efficient.
         # It's not using sqlalchemy.orm because we can't quite get it to be efficient.
-        table_object = model.Submission.__table__
         
-        #   ... join user_submissions and users. Will filter later.
-        table_object = table_object.join(model.UserSubmission.__table__, model.UserSubmission.__table__.c.submission_id == model.Submission.__table__.c.id)
-        table_object = table_object.join(model.User.__table__, model.UserSubmission.__table__.c.user_id == model.User.__table__.c.id)
-
         #   ... for every positive tag, join the submission_tags table
         # JOIN submission_tags st ON submission.id = st.submission_id AND st.tag_id == (tag id from list)
         for tag_object in positive_tags:
@@ -206,12 +234,6 @@ class GalleryController(BaseController):
         # Since it's outer join, tags that aren't present will be NULL. Since these are tags we don't want, WHERE st.tag_id == NULL
         tag_where_object = and_(*[alias.c.tag_id == None for alias in negative_aliases]) if negative_aliases else 1
         
-        #   ... filter out other extra user_submissions.
-        # Since the users:user_submissions relationship is one:many, we need to insure that we only get one back.
-        if c.page_owner and not watchstream and not favorites:
-            owner_where_object = model.UserSubmission.c.user_id == c.page_owner.id
-        else:
-            owner_where_object = model.UserSubmission.c.ownership_status == 'primary'
 
 
 
@@ -264,9 +286,39 @@ class GalleryController(BaseController):
             
         c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=num_pages, perpage=perpage, radius=paging_radius)
         
-        # And finally, convert our results to "objects" and stuff them into the template.
-        c.submissions = [SubmissionEmulator(r, model.Submission.__table__.name) for r in results]
         return render('/gallery/index.mako')
+
+    def index(self, username=None):
+        """Gallery index, either globally or for one user."""
+        if username:
+            c.page_owner = model.User.get_by_name(username)
+        else:
+            c.page_owner = None
+
+        if c.page_owner:
+            joined_tables = model.Submission.__table__ \
+                            .join(model.UserSubmission.__table__) \
+                            .join(model.User.__table__)
+            where = (model.User.id == c.page_owner.id)
+            return self._display(joined_tables=joined_tables, where=where)
+        else:
+            return self._display()
+
+    def watchstream(self, username):
+        """Watches for a given user."""
+        c.page_owner = model.User.get_by_name(username)
+
+        joined_tables = model.Submission.__table__ \
+                        .join(model.UserSubmission.__table__) \
+                        .join(model.UserRelationship.__table__, and_(
+                              model.UserRelationship.to_user_id
+                                  == model.UserSubmission.user_id,
+                              model.UserRelationship.from_user_id
+                                  == c.page_owner.id,
+                              1,  # XXX
+                              )
+                        )
+        return self._display(joined_tables=joined_tables)
 
     #@check_perm('can_favorite')
     def favorite(self, id=None, username=None):

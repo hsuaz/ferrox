@@ -85,18 +85,18 @@ class BaseController(WSGIController):
                 session.save()
                 return
 
+            ip = request.environ['REMOTE_ADDR']
             if c.auth_user.can('administrate'):
-                session['admin_ip'] = request.environ['REMOTE_ADDR']
+                session['admin_ip'] = ip
 
             # Log IPs
-            ip_integer = h.ip_to_integer(request.environ['REMOTE_ADDR'])
             ip_log_q = model.Session.query(model.IPLogEntry)
             last_ip_record = ip_log_q.filter_by(user_id = user_id) \
                 .order_by(model.IPLogEntry.end_time.desc()).first()
-            if last_ip_record and int(last_ip_record.ip) == ip_integer:
+            if last_ip_record and last_ip_record.ip == ip:
                 last_ip_record.end_time = datetime.now()
             else:
-                model.Session.save(model.IPLogEntry(user_id, ip_integer))
+                model.Session.save(model.IPLogEntry(user_id, ip))
             model.Session.commit()
         else:
             c.auth_user = model.GuestUser()

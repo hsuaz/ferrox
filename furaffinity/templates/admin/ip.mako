@@ -12,7 +12,7 @@
     </tr>
     % for ip_log_entry in c.ip_page:
     <tr>
-        <td> ${h.ip_to_string(ip_log_entry.ip)} </td>
+        <td> ${ip_log_entry.ip} </td>
         <td> ${lib.user_link(ip_log_entry.user)} </td>
         <td> ${h.format_time(ip_log_entry.start_time)} </td>
         <td> ${h.format_time(ip_log_entry.end_time)} </td>

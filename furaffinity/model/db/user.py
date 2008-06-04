@@ -5,7 +5,6 @@ import furaffinity.lib.bbcode_for_fa as bbcode
 
 from sqlalchemy import Column, ForeignKey, types, sql
 from sqlalchemy.orm import relation
-from sqlalchemy.databases.mysql import MSInteger, MSSet
 from sqlalchemy.exceptions import InvalidRequestError
 
 from datetime import datetime, timedelta
@@ -13,21 +12,12 @@ import hashlib
 import random
 import re
 
-from furaffinity.model.db import BaseTable, Session
-from furaffinity.model.datetimeasint import *
-from furaffinity.model.enum import *
-from furaffinity.model.set import *
+from furaffinity.model.db import BaseTable, DateTime, Enum, IP, Session
 
 ### Custom types
 
-if re.match('^mysql', pylons.config['sqlalchemy.url']):
-    ip_type = MSInteger(unsigned=True)
-else:
-    ip_type = types.String(length=11)
-
-note_status_type = Enum(['unread','read'])
-user_relationship_type = Set(['watching_submissions','watching_journals','friend_to','blocking'])
-#user_relationship_type = MSSet("'watching_submissions'","'watching_journals'","'friend_to'","'blocking'")
+note_status_type = Enum('unread', 'read')
+user_relationship_type = Enum('watching_submissions', 'watching_journals', 'friend_to', 'blocking')
 
 ### Dummy classes
 
@@ -270,9 +260,9 @@ class IPLogEntry(BaseTable):
     __tablename__   = 'ip_log'
     id              = Column(types.Integer, primary_key=True)
     user_id         = Column(types.Integer, ForeignKey('users.id'), nullable=False)
-    ip              = Column(ip_type, nullable=False)
-    start_time      = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
-    end_time        = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    ip              = Column(IP, nullable=False)
+    start_time      = Column(DateTime, nullable=False, default=datetime.now)
+    end_time        = Column(DateTime, nullable=False, default=datetime.now)
 
     user            = relation(User, backref='ip_log')
 
@@ -324,7 +314,7 @@ class Note(BaseTable):
     content         = Column(types.UnicodeText, nullable=False)
     content_parsed  = Column(types.UnicodeText, nullable=False)
     status          = Column(note_status_type, nullable=False)
-    time            = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    time            = Column(DateTime, nullable=False, default=datetime.now)
 
     sender          = relation(User, primaryjoin=(from_user_id==User.id))
     recipient       = relation(User, primaryjoin=(to_user_id==User.id))

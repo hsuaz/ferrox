@@ -30,7 +30,7 @@ class DateTime(types.TypeDecorator):
 
 
 # Taken from http://www.sqlalchemy.org/trac/wiki/UsageRecipes/Enum
-class Enum(types.TypeEngine):
+class Enum(types.TypeDecorator):
     impl = types.SmallInteger
 
     def __init__(self, values):
@@ -77,3 +77,6 @@ class IP(types.TypeDecorator):
 
     def convert_result_value(self, value, engine):
         return socket.inet_ntoa(struct.pack('i', value))
+
+    def is_mutable(self):
+        return False

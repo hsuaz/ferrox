@@ -25,6 +25,7 @@ import os.path
 import random
 import re
 import sys
+import time
 
 from furaffinity.model.db import BaseTable, DateTime, Enum, Session
 from furaffinity.model.db.user import *
@@ -484,18 +485,6 @@ class Submission(BaseTable):
                 blobstream = cStringIO.StringIO(d.file_blob)
                 store.send_file(d.mogile_key, blobstream)
                 blobstream.close()
-
-    '''
-    def is_favorite_submission(self, user):
-        q = Session.query(FavoriteSubmission)
-        q =  q.filter(User.c.id == user.id)
-        q =  q.filter(Submission.c.id == self.id)
-        try:
-            return q.one()
-        except InvalidRequestError:
-            return None
-    '''
-        
 
 class FavoriteSubmission(BaseTable):
     __tablename__       = 'favorite_submissions'

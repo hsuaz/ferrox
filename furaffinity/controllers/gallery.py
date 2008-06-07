@@ -243,24 +243,6 @@ class GalleryController(BaseController):
         #   ... finally, bring all the where clauses into one object
         final_where_object = and_(tag_where_object, owner_where_object, review_status_where_object)
         
-        #   ... JOIN the relationship table to get people on c.page_owner's watch list.
-        if watchstream:
-            #return "<pre>%s</pre>"%dir(model.UserRelationship.c.relationship.type)
-            table_object = table_object.join(model.UserRelationship.__table__, and_(
-                model.UserSubmission.c.user_id == model.UserRelationship.c.to_user_id,
-                c.page_owner.id == model.UserRelationship.c.from_user_id,
-                "(%s & %d) > 0"%(model.UserRelationship.c.relationship, model.UserRelationship.c.relationship.type.bitfield('watching_submissions'))
-                )
-            )
-            
-        #   ... grab c.page_owner's relationships and add them to the where clause
-        if favorites:
-            table_object = table_object.join(model.FavoriteSubmission.__table__, and_(
-                model.Submission.c.id == model.FavoriteSubmission.c.submission_id,
-                model.User.c.id == model.FavoriteSubmission.c.user_id
-                )
-            )
-            
         #   ... construct and execute the query. (And count the total number of images that the query would return without LIMIT/OFFSET.)
         q = table_object.select(final_where_object, use_labels=True).apply_labels()
         
@@ -315,7 +297,22 @@ class GalleryController(BaseController):
                                   == model.UserSubmission.user_id,
                               model.UserRelationship.from_user_id
                                   == c.page_owner.id,
-                              1,  # XXX
+                              model.UserRelationship.relationship
+                                  == 'watching_submissions',
+                              )
+                        )
+        return self._display(joined_tables=joined_tables)
+
+    def favorites(self, username):
+        """Favorites for a given user."""
+        c.page_owner = model.User.get_by_name(username)
+
+        joined_tables = model.Submission.__table__ \
+                        .join(model.FavoriteSubmission.__table__, and_(
+                              model.FavoriteSubmission.submission_id
+                                  == model.Submission.id,
+                              model.FavoriteSubmission.user_id
+                                  == c.page_owner.id,
                               )
                         )
         return self._display(joined_tables=joined_tables)

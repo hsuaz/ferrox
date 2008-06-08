@@ -3,8 +3,8 @@
 
 ${lib.user_linkbar(c.user)}
 
-<div class="basicbox">
-${c.empty_form.start(h.url(controller='user', action='avatar_update', username=c.user.username), multipart=True)}
+<div class="basic-box">
+${c.empty_form.start(h.url(controller='user', action='avatar_update', username=c.user.username))}
 % if c.user.default_avatar:
     <p>Default Avatar: ${c.user.default_avatar.title}</p>
 % endif
@@ -22,16 +22,22 @@ ${c.empty_form.start(h.url(controller='user', action='avatar_update', username=c
 % else:
     <p>No avatars!</p>
 % endif
+${c.empty_form.submit('Update Avatars')}
+${c.empty_form.end()}
+</div>
+
+<div class="basic-box">
+${c.empty_form.start(h.url(controller='user', action='avatar_upload', username=c.user.username), multipart=True)}
 <dl class="standard-form">
 <dt>Upload new avatar:</dt>
-<dd>${c.empty_form.file_field('newavatar')}</dd>
+<dd>${c.empty_form.file_field('avatar')}</dd>
 <dt>Title</dt>
-<dd>${c.empty_form.text_field('newavatar_title')}</dd>
+<dd>${c.empty_form.text_field('title')}</dd>
 <dt>Make new avatar your default.</dt>
-<dd>Default: ${c.empty_form.radio_button("default", 0, checked=(True if not c.user.default_avatar else False))}</dd>
+<dd>Default: ${c.empty_form.check_box('default', checked=(True if not c.user.default_avatar else False))}</dd>
 </dl>
 </p>
-${c.empty_form.submit('Update Avatars')}
+${c.empty_form.submit('Upload New Avatar')}
 ${c.empty_form.end()}
 </div>
 

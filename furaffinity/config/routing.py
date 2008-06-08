@@ -113,6 +113,7 @@ def make_map():
     map.connect('/users/:username/fuck', controller='user', action='fuck')
     map.connect('/users/:username/avatars', controller='user', action='avatar')
     map.connect('/users/:username/avatars_update', controller='user', action='avatar_update')
+    map.connect('/users/:username/avatars_upload', controller='user', action='avatar_upload')
     #map.connect('/journals/fill', controller='journal', action='fill')
 
 

@@ -157,7 +157,7 @@ class CommentForm(formencode.Schema):
 
 class WatchForm(formencode.Schema):
     journals = validators.Bool(if_empty=True, if_missing=False)
-    submissions = validators.Bool(if_empty=True, if_missing=False)
+    submissions =validators.Bool(if_empty=True, if_missing=False) 
 
 class MemberListPagingForm(formencode.Schema):
     page = formencode.validators.Int(not_empty=False, if_missing=0)
@@ -165,9 +165,9 @@ class MemberListPagingForm(formencode.Schema):
 
 
 class AvatarForm(formencode.Schema):
-    newavatar = FileUploadValidator(not_empty=False, if_missing=None)
-    newavatar_title = formencode.validators.String(not_empty=False, if_missing=None)
-    default = formencode.validators.Int()
+    avatar = FileUploadValidator(not_empty=False, if_missing=None)
+    title = formencode.validators.String(not_empty=False, if_missing=None)
+    default = validators.Bool(if_empty=True, if_missing=False)
     #delete = formencode.validators.Int(repeating=True)
     #delete = formencode.ForEach(formencode.All(formencode.validators.Int()))
 

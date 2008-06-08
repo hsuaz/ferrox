@@ -738,9 +738,6 @@ class SubmissionTag(BaseTable):
         self.tag = tag
 
 
-
-
-
 EditLog.last_edited_by = relation(User)
 
 EditLogEntry.editlog = relation(EditLog, backref='entries')

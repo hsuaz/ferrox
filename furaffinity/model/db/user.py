@@ -1,22 +1,35 @@
+from __future__ import with_statement
+
 import pylons
 
 from furaffinity.lib import helpers as h
 import furaffinity.lib.bbcode_for_fa as bbcode
+from furaffinity.lib.image import ImageClass
+from furaffinity.lib.mimetype import get_mime_type
 
 from sqlalchemy import Column, ForeignKey, types, sql
+from sqlalchemy import and_, or_, not_
 from sqlalchemy.orm import relation
 from sqlalchemy.databases.mysql import MSInteger, MSSet
 from sqlalchemy.exceptions import InvalidRequestError
+from sqlalchemy.orm import eagerload, eagerload_all
 
 from datetime import datetime, timedelta
 import hashlib
 import random
 import re
+import cStringIO
 
 from furaffinity.model.db import BaseTable, Session
 from furaffinity.model.datetimeasint import *
 from furaffinity.model.enum import *
 from furaffinity.model.set import *
+
+# -- This stuff is tied to class UserAvatar --
+if pylons.config['mogilefs.tracker'] == 'FAKE':
+    from furaffinity.lib import fakemogilefs as mogilefs
+else:
+    from furaffinity.lib import mogilefs
 
 ### Custom types
 
@@ -116,10 +129,13 @@ class User(BaseTable):
 #    user_submission = relation(UserSubmission, backref='user')
 
     @classmethod
-    def get_by_name(cls, username):
+    def get_by_name(cls, username, eagerloads=[]):
         """Fetch a user, given eir username."""
         try:
-            return Session.query(cls).filter_by(username=username).one()
+            q = Session.query(cls).filter_by(username=username)
+            for el in eagerloads:
+                q = q.options(eagerload(el))
+            return q.one()
         except InvalidRequestError:
             return None
 
@@ -366,4 +382,44 @@ class Note(BaseTable):
         Returns the subject without any prefixes attached.
         """
         return re.sub('^(Re: |Fwd: )+', '', self.subject)
+
+
+class UserAvatar(BaseTable):
+    __tablename__       = 'user_avatars'
+    id                  = Column(types.Integer, primary_key=True, autoincrement=True)
+    user_id             = Column(types.Integer, ForeignKey('users.id'))
+    default             = Column(types.Boolean)
+    mogile_key          = Column(types.String(length=200))
+    title               = Column(types.Unicode(length=200))
+    
+    def __init__(self):
+        pass
+        
+    def write_to_mogile(self, file_object, user=None):
+        # Note: Must do this before commit.
+        
+        if not user:
+            user = self.user
+        max_size = int(pylons.config.get('avatar.max_size', 120))
+        with ImageClass() as t:
+            t.set_data(file_object['content'])
+            toobig = t.get_resized(max_size)
+            if toobig:
+                file_object['content'] = toobig.get_data()
+
+        self.mogile_key = "avatar_%s_%s"%(user.username, file_object['filename'][-50:])
+        
+        store = mogilefs.Client(pylons.config['mogilefs.domain'], [pylons.config['mogilefs.tracker']])
+        blobstream = cStringIO.StringIO(file_object['content'])
+        store.send_file(self.mogile_key, blobstream)
+        blobstream.close()
+        
+    def delete_from_mogile(self):
+        # Note: Must do this before removing object from database.
+        
+        store = mogilefs.Client(pylons.config['mogilefs.domain'], [pylons.config['mogilefs.tracker']])
+        store.delete(self.mogile_key)
+
+User.avatars = relation(UserAvatar, backref='user')
+User.default_avatar = relation(UserAvatar, primaryjoin=and_(User.c.id == UserAvatar.c.user_id, UserAvatar.c.default == True), uselist=False, lazy=False)
 

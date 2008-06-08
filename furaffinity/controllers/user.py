@@ -258,3 +258,70 @@ class UserController(BaseController):
     def settings(self):
         """Form for editing user settings.  Eventually."""
         return render('/PLACEHOLDER.mako')
+        
+    def avatar(self, username=None, sub_domain=None):
+        c.user = model.User.get_by_name(username, ['avatars'])
+        if not c.user:
+            abort(404)
+        return render('/user/avatar.mako')
+
+    def avatar_update(self, username=None, sub_domain=None):
+
+        deletions = []
+        params_filtered = {}
+        for k in request.params.keys():
+            if k[0:7] == 'delete_':
+                val = k[7:]
+                if val.isdigit():
+                    deletions.append(int(val))
+            else:
+                params_filtered[k] = request.params[k]
+
+                    
+        #return dir(model.form.AvatarForm())
+        validator =model.form.AvatarForm() 
+        try:
+            form_data = validator.to_python(params_filtered)
+        except formencode.Invalid, error:
+            return error
+            
+        c.user = model.User.get_by_name(username, ['avatars'])
+        if not c.user:
+            abort(404)
+            
+        # First, update default
+        if not c.user.default_avatar or form_data['default'] != c.user.default_avatar.id:
+            if c.user.default_avatar:
+                c.user.default_avatar.default = False
+                model.Session.update(c.user.default_avatar)
+            
+            for av in c.user.avatars:
+                if av.id == form_data['default']:
+                    av.default = True
+                    model.Session.update(av)
+                    break
+                    
+        # Process deletions
+        for av in c.user.avatars:
+            if av.id in deletions:
+                if av.default:
+                    form_data['default'] = 0
+                c.user.avatars.remove(av)
+        
+        # Process new avatar upload
+        if form_data['newavatar']:
+            useravatar = model.UserAvatar()
+            useravatar.title = form_data['newavatar_title']
+            useravatar.default = True if form_data['default']==0 else False
+
+            useravatar.write_to_mogile(form_data['newavatar'], c.user)
+            c.user.avatars.append(useravatar)
+            
+        # If there is no default set the first avatar in the collection
+        elif form_data['default'] == 0:
+            if c.user.avatars:
+                c.user.avatars[0].default = True
+            
+        model.Session.commit()
+        h.redirect_to(h.url_for(controller='user', action='avatar', username=c.user.username))
+        #return "<pre>%s</pre>" % form_data

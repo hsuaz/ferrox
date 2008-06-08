@@ -85,6 +85,7 @@ class NewsForm(formencode.Schema):
     title = validators.NotEmpty()
     content = validators.NotEmpty()
     is_anonymous = validators.Bool()
+    avatar_id = validators.Int()
 
 class SubmitEditForm(formencode.Schema):
     fullfile = FileUploadValidator()

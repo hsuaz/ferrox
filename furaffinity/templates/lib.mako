@@ -10,7 +10,13 @@
 <div class="entry${extra_class}">
     <div class="header">
         <div class="title">${entry.title}</div>
-        <div class="avatar FINISHME"><img src="http://userpic.livejournal.com/41114350/600603" alt="avatar"/></div>
+        <div class="avatar">
+            % if not entry.is_anonymous and entry.get_avatar():
+            ${h.image_tag(h.url_for(controller='gallery', action='file', filename=entry.get_avatar().mogile_key), entry.author.username)}
+            % else:
+            <img src="${h.default_avatar_url()}" alt="default avatar"/>
+            % endif
+        </div>
         <%
             if entry.is_anonymous:
                 author_string = 'FA Staff'
@@ -162,5 +168,16 @@
     <li>${h.link_to(h.image_tag('/images/icons/list-add.png', 'Befriend'), h.url_for(controller='user', action='friend', username=user.username)) }</li>
     % endif
 </ul>
+
+</%def>
+
+<%def name="avatar_selector(user, default=0, name='avatar_id')">
+
+<select name="${name}">
+<option value="0"${' selected="selected"' if default==0 else ''}>Default Avatar</option>
+% for av in user.avatars:
+<option value="${av.id}"${' selected="selected"' if default==av.id else ''}>${av.title}</option>
+% endfor
+</select>
 
 </%def>

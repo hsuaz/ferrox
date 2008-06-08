@@ -4,6 +4,7 @@ Consists of functions to typically be used within templates, but also
 available to Controllers. This module is available to both as 'h'.
 """
 from webhelpers import *
+import pylons.config
 
 import os
 import re
@@ -154,3 +155,6 @@ def indented_comments(comments):
         last_comment = comment
 
     return comments
+
+def default_avatar_url():
+    return pylons.config.get('avatar.default', '/default_avatar.png')

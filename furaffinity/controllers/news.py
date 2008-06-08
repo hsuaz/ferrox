@@ -51,6 +51,8 @@ class NewsController(BaseController):
         content = form_data['content']
         news = model.News(title, content, c.auth_user)
         news.is_anonymous = form_data['is_anonymous']
+        if form_data['avatar_id']:
+            news.avatar_id = form_data['avatar_id'];
         model.Session.save(news)
         model.Session.commit()
         h.redirect_to('/news')
@@ -87,6 +89,7 @@ class NewsController(BaseController):
             c.item.title = title
             c.item.update_content(content)
         c.item.is_anonymous = form_data['is_anonymous']
+        c.item.avatar_id = form_data['avatar_id']
         model.Session.commit()
         h.redirect_to('/news')
 

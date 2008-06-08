@@ -106,7 +106,8 @@ class JournalEntry(BaseTable):
     time                = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
     status              = Column(journal_status_type, index=True )
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
-    
+    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
+
     def __init__(self, user_id, title, content):
         content = h.escape_once(content)
         self.user_id = user_id
@@ -115,6 +116,7 @@ class JournalEntry(BaseTable):
         self.content = content
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
+        self.avatar_id = None
 
         self.status = 'normal'
 
@@ -156,6 +158,12 @@ class JournalEntry(BaseTable):
         else:
             return None
 
+    def get_avatar(self):
+        if self.avatar:
+            return self.avatar
+        elif self.author.default_avatar:
+            return self.author.default_avatar
+
 class News(BaseTable):
     __tablename__       = 'news'
     id                  = Column(types.Integer, primary_key=True)
@@ -168,6 +176,7 @@ class News(BaseTable):
     is_anonymous        = Column(types.Boolean, nullable=False, default=False)
     is_deleted          = Column(types.Boolean, nullable=False, default=False)
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
 
     def __init__(self, title, content, author):
         self.title = title
@@ -175,11 +184,18 @@ class News(BaseTable):
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
         self.author = author
+        self.avatar_id = None
 
     def update_content (self, content):
         self.content = h.escape_once(content)
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
+
+    def get_avatar(self):
+        if self.avatar:
+            return self.avatar
+        elif self.author.default_avatar:
+            return self.author.default_avatar
 
 class Submission(BaseTable):
     __tablename__       = 'submissions'
@@ -546,12 +562,21 @@ class UserSubmission(BaseTable):
     relationship        = Column(user_submission_relationship_type, nullable=False)
     ownership_status    = Column(user_submission_ownership_status_type, nullable=False)
     review_status       = Column(user_submission_review_status_type, nullable=False)
+    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
+
 
     def __init__(self, user, relationship, ownership_status, review_status):
         self.user = user
         self.relationship = relationship
         self.ownership_status = ownership_status
         self.review_status = review_status
+        self.avatar_id = None
+
+    def get_avatar(self):
+        if self.avatar:
+            return self.avatar
+        elif self.user.default_avatar:
+            return self.user.default_avatar
 
 class Comment(BaseTable):
     __tablename__       = 'comments'
@@ -564,6 +589,7 @@ class Comment(BaseTable):
     content             = Column(types.UnicodeText, nullable=False)
     content_parsed      = Column(types.UnicodeText, nullable=False)
     content_short       = Column(types.UnicodeText, nullable=False)
+    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
 
     def add_to_nested_set(self, parent, discussion):
         """Call on a new Comment to fix the affected nested set values.
@@ -657,6 +683,7 @@ class Comment(BaseTable):
         self.content = content
         self.content_parsed = content
         self.content_short = content
+        self.avatar_id = None
 
 
 class NewsComment(BaseTable):
@@ -767,4 +794,8 @@ Comment.user = relation(User, backref='comments')
 
 Tag.submissions = relation(Submission, backref='tags', secondary=SubmissionTag.__table__)
 
+JournalEntry.avatar = relation(UserAvatar, primaryjoin=(JournalEntry.c.avatar_id == UserAvatar.c.id), uselist=False, lazy=False)
+News.avatar = relation(UserAvatar, primaryjoin=(News.c.avatar_id == UserAvatar.c.id), uselist=False, lazy=False)
+UserSubmission.avatar = relation(UserAvatar, primaryjoin=(UserSubmission.c.avatar_id == UserAvatar.c.id), uselist=False, lazy=False)
+Comment.avatar = relation(UserAvatar, primaryjoin=(Comment.c.avatar_id == UserAvatar.c.id), uselist=False, lazy=False)
 

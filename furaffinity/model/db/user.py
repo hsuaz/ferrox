@@ -19,6 +19,7 @@ import hashlib
 import random
 import re
 import cStringIO
+from binascii import crc32
 
 from furaffinity.model.db import BaseTable, Session
 from furaffinity.model.datetimeasint import *
@@ -401,13 +402,14 @@ class UserAvatar(BaseTable):
         if not user:
             user = self.user
         max_size = int(pylons.config.get('avatar.max_size', 120))
+        max_filesize = int(pylons.config.get('avatar.max_file_size', 40)) * 1024
         with ImageClass() as t:
             t.set_data(file_object['content'])
-            toobig = t.get_resized(max_size)
+            toobig = t.get_resized(max_size, True, (len(file_object['content']) < max_filesize))
             if toobig:
                 file_object['content'] = toobig.get_data()
 
-        self.mogile_key = "avatar_%s_%s"%(user.username, file_object['filename'][-50:])
+        self.mogile_key = "avatar_%s_%x_%s"%(user.username, crc32(file_object['content']), file_object['filename'][-50:])
         
         store = mogilefs.Client(pylons.config['mogilefs.domain'], [pylons.config['mogilefs.tracker']])
         blobstream = cStringIO.StringIO(file_object['content'])

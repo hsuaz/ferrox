@@ -3,6 +3,7 @@ from furaffinity.lib.base import *
 from furaffinity.lib import pagination
 from furaffinity.model import form
 from furaffinity.lib.formgen import FormGenerator
+from furaffinity.lib.mimetype import get_mime_type
 
 import pylons.config
 import logging
@@ -294,7 +295,15 @@ class UserController(BaseController):
             if av.id in deletions:
                 if av.default:
                     default_avatar_id = 0
+
+                # I really don't like this. This could go to hell with large enough data sets.
+                for cls in [model.News, model.UserSubmission, model.JournalEntry, model.Comment]:
+                    for obj in model.Session.query(cls).filter_by(avatar_id=av.id).all():
+                        obj.avatar = None
+                        model.Session.update(obj)
+
                 c.user.avatars.remove(av)
+                model.Session.delete(av)
         
             
         # If there is no default set the first avatar in the collection
@@ -319,7 +328,7 @@ class UserController(BaseController):
             abort(404)
             
         # Process new avatar upload
-        if form_data['avatar']:
+        if form_data['avatar'] and get_mime_type(form_data['avatar']) in ('image/jpeg', 'image/gif', 'image/png'):
             useravatar = model.UserAvatar()
             useravatar.title = form_data['title']
             useravatar.default = form_data['default'] 

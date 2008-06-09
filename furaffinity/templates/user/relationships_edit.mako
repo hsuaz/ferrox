@@ -3,6 +3,7 @@
 
 ${lib.user_linkbar(c.user)}
 
+${c.form.start(h.url(controller='user', action='relationships_change', username=c.user.username))}
 <table class="relationships">
 <thead>
 <tr>
@@ -15,19 +16,21 @@ ${lib.user_linkbar(c.user)}
 </thead>
 <tbody>
 % for user in c.relationship_order:
+% if user == c.other_user:
 <tr>
-    <th> ${lib.user_link(user)} </th>
+% else:
+<tr class="addition">
+% endif
+    <th>${lib.user_link(user)} </th>
     % for relationship in 'friend_to', 'watching_submissions', \
                           'watching_journals', 'blocking':
-    % if relationship in c.relationships[user]:
-    <td> &bull; </td>
-    % else:
-    <td> </td>
-    % endif
+    <td>${c.form.check_box(user.username, value=relationship, checked=(relationship in c.relationships[user]))}</td>
     % endfor
 </tr>
 % endfor
 </tbody>
 </table>
+${c.form.submit('Apply Changes')}
+${c.form.end()}
 
-<%def name="title()">Relationships for ${c.user.display_name}</%def>
+<%def name="title()">Edit Relationships for ${c.user.display_name}</%def>

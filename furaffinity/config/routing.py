@@ -35,6 +35,18 @@ def make_map():
     map.connect('/users/:username', controller='user', action='view')
     map.connect('/users/:username/profile', controller='user', action='profile')
     map.connect('/users/:username/settings', controller='user', action='settings')
+    
+    map.connect('/users', controller='user', action='memberlist')
+    map.connect('/users/:username/relationships', controller='user', action='relationships')
+    map.connect('/users/:username/relationships_change', controller='user', action='relationships_change')
+    map.connect('/users/:username/watch', controller='user', action='watch')
+    map.connect('/users/:username/watch_confirm', controller='user', action='watch_confirm')
+    map.connect('/users/:username/block', controller='user', action='block')
+    map.connect('/users/:username/block_confirm', controller='user', action='block_confirm')
+    map.connect('/users/:username/friend', controller='user', action='friend')
+    map.connect('/users/:username/friend_confirm', controller='user', action='friend_confirm')
+    map.connect('/users/:username/fuck', controller='user', action='fuck')
+    #map.connect('/journals/fill', controller='journal', action='fill')
 
     map.connect('/news', controller='news', action='index')
     map.connect('/news/post', controller='news', action='post')
@@ -59,7 +71,7 @@ def make_map():
     map.connect('/users/:username/notes/:id/reply', controller='notes', action='reply')
     map.connect('/users/:username/notes/:id/forward', controller='notes', action='forward')
 
-    map.connect('/users/:username/gallery/watchstream', controller='gallery', action='index', watchstream=True)
+    map.connect('/users/:username/watchstream', controller='gallery', action='watchstream')
     map.connect('/users/:username/gallery/favorites', controller='gallery', action='index', favorites=True)
     map.connect('/users/:username/gallery', controller='gallery', action='index')
     map.connect('/users/:username/gallery/submit', controller='gallery', action='submit')
@@ -93,11 +105,6 @@ def make_map():
     map.connect('/journals/:year/:month', controller='journal', action='index')
     map.connect('/journals/:year/:month/:day', controller='journal', action='index')
 
-    map.connect('/stylesheets/:sheet/:color', controller='stylesheets', action='index', color=None)
-
-    map.connect('/debug', controller='debug', action='index')
-    map.connect('/debug/crash', controller='debug', action='crash')
-
     map.connect('/search', controller='search', action='index')
     map.connect('/search/do', controller='search', action='do')
     
@@ -111,9 +118,9 @@ def make_map():
     map.connect('/users/:username/friend', controller='user', action='friend')
     map.connect('/users/:username/friend_confirm', controller='user', action='friend_confirm')
     map.connect('/users/:username/fuck', controller='user', action='fuck')
-    map.connect('/users/:username/avatars', controller='user', action='avatar')
     map.connect('/users/:username/avatars_update', controller='user', action='avatar_update')
     map.connect('/users/:username/avatars_upload', controller='user', action='avatar_upload')
+    map.connect('/users/:username/avatars', controller='user', action='avatar')
     #map.connect('/journals/fill', controller='journal', action='fill')
 
 
@@ -122,7 +129,12 @@ def make_map():
     map.connect('/admin/auth_verify', controller='admin', action='auth_verify')
     map.connect('/admin/ip', controller='admin', action='ip')
     
-    # Backwards compatibility
+    map.connect('/stylesheets/:sheet/:color', controller='stylesheets', action='index', color=None)
+
+    map.connect('/debug', controller='debug', action='index')
+    map.connect('/debug/crash', controller='debug', action='crash')
+
+    ### Backwards compatibility
     map.connect('/view/:id', controller='back_compat', action='view_submission')
 
     # Defaults that we may or may not actually be using

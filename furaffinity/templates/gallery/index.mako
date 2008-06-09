@@ -16,8 +16,6 @@
             ${c.form.hidden_field('query_author')}
             ${c.form.hidden_field('query_tags')}
         % else:
-            ${c.form.hidden_field('compiled_tags')}
-            ${c.form.hidden_field('original_tags')}
             ${c.form.hidden_field('tags')}
         % endif
         ${c.form.hidden_field('perpage')}
@@ -36,8 +34,6 @@
     % if c.page_owner != 'search':
     <h2>
         ${c.form.start(h.url(tags=None, commit=None), method='post')}
-        ${c.form.hidden_field('compiled_tags')}
-        ${c.form.hidden_field('original_tags')}
         Return ${c.form.text_field('perpage', size=5)} results per page.<br>
         Filter: ${c.form.text_field('tags')}${c.form.submit('Filter')}
         ${c.form.end()}
@@ -55,8 +51,8 @@
                 Description: ${item.description_parsed}<br>
                 Date: ${h.format_time(item.time)}
             </div>
-            % if item.get_derived_by_type('thumb') != None:
-            <div class="submission_thumbnail"  id="s${item.id}tn">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=item.get_derived_by_type('thumb').mogile_key), item.title), h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist.username ))}</div>
+            % if item.thumbnail:
+            <div class="submission_thumbnail" id="s${item.id}tn">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=item.thumbnail.mogile_key), item.title), h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist.username ))}</div>
             % endif
             <div class="submission_title" id="s${item.id}title">${h.link_to(item.title, h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist.username))}</div>
             % if c.page_owner == None or c.page_owner == 'search':

@@ -10,7 +10,6 @@ import furaffinity.lib.bbcode_for_fa as bbcode
 from sqlalchemy import Column, MetaData, Table, ForeignKey, types, sql
 from sqlalchemy.orm import mapper, object_mapper, relation
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.databases.mysql import MSInteger, MSEnum
 from sqlalchemy.exceptions import InvalidRequestError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import and_
@@ -26,11 +25,10 @@ import os.path
 import random
 import re
 import sys
+import time
 
-from furaffinity.model.db import BaseTable, Session
+from furaffinity.model.db import BaseTable, DateTime, Enum, Session
 from furaffinity.model.db.user import *
-from furaffinity.model.datetimeasint import *
-from furaffinity.model.enum import *
 
 
 # -- This stuff is tied to class Submission --
@@ -49,20 +47,20 @@ except ImportError:
 # -- end --
 
 
-# Database specific types.
-journal_status_type = Enum(['normal','under_review','removed_by_admin','deleted'])
-submission_type_type = Enum(['image','video','audio','text'])
-submission_status_type = Enum(['normal','under_review','removed_by_admin','unlinked','deleted'])
-derived_submission_derivetype_type = Enum(['thumb','halfview'])
-user_submission_ownership_status_type = Enum(['primary','normal'])
-user_submission_review_status_type = Enum(['normal','under_review','removed_by_admin','deleted'])
-user_submission_relationship_type = Enum(['artist','commissioner','gifted','isin'])
+# Database specific types
+journal_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'deleted')
+submission_type_type = Enum('image', 'video', 'audio', 'text')
+submission_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'unlinked', 'deleted')
+derived_submission_derivetype_type = Enum('thumb', 'halfview')
+user_submission_ownership_status_type = Enum('primary', 'normal')
+user_submission_review_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'deleted')
+user_submission_relationship_type = Enum('artist', 'commissioner', 'gifted', 'isin')
 
 
 class EditLog(BaseTable):
     __tablename__       = 'editlog'
     id                  = Column(types.Integer, primary_key=True)
-    last_edited_at      = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    last_edited_at      = Column(DateTime, nullable=False, default=datetime.now)
     last_edited_by_id   = Column(types.Integer, ForeignKey('users.id'))
 
     def __init__(self,user):
@@ -78,7 +76,7 @@ class EditLogEntry(BaseTable):
     __tablename__       = 'editlog_entries'
     id                  = Column(types.Integer, primary_key=True)
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
-    edited_at           = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    edited_at           = Column(DateTime, nullable=False, default=datetime.now)
     edited_by_id        = Column(types.Integer, ForeignKey('users.id'))
     reason              = Column(types.String(length=250))
     previous_title      = Column(types.UnicodeText, nullable=False)
@@ -103,7 +101,7 @@ class JournalEntry(BaseTable):
     content             = Column(types.UnicodeText, nullable=False)
     content_parsed      = Column(types.UnicodeText, nullable=False)
     content_short       = Column(types.UnicodeText, nullable=False)
-    time                = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    time                = Column(DateTime, nullable=False, default=datetime.now)
     status              = Column(journal_status_type, index=True )
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
     avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
@@ -172,7 +170,7 @@ class News(BaseTable):
     content             = Column(types.UnicodeText, nullable=False)
     content_parsed      = Column(types.UnicodeText, nullable=False)
     content_short       = Column(types.UnicodeText, nullable=False)
-    time                = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    time                = Column(DateTime, nullable=False, default=datetime.now)
     is_anonymous        = Column(types.Boolean, nullable=False, default=False)
     is_deleted          = Column(types.Boolean, nullable=False, default=False)
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
@@ -205,7 +203,7 @@ class Submission(BaseTable):
     description_parsed  = Column(types.UnicodeText, nullable=False)
     type                = Column(submission_type_type, nullable=False)
     discussion_id       = Column(types.Integer, nullable=False)
-    time                = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    time                = Column(DateTime, nullable=False, default=datetime.now)
     status              = Column(submission_status_type, index=True, nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
@@ -222,17 +220,11 @@ class Submission(BaseTable):
         self.old_mogile_key = None
         self.mogile_key = None
 
-    def _get_primary_artist(self):
-        #return self.user_submission[0].user
-        for index in xrange(0,len(self.user_submission)):
-            if self.user_submission[index].ownership_status == 'primary':
-                return self.user_submission[index].user
-    primary_artist = property(_get_primary_artist)
-
     def get_derived_by_type (self, type):
-        for index in xrange(0,len(self.derived_submission)):
-            if self.derived_submission[index].derivetype == type:
-                return self.derived_submission[index]
+        print "getting derived by type!"
+        for ds in self.derived_submission:
+            if ds.derivetype == type:
+                return ds
         return None
 
     def get_users_by_relationship (self, relationship):
@@ -504,18 +496,6 @@ class Submission(BaseTable):
                 store.send_file(d.mogile_key, blobstream)
                 blobstream.close()
 
-    '''
-    def is_favorite_submission(self, user):
-        q = Session.query(FavoriteSubmission)
-        q =  q.filter(User.c.id == user.id)
-        q =  q.filter(Submission.c.id == self.id)
-        try:
-            return q.one()
-        except InvalidRequestError:
-            return None
-    '''
-        
-
 class FavoriteSubmission(BaseTable):
     __tablename__       = 'favorite_submissions'
     user_id             = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
@@ -530,9 +510,15 @@ class DerivedSubmission(BaseTable):
     derivetype          = Column(derived_submission_derivetype_type, nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
+    submission          = relation(Submission, backref='derived_submission', lazy=False)
 
     def __init__(self, derivetype):
         self.derivetype = derivetype
+
+Submission.thumbnail = relation(DerivedSubmission,
+    primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,
+                     DerivedSubmission.derivetype == 'thumb'),
+    uselist=False)
 
 class HistoricSubmission(BaseTable):
     __tablename__       = 'historic_submissions'
@@ -540,7 +526,7 @@ class HistoricSubmission(BaseTable):
     submission_id       = Column(types.Integer, ForeignKey('submissions.id'), nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
-    edited_at           = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    edited_at           = Column(DateTime, nullable=False, default=datetime.now)
     edited_by_id        = Column(types.Integer, ForeignKey('users.id'))
 
     def __init__(self, user):
@@ -578,6 +564,12 @@ class UserSubmission(BaseTable):
         elif self.user.default_avatar:
             return self.user.default_avatar
 
+Submission.primary_artist = relation(User, secondary=UserSubmission.__table__,
+    primaryjoin=and_(Submission.id == UserSubmission.submission_id,
+                     UserSubmission.ownership_status == 'primary'),
+    secondaryjoin=(UserSubmission.user_id == User.id),
+    uselist=False)
+
 class Comment(BaseTable):
     __tablename__       = 'comments'
     id                  = Column(types.Integer, primary_key=True)
@@ -585,7 +577,7 @@ class Comment(BaseTable):
     left                = Column(types.Integer, nullable=False)
     right               = Column(types.Integer, nullable=False)
     subject             = Column(types.UnicodeText, nullable=False)
-    time                = Column(DateTimeAsInteger, nullable=False, default=datetime.now)
+    time                = Column(DateTime, nullable=False, default=datetime.now)
     content             = Column(types.UnicodeText, nullable=False)
     content_parsed      = Column(types.UnicodeText, nullable=False)
     content_short       = Column(types.UnicodeText, nullable=False)
@@ -723,12 +715,12 @@ class Tag(BaseTable):
                 tag = Session.query(Tag).filter(Tag.text == text).one()
                 Tag.cache_by_id[tag.id] = tag
             except InvalidRequestError:
-                # Need to create tag.
                 if create:
+                    # Need to create tag
                     tag = Tag(text=text)
                     Session.save(tag)
                 else:
-                    raise
+                    return None
             Tag.cache_by_text[text] = tag
         return Tag.cache_by_text[text]
 
@@ -779,9 +771,6 @@ UserSubmission.user = relation(User, backref='user_submission')
 
 Submission.editlog = relation(EditLog)
 Submission.comments = relation(Comment, secondary=SubmissionComment.__table__, backref='submission', order_by=Comment.left)
-#Submission.thumbnail = relation(DerivedSubmission, primaryjoin=and_(Submission.__table__.c.id==DerivedSubmission.__table__.c.submission_id, DerivedSubmission.__table__.c.derivetype == 'thumb'), uselist=False)
-
-DerivedSubmission.submission = relation(Submission, backref='derived_submission', lazy=False)
 
 HistoricSubmission.submission = relation(Submission, backref='historic_submission')
 HistoricSubmission.edited_by = relation(User)

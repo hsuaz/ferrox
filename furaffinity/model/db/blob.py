@@ -47,7 +47,7 @@ except ImportError:
 # -- end --
 
 
-# Database specific types.
+# Database specific types
 journal_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'deleted')
 submission_type_type = Enum('image', 'video', 'audio', 'text')
 submission_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'unlinked', 'deleted')
@@ -204,17 +204,11 @@ class Submission(BaseTable):
         self.old_mogile_key = None
         self.mogile_key = None
 
-    def _get_primary_artist(self):
-        #return self.user_submission[0].user
-        for index in xrange(0,len(self.user_submission)):
-            if self.user_submission[index].ownership_status == 'primary':
-                return self.user_submission[index].user
-    primary_artist = property(_get_primary_artist)
-
     def get_derived_by_type (self, type):
-        for index in xrange(0,len(self.derived_submission)):
-            if self.derived_submission[index].derivetype == type:
-                return self.derived_submission[index]
+        print "getting derived by type!"
+        for ds in self.derived_submission:
+            if ds.derivetype == type:
+                return ds
         return None
 
     def get_users_by_relationship (self, relationship):
@@ -500,9 +494,15 @@ class DerivedSubmission(BaseTable):
     derivetype          = Column(derived_submission_derivetype_type, nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
+    submission          = relation(Submission, backref='derived_submission', lazy=False)
 
     def __init__(self, derivetype):
         self.derivetype = derivetype
+
+Submission.thumbnail = relation(DerivedSubmission,
+    primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,
+                     DerivedSubmission.derivetype == 'thumb'),
+    uselist=False)
 
 class HistoricSubmission(BaseTable):
     __tablename__       = 'historic_submissions'
@@ -538,6 +538,12 @@ class UserSubmission(BaseTable):
         self.relationship = relationship
         self.ownership_status = ownership_status
         self.review_status = review_status
+
+Submission.primary_artist = relation(User, secondary=UserSubmission.__table__,
+    primaryjoin=and_(Submission.id == UserSubmission.submission_id,
+                     UserSubmission.ownership_status == 'primary'),
+    secondaryjoin=(UserSubmission.user_id == User.id),
+    uselist=False)
 
 class Comment(BaseTable):
     __tablename__       = 'comments'
@@ -682,12 +688,12 @@ class Tag(BaseTable):
                 tag = Session.query(Tag).filter(Tag.text == text).one()
                 Tag.cache_by_id[tag.id] = tag
             except InvalidRequestError:
-                # Need to create tag.
                 if create:
+                    # Need to create tag
                     tag = Tag(text=text)
                     Session.save(tag)
                 else:
-                    raise
+                    return None
             Tag.cache_by_text[text] = tag
         return Tag.cache_by_text[text]
 
@@ -741,9 +747,6 @@ UserSubmission.user = relation(User, backref='user_submission')
 
 Submission.editlog = relation(EditLog)
 Submission.comments = relation(Comment, secondary=SubmissionComment.__table__, backref='submission', order_by=Comment.left)
-#Submission.thumbnail = relation(DerivedSubmission, primaryjoin=and_(Submission.__table__.c.id==DerivedSubmission.__table__.c.submission_id, DerivedSubmission.__table__.c.derivetype == 'thumb'), uselist=False)
-
-DerivedSubmission.submission = relation(Submission, backref='derived_submission', lazy=False)
 
 HistoricSubmission.submission = relation(Submission, backref='historic_submission')
 HistoricSubmission.edited_by = relation(User)

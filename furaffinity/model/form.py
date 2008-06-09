@@ -119,11 +119,9 @@ class SearchForm(formencode.Schema):
     perpage = formencode.validators.Int(not_empty=False, if_missing=0)
 
 class TagFilterForm(formencode.Schema):
-    original_tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
-    compiled_tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
     tags = formencode.validators.NotEmpty(not_empty=False, if_missing='')
-    page = formencode.validators.Int(not_empty=False, if_missing=0)
-    perpage = formencode.validators.Int(not_empty=False, if_missing=0)
+    page = formencode.validators.Int(not_empty=False, if_missing=None)
+    perpage = formencode.validators.Int(not_empty=False, if_missing=None)
 
 class ReplyValidator(validators.FormValidator):
     validate_partial_form = True

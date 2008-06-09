@@ -93,7 +93,8 @@ def get_submission(id, eagerloads=[]):
 
 class GalleryController(BaseController):
 
-    def _display(self, joined_tables=None, where=None):
+    def _generic_gallery(self,joined_tables=model.Submission.__table__,
+                         where_clauses=[]):
         """Generic backend for viewing a gallery.
         
         Handles default tag filtering, as well as a set of default controls
@@ -102,26 +103,73 @@ class GalleryController(BaseController):
         Pass a pre-joined `joined_tables` sqla.sql object to filter further
         before this method does its mucking around."""
 
-        ### SQL
-        # Join whatever we're given to some other necessary tables
-        if not joined_tables:
-            joined_tables = model.Submission.__table__
-
         # Form validation
-        c.form = FormGenerator()
         validator = model.form.TagFilterForm()
         try:
             form_data = validator.to_python(request.params)
         except formencode.Invalid, error:
-            return error
+            c.form = FormGenerator(form_error=error)
+            return render('gallery/index.mako')
+
+        c.form = FormGenerator()
+
+        ### SQL
+        # Some defaults..
+        # XXX admins can see more than this
+        where_clauses.append(model.UserSubmission.c.review_status == 'normal')
+
+        ### Tag filtering
+        # Construct a list of required and excluded tags
+        required_tags = []
+        excluded_tags = []
+        invalid_tags = []
+        (required_tag_names, excluded_tag_names) \
+            = tagging.break_apart_tag_string(form_data['tags'],
+                                             include_negative=True)
+        
+        for tag_list, tag_name_list in (required_tags, required_tag_names), \
+                                       (excluded_tags, excluded_tag_names):
+            for tag_name in tag_name_list:
+                tag = model.Tag.get_by_text(tag_name)
+                if tag:
+                    tag_list.append(tag)
+                else:
+                    invalid_tags.append(tag_name)
+
+        # Error on invalid tags
+        if invalid_tags:
+            c.form.errors['tags'] = 'No such tags: ' + ', '.join(invalid_tags)
+            return render('gallery/index.mako')
+
+        # Require tags via simple INNER JOINs
+        for tag in required_tags:
+            alias = model.SubmissionTag.__table__.alias()
+            joined_tables = joined_tables.join(alias, and_(
+                model.Submission.id == alias.c.submission_id,
+                alias.c.tag_id == tag.id,
+                )
+            )
+
+        # Exclude tags via LEFT JOIN .. WHERE IS NULL
+        excluded_aliases = []
+        for tag in excluded_tags:
+            alias = model.SubmissionTag.__table__.alias()
+            joined_tables = joined_tables.outerjoin(alias, and_(
+                model.Submission.id == alias.c.submission_id,
+                alias.c.tag_id == tag.id,
+                )
+            )
+            where_clauses.append(alias.c.tag_id == None)
 
         # Pagination
-        pageno = form_data.get('page', 1) - 1
-        perpage = form_data.get('perpage',
-                      pylons.config.get('gallery.default_perpage', 12))
+        pageno = (form_data['page'] or 1) - 1
+        perpage = form_data['perpage'] or \
+                      pylons.config.get('gallery.default_perpage', 12)
+        c.form.defaults['perpage'] = perpage
 
-        #q = joined_tables.select(where) \
-        q = sql.select([model.Submission.id], where, from_obj=joined_tables) \
+        # Run query, fetching submission ids so we can get objects from orm
+        q = sql.select([model.Submission.id], and_(*where_clauses),
+                       from_obj=joined_tables) \
             .order_by(model.Submission.time.desc()) \
             .limit(perpage).offset(perpage * pageno)
 
@@ -130,144 +178,32 @@ class GalleryController(BaseController):
 
         submission_ids = [row.id for row in model.Session.execute(q)]
 
+        # Fetch the total number of matching submissions
         if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
             submission_ct = model.Session.execute(
                                 sqlalchemy.sql.text('SELECT FOUND_ROWS()')) \
                             .fetchone()[0]
 
-        print "sub_ct: ", submission_ct
-
         # Actually fetch submissions
-        # XXX TODO eager loads
         c.submissions = model.Session.query(model.Submission) \
-                        .filter(model.Submission.id.in_(submission_ids))
+                        .filter(model.Submission.id.in_(submission_ids)) \
+                        .options(eagerload('thumbnail'),
+                                 eagerload('primary_artist'),
+                                 )
 
         # Preliminaries
         c.javascripts = ['gallery']
 
-
-
-        return render('/gallery/index.mako')
-
-
-
-
-
-        
-        
-        # Retrieve tags from the database, if needed
-        positive_tags = []
-        negative_tags = []
-        if ( form_data['tags'] == form_data['original_tags'] ):
-            # use compiled tag string (faster because it's by tag.id)
-            (positive_tag_strings, negative_tag_strings) = tagging.break_apart_tag_string(form_data['compiled_tags'], include_negative=True)
-            
-            for x in positive_tag_strings:
-                try:
-                    positive_tags.append(model.Tag.get_by_id(x))
-                except sqlalchemy.exceptions.InvalidRequestError:
-                    pass
-            
-            for x in negative_tag_strings:
-                try:
-                    negative_tags.append(model.Tag.get_by_id(x))
-                except sqlalchemy.exceptions.InvalidRequestError:
-                    pass
-                    
-        else:
-            # recompile tag string (slower because it's by tag.text)
-            (positive_tag_strings, negative_tag_strings) = tagging.break_apart_tag_string(form_data['tags'], include_negative=True)
-            
-            for x in positive_tag_strings:
-                try:
-                    positive_tags.append(model.Tag.get_by_text(x))
-                except sqlalchemy.exceptions.InvalidRequestError:
-                    pass
-            
-            for x in negative_tag_strings:
-                try:
-                    negative_tags.append(model.Tag.get_by_text(x))
-                except sqlalchemy.exceptions.InvalidRequestError:
-                    pass
-
-        # Done making tag strings, print them out to the form.
-        c.form.defaults['compiled_tags'] = tagging.make_compiled_tag_string(positive_tags, negative_tags)
-        c.form.defaults['original_tags'] = c.form.defaults['tags'] = tagging.make_tag_string(positive_tags, negative_tags)
-        c.form.defaults['perpage'] = perpage
-
-        # The big query that better by bleeping efficient.
-        # It's not using sqlalchemy.orm because we can't quite get it to be efficient.
-        
-        #   ... for every positive tag, join the submission_tags table
-        # JOIN submission_tags st ON submission.id = st.submission_id AND st.tag_id == (tag id from list)
-        for tag_object in positive_tags:
-            tag_id = int(tag_object)
-            alias = model.SubmissionTag.__table__.alias()
-            table_object = table_object.join(
-                alias,
-                and_(
-                    model.Submission.__table__.c.id == alias.c.submission_id,
-                    alias.c.tag_id == tag_id
-                    )
-            )
-
-        #   ... for every negative tag, outer join the submission_tags table. Will filter later.
-        # LEFT OUTER JOIN submission_tags st ON submission.id = st.submission_id AND st.tag_id == (tag id from list)
-        negative_aliases = []
-        for tag_object in negative_tags:
-            tag_id = int(tag_object)
-            alias = model.SubmissionTag.__table__.alias()
-            negative_aliases.append(alias)
-            table_object = table_object.outerjoin(
-                alias,
-                and_(
-                    model.Submission.__table__.c.id == alias.c.submission_id,
-                    alias.c.tag_id == tag_id
-                    )
-                )
-
-        #   ... outer join the derived submission table, but only on thumbnail.
-        # outer join because the submission isn't garunteed to have a thumbnail.
-        table_object = table_object.outerjoin(model.DerivedSubmission.__table__, and_(model.Submission.__table__.c.id==model.DerivedSubmission.__table__.c.submission_id, model.DerivedSubmission.__table__.c.derivetype == 'thumb'))
-
-        #   ... filter out negative tags. This is why it has to be outer join.
-        # Since it's outer join, tags that aren't present will be NULL. Since these are tags we don't want, WHERE st.tag_id == NULL
-        tag_where_object = and_(*[alias.c.tag_id == None for alias in negative_aliases]) if negative_aliases else 1
-        
-
-
-
-        #   ... also limit by deletion status check deletion status
-        review_status_where_object = model.UserSubmission.c.review_status == 'normal'
-       
-        #   ... finally, bring all the where clauses into one object
-        final_where_object = and_(tag_where_object, owner_where_object, review_status_where_object)
-        
-        #   ... construct and execute the query. (And count the total number of images that the query would return without LIMIT/OFFSET.)
-        q = table_object.select(final_where_object, use_labels=True).apply_labels()
-        
-        q = q.order_by(model.Submission.c.time.desc())
-
-        if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
-            q = q.prefix_with('SQL_CALC_FOUND_ROWS')
-        
-        q = q.limit(perpage).offset(perpage*pageno)
-        
-        results = model.Session.execute(q)
-
-        if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
-            number_of_submissions = model.Session.execute(sqlalchemy.sql.text('SELECT FOUND_ROWS()')).fetchone()[0]
-        else:
-            # If you want to use a non-MySQL database in production, FIX THIS.
-            number_of_submissions = 1000000
-        
-        # Now that we have all the paging data, we can do the final number crunch.
-        num_pages = int(math.ceil(float(number_of_submissions) / float(perpage)))
-        
+        # Pagination links
+        # XXX sqlite or otherwise no number of pages?
+        num_pages = int((submission_ct + 0.5) // perpage)
         paging_radius = int(pylons.config.get('paging.radius', 3))
-            
-        c.paging_links = pagination.populate_paging_links(pageno=pageno, num_pages=num_pages, perpage=perpage, radius=paging_radius)
-        
+        c.paging_links = pagination.populate_paging_links(pageno=pageno,
+                                                          num_pages=num_pages,
+                                                          perpage=perpage,
+                                                          radius=paging_radius
+                                                          )
+
         return render('/gallery/index.mako')
 
     def index(self, username=None):
@@ -281,10 +217,11 @@ class GalleryController(BaseController):
             joined_tables = model.Submission.__table__ \
                             .join(model.UserSubmission.__table__) \
                             .join(model.User.__table__)
-            where = (model.User.id == c.page_owner.id)
-            return self._display(joined_tables=joined_tables, where=where)
+            where = [model.User.id == c.page_owner.id]
+            return self._generic_gallery(joined_tables=joined_tables,
+                                         where_clauses=where)
         else:
-            return self._display()
+            return self._generic_gallery()
 
     def watchstream(self, username):
         """Watches for a given user."""
@@ -301,7 +238,7 @@ class GalleryController(BaseController):
                                   == 'watching_submissions',
                               )
                         )
-        return self._display(joined_tables=joined_tables)
+        return self._generic_gallery(joined_tables=joined_tables)
 
     def favorites(self, username):
         """Favorites for a given user."""
@@ -315,7 +252,7 @@ class GalleryController(BaseController):
                                   == c.page_owner.id,
                               )
                         )
-        return self._display(joined_tables=joined_tables)
+        return self._generic_gallery(joined_tables=joined_tables)
 
     #@check_perm('can_favorite')
     def favorite(self, id=None, username=None):

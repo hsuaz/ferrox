@@ -73,6 +73,11 @@ col.time { width: 12em; }
 col.user { width: 12em; }
 col.subject { width: auto; }
 
+/* user relationship table */
+table.relationships { }
+table.relationships thead th { width: 8em; vertical-align: bottom; text-align: center; font-weight: bold; }
+table.relationships tbody td { font-size: 1.2em; line-height: 1em; text-align: center; }
+
 /* remove before release */
 #PLACEHOLDER { border: 3px double #c04040; color: #c04040; font-weight: bold; font-size: 1.67em; padding: 0.5em; text-align: center; }
 

@@ -38,13 +38,12 @@ def make_map():
     
     map.connect('/users', controller='user', action='memberlist')
     map.connect('/users/:username/relationships', controller='user', action='relationships')
-    map.connect('/users/:username/relationships_change', controller='user', action='relationships_change')
+    map.connect('/users/:username/relationships/edit', controller='user', action='relationships_edit')
+    map.connect('/users/:username/relationships/edit_confirm', controller='user', action='relationships_confirm', **require_post)
+
     map.connect('/users/:username/watch', controller='user', action='watch')
-    map.connect('/users/:username/watch_confirm', controller='user', action='watch_confirm')
     map.connect('/users/:username/block', controller='user', action='block')
-    map.connect('/users/:username/block_confirm', controller='user', action='block_confirm')
     map.connect('/users/:username/friend', controller='user', action='friend')
-    map.connect('/users/:username/friend_confirm', controller='user', action='friend_confirm')
     map.connect('/users/:username/fuck', controller='user', action='fuck')
     #map.connect('/journals/fill', controller='journal', action='fill')
 
@@ -72,7 +71,7 @@ def make_map():
     map.connect('/users/:username/notes/:id/forward', controller='notes', action='forward')
 
     map.connect('/users/:username/watchstream', controller='gallery', action='watchstream')
-    map.connect('/users/:username/gallery/favorites', controller='gallery', action='index', favorites=True)
+    map.connect('/users/:username/favorites', controller='gallery', action='favorites')
     map.connect('/users/:username/gallery', controller='gallery', action='index')
     map.connect('/users/:username/gallery/submit', controller='gallery', action='submit')
     map.connect('/users/:username/gallery/submit_upload', controller='gallery', action='submit_upload', **require_post)

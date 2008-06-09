@@ -5,7 +5,7 @@ import furaffinity.lib.bbcode_for_fa as bbcode
 
 from sqlalchemy import Column, ForeignKey, types, sql
 from sqlalchemy.orm import relation
-from sqlalchemy.exceptions import InvalidRequestError
+from sqlalchemy.exceptions import IntegrityError, InvalidRequestError
 
 from datetime import datetime, timedelta
 import hashlib
@@ -226,23 +226,24 @@ class User(BaseTable):
 
         return note_q
 
-    def get_or_create_relationship(self, user, nocreate=False):
-        need_new_r = True
-        r = None
-        for r in self.relationships:
-            if r.target == user:
-                need_new_r = False
-                break
+    def get_relationship(self, other_user, relationship):
+        """Returns the requested relationship object, if it exists."""
+        return Session.query(UserRelationship) \
+               .filter_by(from_user_id=self.id,
+                          to_user_id=other_user.id,
+                          relationship=relationship) \
+               .first()
 
-        if need_new_r and not nocreate:
-            print 'did not find relationship'
-            r = UserRelationship()
-            r.target = user
-            Session.save(r)
-            self.relationships.append(r)
-            Session.update(self)
-
-        return r
+    def add_relationship(self, other_user, relationship):
+        rel = UserRelationship()
+        rel.user = self
+        rel.target = other_user
+        rel.relationship = relationship
+        try:
+            Session.save(rel)
+        except IntegrityError:
+            pass
+        return
 
 class UserRelationship(BaseTable):
     __tablename__       = 'user_relationships'

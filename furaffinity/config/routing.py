@@ -34,7 +34,8 @@ def make_map():
     map.connect('/verify', controller='index', action='verify')
     map.connect('/users/:username', controller='user', action='view')
     map.connect('/users/:username/profile', controller='user', action='profile')
-    map.connect('/users/:username/settings', controller='user', action='settings')
+
+    map.connect('/users/:username/settings', controller='user_settings', action='index')
     
     map.connect('/users', controller='user', action='memberlist')
     map.connect('/users/:username/relationships', controller='user', action='relationships')

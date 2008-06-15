@@ -116,10 +116,6 @@ class UserController(BaseController):
 
         return render('/user/memberlist.mako')
     
-    def settings(self):
-        """Form for editing user settings.  Eventually."""
-        return render('/PLACEHOLDER.mako')
-        
     def avatar(self, username=None, sub_domain=None):
         c.user = model.User.get_by_name(username, ['avatars'])
         if not c.user:

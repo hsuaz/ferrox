@@ -18,8 +18,6 @@ import cStringIO
 import chardet
 import codecs
 from datetime import datetime, timedelta
-from datetimeasint import *
-from enum import *
 import hashlib
 import mimetypes
 import os.path

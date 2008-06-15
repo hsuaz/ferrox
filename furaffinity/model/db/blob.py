@@ -783,8 +783,8 @@ Comment.user = relation(User, backref='comments')
 
 Tag.submissions = relation(Submission, backref='tags', secondary=SubmissionTag.__table__)
 
-JournalEntry.avatar = relation(UserAvatar, primaryjoin=(JournalEntry.c.avatar_id == UserAvatar.c.id), uselist=False, lazy=False)
-News.avatar = relation(UserAvatar, primaryjoin=(News.c.avatar_id == UserAvatar.c.id), uselist=False, lazy=False)
-UserSubmission.avatar = relation(UserAvatar, primaryjoin=(UserSubmission.c.avatar_id == UserAvatar.c.id), uselist=False, lazy=False)
-Comment.avatar = relation(UserAvatar, primaryjoin=(Comment.c.avatar_id == UserAvatar.c.id), uselist=False, lazy=False)
+JournalEntry.avatar = relation(UserAvatar, primaryjoin=(JournalEntry.avatar_id == UserAvatar.id), uselist=False, lazy=False)
+News.avatar = relation(UserAvatar, primaryjoin=(News.avatar_id == UserAvatar.id), uselist=False, lazy=False)
+UserSubmission.avatar = relation(UserAvatar, primaryjoin=(UserSubmission.avatar_id == UserAvatar.id), uselist=False, lazy=False)
+Comment.avatar = relation(UserAvatar, primaryjoin=(Comment.avatar_id == UserAvatar.id), uselist=False, lazy=False)
 

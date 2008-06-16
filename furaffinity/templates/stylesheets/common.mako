@@ -78,6 +78,12 @@ table.relationships { }
 table.relationships thead th { width: 8em; vertical-align: bottom; text-align: center; font-weight: bold; }
 table.relationships tbody td { font-size: 1.2em; line-height: 1em; text-align: center; }
 
+/* thumbnail grid, for gallery viewage */
+ul.thumbnail-grid { }
+ul.thumbnail-grid li { float: left; height: 150px; width: 150px; text-align: center; margin: 15px; }
+ul.thumbnail-grid:after { content: 'v'; visibility: hidden; height: 0; display: block; clear: both; }
+ul.thumbnail-grid li .popup { display: none; background: inherit; top: 0; left: 0; }
+
 /* remove before release */
 #PLACEHOLDER { border: 3px double #c04040; color: #c04040; font-weight: bold; font-size: 1.67em; padding: 0.5em; text-align: center; }
 

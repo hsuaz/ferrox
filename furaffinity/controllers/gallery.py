@@ -37,43 +37,6 @@ else:
 
 log = logging.getLogger(__name__)
 
-# Since this isn't the only action to use /gallery/index.mako and all the other actions that use it use sqlalchemy.orm, 
-# we're going to make rows look like objects using some good, old fashion Pythonic magic.
-# This isn't a pretty hack. Do yourself a favor and don't read it.
-class ObjectEmulator:
-    def __init__(self, row, prefix):
-        self.row = row
-        self.prefix = prefix
-
-    def __eq__(self, other):
-        # this can only compare to None
-        if other == None:
-            return self.id == None
-        else:
-            raise ValueError('You must override __eq__ and __ne__ to compare to anything other than id == None')
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __getattr__(self, name):
-        return self.row["%s_%s"%(self.prefix, name)]
-
-class SubmissionEmulator(ObjectEmulator):
-    def __init__(self, row, prefix):
-        ObjectEmulator.__init__(self, row, prefix)
-
-    def get_derived_by_type(self, type):
-        if type=='thumb':
-            return ObjectEmulator(self.row, model.DerivedSubmission.__table__.name)
-
-    def __getattr__(self, name):
-        if name == 'primary_artist':
-            return ObjectEmulator(self.row, model.User.__table__.name)
-        elif name == 'thumbnail':
-            return None
-        else:
-            return ObjectEmulator.__getattr__(self, name)
-
 def get_submission(id, eagerloads=[]):
     """Fetches a submission, and dies nicely if it can't be found."""
     q = model.Session.query(model.Submission)
@@ -90,6 +53,94 @@ def get_submission(id, eagerloads=[]):
     #tag_list.parse_tag_object_array(submission.tags, negative=False)
     c.tags = tagging.make_tag_string(submission.tags)
     return submission
+
+class NoSuchTagsException(Exception):
+    def __init__(self, *tags):
+        self.tags = tags
+
+def find_submissions(joined_tables=model.Submission.__table__,
+                     where_clauses=[], tag_string=None,
+                     page_num=1, page_size=None):
+    """Does all the grunt work for finding specific submissions, including
+    tag filtering (plus the user's defaults) and pagination and such.
+    
+    Returns a two-element tuple.  The first is an array of Submission objects
+    with some useful stuff eager-loaded.  The second is the total number of
+    submissions found.
+    """
+
+    # Some defaults..
+    # XXX admins can see more than this
+    where_clauses.append(model.UserSubmission.review_status == 'normal')
+
+    ### Tag filtering
+    # Construct a list of required and excluded tags
+    # XXX user default tags
+    required_tags = []
+    excluded_tags = []
+    invalid_tags = []
+    (required_tag_names, excluded_tag_names) \
+        = tagging.break_apart_tag_string(tag_string,
+                                         include_negative=True)
+
+    for tag_list, tag_name_list in (required_tags, required_tag_names), \
+                                   (excluded_tags, excluded_tag_names):
+        for tag_name in tag_name_list:
+            tag = model.Tag.get_by_text(tag_name)
+            if tag:
+                tag_list.append(tag)
+            else:
+                invalid_tags.append(tag_name)
+
+    # Error on invalid tags
+    if invalid_tags:
+        raise NoSuchTagsException(*invalid_tags)
+
+    # Require tags via simple INNER JOINs
+    for tag in required_tags:
+        alias = model.SubmissionTag.__table__.alias()
+        joined_tables = joined_tables.join(alias, and_(
+            model.Submission.id == alias.c.submission_id,
+            alias.c.tag_id == tag.id,
+            )
+        )
+
+    # Exclude tags via LEFT JOIN .. WHERE IS NULL
+    excluded_aliases = []
+    for tag in excluded_tags:
+        alias = model.SubmissionTag.__table__.alias()
+        joined_tables = joined_tables.outerjoin(alias, and_(
+            model.Submission.id == alias.c.submission_id,
+            alias.c.tag_id == tag.id,
+            )
+        )
+        where_clauses.append(alias.c.tag_id == None)
+
+    # Run query, fetching submission ids so we can get objects from orm
+    q = sql.select([model.Submission.id], and_(*where_clauses),
+                   from_obj=joined_tables) \
+        .order_by(model.Submission.time.desc()) \
+        .limit(page_size).offset((page_num - 1) * page_size)
+
+    if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
+        q = q.prefix_with('SQL_CALC_FOUND_ROWS')
+
+    submission_ids = [row.id for row in model.Session.execute(q)]
+
+    # Fetch the total number of matching submissions
+    if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
+        submission_ct = model.Session.execute(
+                            sqlalchemy.sql.text('SELECT FOUND_ROWS()')) \
+                        .fetchone()[0]
+
+    # Actually fetch submissions
+    submissions = model.Session.query(model.Submission) \
+                    .filter(model.Submission.id.in_(submission_ids)) \
+                    .options(eagerload('thumbnail'),
+                             eagerload('primary_artist'),
+                             )
+
+    return submissions, submission_ct
 
 class GalleryController(BaseController):
 
@@ -113,83 +164,23 @@ class GalleryController(BaseController):
 
         c.form = FormGenerator()
 
-        ### SQL
-        # Some defaults..
-        # XXX admins can see more than this
-        where_clauses.append(model.UserSubmission.c.review_status == 'normal')
-
-        ### Tag filtering
-        # Construct a list of required and excluded tags
-        required_tags = []
-        excluded_tags = []
-        invalid_tags = []
-        (required_tag_names, excluded_tag_names) \
-            = tagging.break_apart_tag_string(form_data['tags'],
-                                             include_negative=True)
-        
-        for tag_list, tag_name_list in (required_tags, required_tag_names), \
-                                       (excluded_tags, excluded_tag_names):
-            for tag_name in tag_name_list:
-                tag = model.Tag.get_by_text(tag_name)
-                if tag:
-                    tag_list.append(tag)
-                else:
-                    invalid_tags.append(tag_name)
-
-        # Error on invalid tags
-        if invalid_tags:
-            c.form.errors['tags'] = 'No such tags: ' + ', '.join(invalid_tags)
-            return render('gallery/index.mako')
-
-        # Require tags via simple INNER JOINs
-        for tag in required_tags:
-            alias = model.SubmissionTag.__table__.alias()
-            joined_tables = joined_tables.join(alias, and_(
-                model.Submission.id == alias.c.submission_id,
-                alias.c.tag_id == tag.id,
-                )
-            )
-
-        # Exclude tags via LEFT JOIN .. WHERE IS NULL
-        excluded_aliases = []
-        for tag in excluded_tags:
-            alias = model.SubmissionTag.__table__.alias()
-            joined_tables = joined_tables.outerjoin(alias, and_(
-                model.Submission.id == alias.c.submission_id,
-                alias.c.tag_id == tag.id,
-                )
-            )
-            where_clauses.append(alias.c.tag_id == None)
-
         # Pagination
-        pageno = (form_data['page'] or 1) - 1
+        pageno = form_data['page'] or 1
         perpage = form_data['perpage'] or \
                       pylons.config.get('gallery.default_perpage', 12)
         c.form.defaults['perpage'] = perpage
 
-        # Run query, fetching submission ids so we can get objects from orm
-        q = sql.select([model.Submission.id], and_(*where_clauses),
-                       from_obj=joined_tables) \
-            .order_by(model.Submission.time.desc()) \
-            .limit(perpage).offset(perpage * pageno)
-
-        if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
-            q = q.prefix_with('SQL_CALC_FOUND_ROWS')
-
-        submission_ids = [row.id for row in model.Session.execute(q)]
-
-        # Fetch the total number of matching submissions
-        if pylons.config['sqlalchemy.url'][0:5] == 'mysql':
-            submission_ct = model.Session.execute(
-                                sqlalchemy.sql.text('SELECT FOUND_ROWS()')) \
-                            .fetchone()[0]
-
-        # Actually fetch submissions
-        c.submissions = model.Session.query(model.Submission) \
-                        .filter(model.Submission.id.in_(submission_ids)) \
-                        .options(eagerload('thumbnail'),
-                                 eagerload('primary_artist'),
-                                 )
+        try:
+            (c.submissions, submission_ct) = find_submissions(
+                joined_tables=joined_tables,
+                where_clauses=where_clauses,
+                tag_string=form_data['tags'],
+                page_num=pageno,
+                page_size=perpage,
+            )
+        except NoSuchTagsException, e:
+            c.form.errors['tags'] = 'No such tags: ' + ', '.join(e.tags)
+            return render('gallery/index.mako')
 
         # Preliminaries
         c.javascripts = ['gallery']

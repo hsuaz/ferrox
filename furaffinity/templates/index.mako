@@ -3,84 +3,8 @@
 
 <div id="left-column">
     <div class="basic-box">
-        <h2>Recent Artwork</h2>
-        <div class="thumbnail-grid">
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-        </div>
-    </div>
-    <div class="basic-box">
-        <h2>Recent Stories</h2>
-        <div class="thumbnail-grid">
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-        </div>
-    </div>
-    <div class="basic-box">
-        <h2>Recent Poetry</h2>
-        <div class="thumbnail-grid">
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-        </div>
-    </div>
-    <div class="basic-box">
-        <h2>Recent Music</h2>
-        <div class="thumbnail-grid">
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-            <div class="thumbnail">
-                ${h.image_tag("thumb.jpg", "foo")}
-            </div>
-        </div>
+        <h2>Recent Submissions</h2>
+        ${lib.thumbnail_grid(c.recent_submissions)}
     </div>
 </div>
 <div id="right-column">

@@ -43,27 +43,8 @@
     % if c.is_mine:
     <p class="admin"> ${h.link_to('Submit Art', h.url(controller='gallery', action='submit', username=c.auth_user.username))} </p>
     % endif
-    % if c.submissions:
-        <ul>
-        % for item in c.submissions:
-        <li class="submission">
-            <div class="submission_popup" id="s${item.id}popup">
-                Description: ${item.description_parsed}<br>
-                Date: ${h.format_time(item.time)}
-            </div>
-            % if item.thumbnail:
-            <div class="submission_thumbnail" id="s${item.id}tn">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=item.thumbnail.mogile_key), item.title), h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist.username ))}</div>
-            % endif
-            <div class="submission_title" id="s${item.id}title">${h.link_to(item.title, h.url(controller='gallery', action='view', id=item.id, username=item.primary_artist.username))}</div>
-            % if c.page_owner == None or c.page_owner == 'search':
-            by ${h.link_to(item.primary_artist.display_name, h.url(controller='gallery', action='index', username=item.primary_artist.username))}
-            % endif
-        </li>
-        % endfor
-        </ul>
-    % else:
-    <p> There are no submissions. </p>
-    % endif
+
+    ${lib.thumbnail_grid(c.submissions)}
 </div>
 
 <%def name="title()">

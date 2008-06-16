@@ -114,10 +114,9 @@ input[type='radio'] { cursor: pointer; }
 .entry.comment .header .date { margin-left: 100px; }
 .entry.comment .header .micro-linkbar { position: absolute; bottom: 0; left: 100px; right: 0; }
 
-
-/* thumbnail grid */
-.thumbnail-grid { margin: 0 auto; clear: both; }
-.thumbnail-grid .thumbnail { float: none; display: inline-block; padding: 1em; }
+/* thumbnail grid tweaks*/
+ul.thumbnail-grid { margin: 0 auto; clear: both; }
+ul.thumbnail-grid li { float: none; display: inline-block; padding: 1em; }
 
 /* standard tables */
 table.bare-table tbody tr:hover { background: ${c.colors['background_hover']}; }

@@ -1,5 +1,6 @@
 from pylons.decorators.secure import *
 
+from furaffinity.controllers.gallery import find_submissions
 from furaffinity.lib.base import *
 from furaffinity.lib.formgen import FormGenerator
 
@@ -12,10 +13,13 @@ log = logging.getLogger(__name__)
 class IndexController(BaseController):
     def index(self):
         """Main site index page."""
-        news_q = model.Session.query(model.News)
-        news_q = news_q.filter_by(is_deleted=False)
-        news_q = news_q.order_by(model.News.time.desc())
-        c.news = news_q.limit(5)
+        c.news = model.Session.query(model.News) \
+                 .filter_by(is_deleted=False) \
+                 .order_by(model.News.time.desc()) \
+                 .limit(5)
+
+        c.recent_submissions = find_submissions(page_size=12)[0]
+        print c.recent_submissions.all()
         return render('/index.mako')
 
     def register(self):

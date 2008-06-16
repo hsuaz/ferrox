@@ -65,9 +65,8 @@ body { background: ${c.colors['background']}; color: ${c.colors['text']}; font-f
 .entry.collapsed .header .title { float: none; font-size: 1.33em; margin: 0; }
 .entry.collapsed .header .title a { display: block; padding: 0.25em; }
 
-/* thumbnail grid */
-.thumbnail-grid .thumbnail { float: left; width: 120px; height: 120px; padding: 0.25em; margin: 1em; border: 1px solid ${c.colors['border']}; }
-.thumbnail-grid:after { display: block; clear: both; visibility: hidden; content: 'vee was here'; height: 0; }
+/* thumbnail grid tweaks */
+ul.thumbnail-grid li { width: 120px; height: 120px; padding: 0.25em; margin: 1em; border: 1px solid ${c.colors['border']}; }
 
 /* sub-link-bar */
 .mini-linkbar { display: inline; margin-bottom: 0.5em; border: 1px solid ${c.colors['border']}; background: ${c.colors['border']}; ~zoom: 1; }

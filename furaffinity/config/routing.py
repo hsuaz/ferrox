@@ -106,10 +106,25 @@ def make_map():
 
     map.connect('/search', controller='search', action='index')
     map.connect('/search/do', controller='search', action='do')
-
+    
+    
+    map.connect('/users', controller='user', action='memberlist')
+    map.connect('/users/:username/relationships', controller='user', action='relationships')
+    map.connect('/users/:username/relationships_change', controller='user', action='relationships_change')
+    map.connect('/users/:username/watch', controller='user', action='watch')
+    map.connect('/users/:username/watch_confirm', controller='user', action='watch_confirm')
+    map.connect('/users/:username/block', controller='user', action='block')
+    map.connect('/users/:username/block_confirm', controller='user', action='block_confirm')
+    map.connect('/users/:username/friend', controller='user', action='friend')
+    map.connect('/users/:username/friend_confirm', controller='user', action='friend_confirm')
+    map.connect('/users/:username/fuck', controller='user', action='fuck')
     map.connect('/users/:username/avatars', controller='user', action='avatar')
     map.connect('/users/:username/avatars_update', controller='user', action='avatar_update')
     map.connect('/users/:username/avatars_upload', controller='user', action='avatar_upload')
+    
+    #map.connect('/journals/fill', controller='journal', action='fill')
+
+
     map.connect('/admin', controller='admin', action='index')
     map.connect('/admin/auth', controller='admin', action='auth')
     map.connect('/admin/auth_verify', controller='admin', action='auth_verify')

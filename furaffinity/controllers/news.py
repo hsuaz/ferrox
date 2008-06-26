@@ -16,8 +16,9 @@ class NewsController(BaseController):
         page = request.params.get(page_link_var, 0)
         news_q = model.Session.query(model.News)
         news_q = news_q.order_by(model.News.time.desc())
-        c.newspage = paginate.Page(news_q, page_nr=page, items_per_page=10)
-        c.newsnav = c.newspage.navigator(link_var=page_link_var)
+        #c.newspage = paginate.Page(news_q, page_nr=page, items_per_page=10)
+        #c.newsnav = c.newspage.navigator(link_var=page_link_var)
+        c.newsitems = news_q.all()
         return render('news/index.mako')
 
     def view(self, id):

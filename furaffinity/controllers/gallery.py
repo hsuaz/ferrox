@@ -116,7 +116,7 @@ class GalleryController(BaseController):
         ### SQL
         # Some defaults..
         # XXX admins can see more than this
-        where_clauses.append(model.UserSubmission.c.review_status == 'normal')
+        where_clauses.append(model.UserSubmission.review_status == 'normal')
 
         ### Tag filtering
         # Construct a list of required and excluded tags

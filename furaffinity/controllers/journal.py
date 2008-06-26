@@ -94,7 +94,7 @@ class JournalController(BaseController):
         if c.page_owner and not watchstream:
             journal_q = journal_q.filter_by(user_id = c.page_owner.id)
         journal_q = journal_q.filter_by(status = 'normal')
-        journal_q = journal_q.filter(model.JournalEntry.c.time >= earliest).filter(model.JournalEntry.c.time < latest)
+        journal_q = journal_q.filter(model.JournalEntry.time >= earliest).filter(model.JournalEntry.time < latest)
 
 
         #   ... grab c.page_owner's relationships and add them to the where clause
@@ -104,7 +104,7 @@ class JournalController(BaseController):
                 print r.target.display_name,
                 if 'watching_journals' in r.relationship:
                     print '  yes'
-                    watchstream_where.append(model.UserSubmission.c.user_id == r.to_user_id)
+                    watchstream_where.append(model.UserSubmission.user_id == r.to_user_id)
                 else:
                     print '   no'
             if watchstream_where:
@@ -116,7 +116,7 @@ class JournalController(BaseController):
                 c.error_title = "No journals found. User '%s' isn't watching anyone."%c.page_owner.display_name
                 return render('/error.mako')
 
-        journal_q = journal_q.order_by(model.JournalEntry.c.time.desc())
+        journal_q = journal_q.order_by(model.JournalEntry.time.desc())
         c.journals = journal_q.limit(max_per_page).offset(pageno * max_per_page).all()
         num_journals = journal_q.count()
         
@@ -338,7 +338,7 @@ class JournalController(BaseController):
         numlines = len(lines)
         randomwords = lambda x: ' '.join([lines[random.randint(0,numlines-1)] for x in xrange(x)])
 
-        cur_time = datetime.datetime.fromtimestamp(model.Session.query(model.JournalEntry).max(model.JournalEntry.c.time))
+        cur_time = datetime.datetime.fromtimestamp(model.Session.query(model.JournalEntry).max(model.JournalEntry.time))
         cur_time = datetime.datetime(2005,1,1) if cur_time < datetime.datetime(2005,1,1) else cur_time
                 
         for i in xrange(num_rows):

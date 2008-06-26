@@ -415,5 +415,5 @@ class UserAvatar(BaseTable):
         store.delete(self.mogile_key)
 
 User.avatars = relation(UserAvatar, backref='user')
-User.default_avatar = relation(UserAvatar, primaryjoin=and_(User.c.id == UserAvatar.c.user_id, UserAvatar.c.default == True), uselist=False, lazy=False)
+User.default_avatar = relation(UserAvatar, primaryjoin=and_(User.id == UserAvatar.user_id, UserAvatar.default == True), uselist=False, lazy=False)
 

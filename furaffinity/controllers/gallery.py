@@ -183,7 +183,7 @@ class GalleryController(BaseController):
             return render('gallery/index.mako')
 
         # Preliminaries
-        c.javascripts = ['gallery']
+        c.javascripts.append('gallery')
 
         # Pagination links
         # XXX sqlite or otherwise no number of pages?

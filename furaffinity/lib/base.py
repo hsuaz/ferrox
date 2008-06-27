@@ -10,6 +10,7 @@ from pylons.decorators import jsonify, validate
 from pylons.i18n import _, ungettext, N_
 from pylons.templating import render
 from routes import request_config
+from sqlalchemy.exceptions import InvalidRequestError
 
 from furaffinity.lib.formgen import FormGenerator
 import furaffinity.lib.helpers as h
@@ -73,18 +74,19 @@ class BaseController(WSGIController):
         c.empty_form = FormGenerator()
         c.error_msgs = []
         c.route = request_config().mapper_dict
+        c.javascripts = ['jquery-1.2.1.pack', 'common']
 
-        user_q = model.Session.query(model.User)
-        user_id = session.get('user_id', None)
-        if user_id:
-            c.auth_user = user_q.filter_by(id = user_id).first()
-
-            # User may have been deleted in the interim
-            if not c.auth_user:
-                session['user_id'] = None
+        if 'user_id' in session:
+            try:
+                user_id = session['user_id']
+                print user_id
+                c.auth_user = model.Session.query(model.User).get(user_id)
+            except InvalidRequestError:
+                # User may have been deleted in the interim
+                del session['user_id']
                 session.save()
-                return
 
+        if c.auth_user:
             ip = request.environ['REMOTE_ADDR']
             if c.auth_user.can('administrate'):
                 session['admin_ip'] = ip

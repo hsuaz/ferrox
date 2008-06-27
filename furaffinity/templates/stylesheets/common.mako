@@ -28,16 +28,17 @@ ul.inline li:first-child:before { content: ''; }
 /* usernames */
 .userlink { position: relative; /* XXX breaks IE somehow */ }
 .userlink a { font-weight: bold; }
-.userlink a img { border: none; vertical-align: bottom; }
-.userlink .popup { visibility: hidden; position: absolute; left: 0; z-index: 10; color: black; background: white; background: rgba(255, 255, 255, 0.9); border: 1px solid black; width: 15em; padding: 0.5em; }
-.userlink .popup .avatar { float: right; height: 50px; }
-.userlink .popup .name { font-weight: bold; }
-.userlink .popup .role { font-size: 0.8em; font-style: italic; margin-bottom: 0.5em; }
-.userlink .popup .rel { font-size: 0.8em; }
-.userlink .popup .links { font-size: 0.8em; margin-top: 0.5em; }
-.userlink .popup .online { color: white; background-color: rgb(0, 128, 0); background-color: rgba(0, 128, 0, 0.5); font-size: 0.75em; font-weight: bold; text-align: center; padding: 0.17em; margin: 0.5em -0.66em -0.66em -0.66em; }
-.userlink .popup .offline { color: white; background-color: rgb(128, 0, 0); background-color: rgba(128, 0, 0, 0.5); font-size: 0.75em; font-weight: bold; text-align: center; padding: 0.17em; margin: 0.5em -0.66em -0.66em -0.66em; }
-.userlink:hover .popup { visibility: visible; }
+.userlink a img { border: none; vertical-align: text-bottom; }
+
+.userlink-popup { position: absolute; width: 15em; padding: 0.5em; left: 0; z-index: 10; text-align: left; color: black; background: white; background: rgba(255, 255, 255, 0.9); border: 1px solid black; -moz-border-radius-topright: 1.5em; -webkit-border-radius-top-right: 1.5em; }
+.userlink-popup .avatar { float: right; height: 50px; }
+.userlink-popup .name { font-weight: bold; }
+.userlink-popup .role { xfont-size: 0.8em; font-style: italic; margin-bottom: 0.5em; }
+.userlink-popup .rel { xfont-size: 0.8em; }
+.userlink-popup .rel-blocked { color: #c00000; }
+.userlink-popup .links { xfont-size: 0.8em; clear: right; margin-top: 0.5em; }
+.userlink-popup .online { color: white; background-color: rgb(0, 128, 0); background-color: rgba(0, 128, 0, 0.5); xfont-size: 0.75em; font-weight: bold; text-align: center; padding: 0.17em; margin: 0.5em -0.5em -0.5em -0.5em; }
+.userlink-popup .offline { color: white; background-color: rgb(128, 0, 0); background-color: rgba(128, 0, 0, 0.5); xfont-size: 0.75em; font-weight: bold; text-align: center; padding: 0.17em; margin: 0.5em -0.5em -0.5em -0.5em; }
 
 /* standard dl-based form */
 dl.standard-form dt { float: left; position: relative; z-index: 2; width: 9.75em; padding: 0.25em 0 0 0.25em; line-height: 150%; font-style: italic; }

@@ -49,7 +49,7 @@ class NotesController(BaseController):
     def view(self, username, id):
         """View of a single note thread."""
         self._note_setup(username, id)
-        c.javascripts = ['notes']
+        c.javascripts.append('notes')
 
         note_thread_id = c.note.original_note_id
 

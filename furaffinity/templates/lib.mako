@@ -128,29 +128,10 @@
 </%def>
 
 <%def name="user_link(user, care_about_online=True)">
-    <span class="userlink">
-        <a href="${h.url_for(controller='user', action='view', username=user.username)}"><img src="/images/foxy.gif" alt="[user]"/></a>
-        <a href="${h.url_for(controller='user', action='view', username=user.username)}">${user.username}</a>
-<!--
-        <div class="popup">
-            <img src="/images/foxy.gif" alt="" class="avatar"/>
-            <div class="name">${user.role.sigil}${user.display_name}</div>
-            <div class="role">${user.role.name}</div>
-            <div class="rel">Not <a href="/users/eevee/watch">watched</a> by you</div>
-            <div class="rel">Has you friended</div>
-            <div class="links">
-                <a href="${h.url_for(controller='user', action='view', username=user.username)}">Profile</a> |
-                <a href="${h.url_for(controller='gallery', action='index', username=user.username)}">Gallery</a> |
-                <a href="${h.url_for(controller='journal', action='index', username=user.username)}">Journal</a>
-            </div>
-            % if not care_about_online or user.is_online():
-            <div class="online">online</div>
-            % else:
-            <div class="offline">offline</div>
-            % endif
-        </div>
--->
-    </span>
+<span class="userlink">
+    <a href="${h.url_for(controller='user', action='view', username=user.username)}"><img src="/images/foxy.gif" alt="[user]"/></a>
+    <a href="${h.url_for(controller='user', action='view', username=user.username)}" class="js-userlink-target">${user.username}</a>
+</span>
 </%def>
 
 <%def name="user_linkbar(user)">
@@ -172,12 +153,32 @@
 </%def>
 
 <%def name="avatar_selector(user, default=0, name='avatar_id')">
-
 <select name="${name}">
 <option value="0"${' selected="selected"' if default==0 else ''}>Default Avatar</option>
 % for av in user.avatars:
 <option value="${av.id}"${' selected="selected"' if default==av.id else ''}>${av.title}</option>
 % endfor
 </select>
+</%def>
 
+<%def name="thumbnail_grid(submissions)">
+% if submissions:
+<ul class="thumbnail-grid">
+    % for submission in submissions:
+    <li id="sub${submission.id}">
+        <div class="popup">
+            Description: ${submission.description_parsed}<br>
+            Date: ${h.format_time(submission.time)}
+        </div>
+        % if submission.thumbnail:
+        <div class="thumbnail">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=submission.thumbnail.mogile_key), submission.title), h.url(controller='gallery', action='view', id=submission.id, username=submission.primary_artist.username ))}</div>
+        % endif
+        <div class="title">${h.link_to(submission.title, h.url(controller='gallery', action='view', id=submission.id, username=submission.primary_artist.username))}</div>
+        by ${h.link_to(submission.primary_artist.display_name, h.url(controller='gallery', action='index', username=submission.primary_artist.username))}
+    </li>
+    % endfor
+</ul>
+% else:
+<p> No submissions to list. </p>
+% endif
 </%def>

@@ -14,6 +14,23 @@ log = logging.getLogger(__name__)
 
 class UserController(BaseController):
 
+    def ajax_tooltip(self, username=None):
+        """Returns HTML fragment for the user tooltip."""
+
+        c.user = model.User.get_by_name(username)
+        if not c.user:
+            abort(404)
+
+        # Relationships
+        if c.auth_user:
+            c.is_friend = c.auth_user.get_relationship(c.user, 'friend_to')
+            c.friend_of = c.user.get_relationship(c.auth_user, 'friend_to')
+
+            c.blocking = c.auth_user.get_relationship(c.user, 'blocking')
+            c.blocked_by = c.user.get_relationship(c.auth_user, 'blocking')
+
+        return render('user/ajax_tooltip.mako')
+
     def view(self, username=None, sub_domain=None):
         """Default view for a user; shows eir recent activity and some simple
         stats/info.

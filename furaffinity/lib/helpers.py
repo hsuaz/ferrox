@@ -146,5 +146,19 @@ def indented_comments(comments):
 
     return comments
 
-def default_avatar_url():
+
+def get_avatar_url(object = None):
+    if hasattr(object, 'avatar') and object.avatar:
+        return url_for(controller='gallery', action='file', filename=object.avatar.mogile_key)
+    else:
+        av = None
+        if hasattr(object, 'primary_artist'):
+            av = object.primary_artist.default_avatar
+        elif hasattr(object, 'author'):
+            av = object.author.default_avatar
+        elif hasattr(object, 'user'):
+            av = object.user.default_avatar
+        if av:
+            return url_for(controller='gallery', action='file', filename=av.mogile_key)
+    
     return pylons.config.get('avatar.default', '/default_avatar.png')

@@ -11,10 +11,10 @@
     <div class="header">
         <div class="title">${entry.title}</div>
         <div class="avatar">
-            % if not entry.is_anonymous and entry.get_avatar():
-            ${h.image_tag(h.url_for(controller='gallery', action='file', filename=entry.get_avatar().mogile_key), entry.author.username)}
+            % if not entry.is_anonymous:
+            ${h.image_tag(h.get_avatar_url(entry), entry.author.username)}
             % else:
-            <img src="${h.default_avatar_url()}" alt="default avatar"/>
+            <img src="${h.get_avatar_url()}" alt="default avatar"/>
             % endif
         </div>
         <%

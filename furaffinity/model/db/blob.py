@@ -156,12 +156,6 @@ class JournalEntry(BaseTable):
         else:
             return None
 
-    def get_avatar(self):
-        if self.avatar:
-            return self.avatar
-        elif self.author.default_avatar:
-            return self.author.default_avatar
-
 class News(BaseTable):
     __tablename__       = 'news'
     id                  = Column(types.Integer, primary_key=True)
@@ -189,11 +183,6 @@ class News(BaseTable):
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
 
-    def get_avatar(self):
-        if self.avatar:
-            return self.avatar
-        elif self.author.default_avatar:
-            return self.author.default_avatar
 
 class Submission(BaseTable):
     __tablename__       = 'submissions'
@@ -558,11 +547,6 @@ class UserSubmission(BaseTable):
         self.review_status = review_status
         self.avatar_id = None
 
-    def get_avatar(self):
-        if self.avatar:
-            return self.avatar
-        elif self.user.default_avatar:
-            return self.user.default_avatar
 
 Submission.primary_artist = relation(User, secondary=UserSubmission.__table__,
     primaryjoin=and_(Submission.id == UserSubmission.submission_id,

@@ -43,7 +43,6 @@ class ImageClass:
     def __init__(self, file_stream = None):
         self.temporary_files = []
         self.original = None
-        #self.type = None
         self.height = 0
         self.width = 0
         
@@ -66,12 +65,9 @@ class ImageClass:
 
             self.original = temporary_file
 
-            #print("idenitify -format \"%%m %%w %%h\" %s"%temporary_file[1])
             imagedata = os.popen("identify -format \"%%m %%w %%h \" %s"%temporary_file[1])
             information = imagedata.read().split(' ')
-            print information
             imagedata.close()
-            #self.type = information[0]
             self.width = int(information[1])
             self.height = int(information[2])
 
@@ -101,29 +97,6 @@ class ImageClass:
                     width = int(size[0])
                     height = int(size[1] * new_aspect / old_aspect)
                 
-                # not ready to scrap this yet...
-                '''
-                aspect = float(self.width) / float(self.height)
-                #print "%d %d %f"%(self.width,self.height,aspect)
-                if aspect > 1.0:
-                    #wide
-                    width = int(linear_dimension)
-                    height = int(linear_dimension / aspect)
-                else:
-                    #tall
-                    width = int(linear_dimension * aspect)
-                    height  = int(linear_dimension)
-
-                '''
-                
-                # We want another image object instead...
-                '''
-                return dict (
-                    content = imagemagick.resize(self.original, width, height),
-                    width = width,
-                    height = height
-                )
-                '''
                 return ImageClass(imagemagick.resize(self.original, width, height))
 
             else:
@@ -132,23 +105,11 @@ class ImageClass:
                 self.temporary_files.append(temporary_file)
 
                 os.system("convert %s -resize %dx%d %s"%(self.original[1],size[0],size[1],temporary_file[1]))
-                #imagedata = os.popen("identify -format \"%%m %%w %%h \" %s"%temporary_file[1])
-                #information = imagedata.read().split(' ')
-                #imagedata.close()
-                #width = int(information[1])
-                #height = int(information[2])
 
                 f = open(temporary_file[1],'rb')
                 data = f.read()
                 f.close()
                 
-                '''
-                return dict (
-                    content = data,
-                    width = int(information[1]),
-                    height = int(information[2])
-                )
-                '''
                 return ImageClass(data)
 
     def get_metadata (self):

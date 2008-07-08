@@ -19,7 +19,6 @@ class IndexController(BaseController):
                  .limit(5)
 
         c.recent_submissions = find_submissions(page_size=12)[0]
-        print c.recent_submissions.all()
         return render('/index.mako')
 
     def register(self):

@@ -221,7 +221,6 @@ class Submission(BaseTable):
         self.mogile_key = None
 
     def get_derived_by_type (self, type):
-        print "getting derived by type!"
         for ds in self.derived_submission:
             if ds.derivetype == type:
                 return ds

@@ -79,7 +79,6 @@ class BaseController(WSGIController):
         if 'user_id' in session:
             try:
                 user_id = session['user_id']
-                print user_id
                 c.auth_user = model.Session.query(model.User).get(user_id)
             except InvalidRequestError:
                 # User may have been deleted in the interim

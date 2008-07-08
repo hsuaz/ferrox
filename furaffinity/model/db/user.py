@@ -189,7 +189,6 @@ class User(BaseTable):
                     )
 
         if not datum in self._metadata_cache:
-            print datum
             datum_row = Session.query(UserMetadataField) \
                         .filter_by(key=datum) \
                         .one()

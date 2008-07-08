@@ -101,12 +101,8 @@ class JournalController(BaseController):
         if watchstream:
             watchstream_where = []
             for r in c.page_owner.relationships:
-                print r.target.display_name,
                 if 'watching_journals' in r.relationship:
-                    print '  yes'
                     watchstream_where.append(model.UserSubmission.c.user_id == r.to_user_id)
-                else:
-                    print '   no'
             if watchstream_where:
                 journal_q = journal_q.filter(or_(*watchstream_where))
             else:

@@ -30,7 +30,6 @@ class CommentsController(BaseController):
 
         # XXX validate that this item matches the comment
         item = model.Session.query(table).get(route['id'])
-        print item
         if item:
             return item
         else:

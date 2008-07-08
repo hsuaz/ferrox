@@ -75,7 +75,7 @@ col.user { width: 12em; }
 col.subject { width: auto; }
 
 /* user relationship table */
-table.relationships { }
+table.relationships { width: auto; }
 table.relationships thead th { width: 8em; vertical-align: bottom; text-align: center; font-weight: bold; }
 table.relationships tbody td { font-size: 1.2em; line-height: 1em; text-align: center; }
 

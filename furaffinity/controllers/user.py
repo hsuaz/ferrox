@@ -12,6 +12,28 @@ import formencode
 
 log = logging.getLogger(__name__)
 
+def fetch_relationships(other_user=None):
+    """Populates c.relationships with a dict of user => [relationships],
+    filtering to those owned by c.other_user if one exists.
+    """
+    if other_user:
+        relationships = model.Session.query(model.UserRelationship) \
+                          .filter_by(from_user_id=c.user.id,
+                                     to_user_id=other_user.id) \
+                          .all()
+    else:
+        relationships = c.user.relationships
+
+    c.relationships = {}
+    for rel in relationships:
+        if not rel.target in c.relationships:
+            c.relationships[rel.target] = []
+        c.relationships[rel.target].append(rel.relationship)
+
+    c.relationship_order = c.relationships.keys()
+    c.relationship_order.sort(cmp=lambda a, b: cmp(a.username, b.username))
+    return
+
 class UserController(BaseController):
 
     def ajax_tooltip(self, username=None):
@@ -47,61 +69,14 @@ class UserController(BaseController):
             abort(404)
         return render('user/profile.mako')
 
-    def _fetch_relationships(self):
-        """Populates c.relationships with a dict of user => [relationships],
-        filtering to those owned by c.other_user if one exists.
-        """
-        if c.other_user:
-            relationships = model.Session.query(model.UserRelationship) \
-                              .filter_by(from_user_id=c.user.id,
-                                         to_user_id=c.other_user.id) \
-                              .all()
-        else:
-            relationships = c.user.relationships
-
-        c.relationships = {}
-        for rel in relationships:
-            if not rel.target in c.relationships:
-                c.relationships[rel.target] = []
-            c.relationships[rel.target].append(rel.relationship)
-
-        c.relationship_order = c.relationships.keys()
-        c.relationship_order.sort(cmp=lambda a, b: cmp(a.username,
-                                                       b.username))
-        return
-
     # XXX: friendof?  construct hashes from this instead?
     def relationships(self, username=None, sub_domain=None, other_user=None):
         """Show user's relationships"""
         c.user = model.User.get_by_name(username)
         c.other_user = model.User.get_by_name(other_user)
-        self._fetch_relationships()
+        fetch_relationships(c.other_user)
 
         return render('user/relationships.mako')
-
-    def relationships_edit(self, username=None, sub_domain=None):
-        """Edit user's relationships"""
-        c.user = model.User.get_by_name(username)
-
-        self._fetch_relationships()
-        c.form = FormGenerator()
-
-        if 'other_user' in request.params:
-            c.other_user = model.User.get_by_name(
-                request.params['other_user']
-                )
-        if c.other_user:
-            if c.other_user in c.relationship_order:
-                c.relationship_order.remove(c.other_user)
-            c.relationship_order.insert(0, c.other_user)
-
-            c.relationships[c.other_user] = []
-            if 'relationship' in request.params:
-                c.relationships[c.other_user].append(
-                    request.params['relationship']
-                    )
-
-        return render('user/relationships_edit.mako')
 
     def fuck(self, username=None, sub_domain=None):
         if username == c.auth_user.username:

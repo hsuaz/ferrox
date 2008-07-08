@@ -3,7 +3,11 @@
 
 ${lib.user_linkbar(c.user)}
 
-<table class="relationships">
+<ul class="inline admin">
+    <li>${h.link_to('Add or remove relationships', h.url(controller='user_settings', action='relationships', username=c.user.username))}</li>
+</ul>
+
+<table class="standard-table relationships">
 <thead>
 <tr>
     <th> </th>
@@ -29,5 +33,8 @@ ${lib.user_linkbar(c.user)}
 % endfor
 </tbody>
 </table>
+
+<!-- XXX permissions -->
+
 
 <%def name="title()">Relationships for ${c.user.display_name}</%def>

@@ -1,10 +1,8 @@
 <%namespace name="lib" file="/lib.mako"/>
 <%inherit file="base.mako"/>
 
-${lib.user_linkbar(c.user)}
-
-${c.form.start(h.url(controller='user', action='relationships_change', username=c.user.username))}
-<table class="relationships">
+${c.form.start(h.url(controller='user_settings', action='relationships_commit', username=c.user.username))}
+<table class="standard-table relationships">
 <thead>
 <tr>
     <th> </th>
@@ -21,10 +19,10 @@ ${c.form.start(h.url(controller='user', action='relationships_change', username=
 % else:
 <tr class="addition">
 % endif
-    <th>${lib.user_link(user)} </th>
+    <th> ${lib.user_link(user)} ${c.form.hidden_field('users', value=user.username)} </th>
     % for relationship in 'friend_to', 'watching_submissions', \
                           'watching_journals', 'blocking':
-    <td>${c.form.check_box(user.username, value=relationship, checked=(relationship in c.relationships[user]))}</td>
+    <td>${c.form.check_box('user:%s' % user.username, value=relationship, checked=(relationship in c.relationships[user]))}</td>
     % endfor
 </tr>
 % endfor

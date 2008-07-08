@@ -37,11 +37,11 @@ def make_map():
     map.connect('/users/:username/profile', controller='user', action='profile')
 
     map.connect('/users/:username/settings', controller='user_settings', action='index')
+    map.connect('/users/:username/settings/relationships', controller='user_settings', action='relationships')
+    map.connect('/users/:username/settings/relationships/commit', controller='user_settings', action='relationships_commit', **require_post)
     
     map.connect('/users', controller='user', action='memberlist')
     map.connect('/users/:username/relationships', controller='user', action='relationships')
-    map.connect('/users/:username/relationships/edit', controller='user', action='relationships_edit')
-    map.connect('/users/:username/relationships/edit_confirm', controller='user', action='relationships_confirm', **require_post)
 
     map.connect('/users/:username/watch', controller='user', action='watch')
     map.connect('/users/:username/block', controller='user', action='block')

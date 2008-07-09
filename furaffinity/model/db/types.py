@@ -33,7 +33,7 @@ class DateTime(types.TypeDecorator):
 class Enum(types.TypeDecorator):
     impl = types.SmallInteger
 
-    def __init__(self, values):
+    def __init__(self, *values):
         """Emulate an Enum type.
 
         values:

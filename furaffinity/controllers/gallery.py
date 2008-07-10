@@ -132,6 +132,15 @@ def find_submissions(joined_tables=model.Submission.__table__,
         submission_ct = model.Session.execute(
                             sqlalchemy.sql.text('SELECT FOUND_ROWS()')) \
                         .fetchone()[0]
+    else:
+        submission_ct = model.Session.execute(
+                sql.select(
+                    [sql.func.count(model.Submission.id)],
+                    and_(*where_clauses),
+                    from_obj=joined_tables,
+                    )
+                ) \
+            .fetchone()[0]
 
     # Actually fetch submissions
     submissions = model.Session.query(model.Submission) \

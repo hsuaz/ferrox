@@ -42,7 +42,7 @@ class Enum(types.TypeDecorator):
 
         if values is None or len(values) is 0:
             raise exceptions.AssertionError('Enum requires a list of values')
-        self.values = values[:]
+        self.values = list(values)
 
     def convert_bind_param(self, value, engine):
         if value not in self.values:

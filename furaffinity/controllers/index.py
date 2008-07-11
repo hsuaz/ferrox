@@ -116,6 +116,7 @@ class IndexController(BaseController):
     def logout(self):
         """Logout POST target."""
         del session['user_id']
-        del session['admin_last_used']
+        if 'admin_last_used' in session:
+            del session['admin_last_used']
         session.save()
         h.redirect_to(request.headers.get('referer', '/'))

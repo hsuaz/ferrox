@@ -14,7 +14,7 @@
         <dd>${lib.user_link(c.item.author)}</dd>
         <dt>Date</dt>
         <dd>${h.format_time(c.item.time)}</dd>
-        <dt>Select Avatar:</dt>
+        <dt>Select Avatar</dt>
         <dd>${lib.avatar_selector(c.auth_user, c.item.avatar_id)}</dd>
     </dl>
     <p>${c.form.text_area('content', size="80x10")}</p>

@@ -1,6 +1,7 @@
 from furaffinity.controllers.user import fetch_relationships
 from furaffinity.lib.base import *
 from furaffinity.lib.formgen import FormGenerator
+from furaffinity.lib.mimetype import get_mime_type
 from furaffinity.model import form
 
 import pylons.config
@@ -18,6 +19,94 @@ class UserSettingsController(BaseController):
             abort(404)
 
         return render('/user/settings/index.mako')
+
+    def avatars(self, username=None, sub_domain=None):
+        c.user = model.User.get_by_name(username, ['avatars'])
+        if not c.user:
+            abort(404)
+        return render('/user/settings/avatars.mako')
+
+    def avatars_update(self, username=None, sub_domain=None):
+        c.user = model.User.get_by_name(username, ['avatars'])
+        if not c.user:
+            abort(404)
+
+        default_avatar_id = 0
+        if request.params['default'].isdigit():
+            default_avatar_id = int(request.params['default'])
+
+        deletions = []
+        for k in request.params.keys():
+            if k[0:6] == 'delete' and k[7:].isdigit():
+                deletions.append(int(k[7:]))
+
+        # First, update default
+        if not c.user.default_avatar or default_avatar_id != c.user.default_avatar.id:
+            if c.user.default_avatar:
+                c.user.default_avatar.default = False
+                model.Session.update(c.user.default_avatar)
+            
+            for av in c.user.avatars:
+                if av.id == default_avatar_id:
+                    av.default = True
+                    model.Session.update(av)
+                    break
+                    
+        # Process deletions
+        for av in c.user.avatars:
+            if av.id in deletions:
+                if av.default:
+                    default_avatar_id = 0
+
+                # I really don't like this. This could go to hell with large
+                # enough data sets.
+                # XXX PERF
+                for cls in [model.News, model.UserSubmission,
+                            model.JournalEntry, model.Comment]:
+                    for obj in model.Session.query(cls) \
+                                    .filter_by(avatar_id=av.id).all():
+                        obj.avatar = None
+                        model.Session.update(obj)
+
+                c.user.avatars.remove(av)
+                model.Session.delete(av)
+        
+        # If there is no default set the first avatar in the collection
+        if default_avatar_id == 0:
+            if c.user.avatars:
+                c.user.avatars[0].default = True
+                model.Session.update(c.user.avatars[0])
+
+        model.Session.commit()
+        h.redirect_to(h.url_for(controller='user_settings', action='avatars', username=c.user.username))
+
+    def avatars_upload(self, username=None, sub_domain=None):
+        validator = model.form.AvatarForm() 
+        try:
+            form_data = validator.to_python(request.params)
+        except formencode.Invalid, error:
+            return error
+            
+        c.user = model.User.get_by_name(username, ['avatars'])
+        if not c.user:
+            abort(404)
+            
+        # Process new avatar upload
+        if form_data['avatar'] and get_mime_type(form_data['avatar']) \
+            in ('image/jpeg', 'image/gif', 'image/png'):
+
+            useravatar = model.UserAvatar()
+            useravatar.title = form_data['title']
+            useravatar.default = form_data['default'] 
+
+            if form_data['default'] and c.user.default_avatar:
+                c.user.default_avatar.default = False
+
+            useravatar.write_to_mogile(form_data['avatar'], c.user)
+            c.user.avatars.append(useravatar)
+
+        model.Session.commit()
+        h.redirect_to(h.url_for(controller='user_settings', action='avatars', username=c.user.username))
 
     def relationships(self, username=None, sub_domain=None):
         """Edit user's relationships"""

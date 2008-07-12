@@ -37,6 +37,9 @@ def make_map():
     map.connect('/users/:username/profile', controller='user', action='profile')
 
     map.connect('/users/:username/settings', controller='user_settings', action='index')
+    map.connect('/users/:username/settings/avatars', controller='user_settings', action='avatars')
+    map.connect('/users/:username/settings/avatars_update', controller='user_settings', action='avatars_update')
+    map.connect('/users/:username/settings/avatars_upload', controller='user_settings', action='avatars_upload')
     map.connect('/users/:username/settings/relationships', controller='user_settings', action='relationships')
     map.connect('/users/:username/settings/relationships/commit', controller='user_settings', action='relationships_commit', **require_post)
     
@@ -109,9 +112,6 @@ def make_map():
     map.connect('/search', controller='search', action='index')
     map.connect('/search/do', controller='search', action='do')
 
-    map.connect('/users/:username/avatars', controller='user', action='avatar')
-    map.connect('/users/:username/avatars_update', controller='user', action='avatar_update')
-    map.connect('/users/:username/avatars_upload', controller='user', action='avatar_upload')
     map.connect('/admin', controller='admin', action='index')
     map.connect('/admin/auth', controller='admin', action='auth')
     map.connect('/admin/auth_verify', controller='admin', action='auth_verify')

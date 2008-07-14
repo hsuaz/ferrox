@@ -6,7 +6,8 @@
     <h2>${c.submission.title}</h2>
 
     <div class="time">Submitted on ${h.format_time(c.submission.time)}</div>
-    <div class="artist">by ${lib.user_link(c.submission.primary_artist)}</div>
+    <div class="artist">by ${lib.user_link(c.submission.primary_artist)}
+    ${h.image_tag(h.get_avatar_url(c.submission), c.submission.primary_artist.display_name)}</div>
     <div class="buttons">
     % if c.auth_user:
         % if c.submission in c.auth_user.favorite_submissions:

@@ -173,6 +173,54 @@ class GalleryController(BaseController):
 
         c.form = FormGenerator()
 
+        ### SQL
+        # Some defaults..
+        # XXX admins can see more than this
+        where_clauses.append(model.UserSubmission.review_status == 'normal')
+
+        ### Tag filtering
+        # Construct a list of required and excluded tags
+        required_tags = []
+        excluded_tags = []
+        invalid_tags = []
+        (required_tag_names, excluded_tag_names) \
+            = tagging.break_apart_tag_string(form_data['tags'],
+                                             include_negative=True)
+        
+        for tag_list, tag_name_list in (required_tags, required_tag_names), \
+                                       (excluded_tags, excluded_tag_names):
+            for tag_name in tag_name_list:
+                tag = model.Tag.get_by_text(tag_name)
+                if tag:
+                    tag_list.append(tag)
+                else:
+                    invalid_tags.append(tag_name)
+
+        # Error on invalid tags
+        if invalid_tags:
+            c.form.errors['tags'] = 'No such tags: ' + ', '.join(invalid_tags)
+            return render('gallery/index.mako')
+
+        # Require tags via simple INNER JOINs
+        for tag in required_tags:
+            alias = model.SubmissionTag.__table__.alias()
+            joined_tables = joined_tables.join(alias, and_(
+                model.Submission.id == alias.c.submission_id,
+                alias.c.tag_id == tag.id,
+                )
+            )
+
+        # Exclude tags via LEFT JOIN .. WHERE IS NULL
+        excluded_aliases = []
+        for tag in excluded_tags:
+            alias = model.SubmissionTag.__table__.alias()
+            joined_tables = joined_tables.outerjoin(alias, and_(
+                model.Submission.id == alias.c.submission_id,
+                alias.c.tag_id == tag.id,
+                )
+            )
+            where_clauses.append(alias.c.tag_id == None)
+
         # Pagination
         pageno = form_data['page'] or 1
         perpage = form_data['perpage'] or \
@@ -461,6 +509,11 @@ class GalleryController(BaseController):
             ownership_status = 'primary',
             review_status = 'normal'
         )
+        if form_data['avatar_id']:
+            av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()
+            user_submission.avatar = av
+        else:
+            user_submission.avatar = None
         submission.user_submission.append(user_submission)
 
         model.Session.commit()
@@ -469,8 +522,7 @@ class GalleryController(BaseController):
 
         # update xapian
         if search_enabled:
-            xapian_database = xapian.WritableDatabase('submission.xapian',
-                                                      xapian.DB_OPEN)
+            xapian_database = xapian.WritableDatabase('submission.xapian', xapian.DB_OPEN)
             xapian_document = submission.to_xapian()
             xapian_database.add_document(xapian_document)
 

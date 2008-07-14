@@ -53,7 +53,8 @@ class NewsController(BaseController):
         news = model.News(title, content, c.auth_user)
         news.is_anonymous = form_data['is_anonymous']
         if form_data['avatar_id']:
-            news.avatar_id = form_data['avatar_id'];
+            av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()
+            news.avatar = av
         model.Session.save(news)
         model.Session.commit()
         h.redirect_to('/news')
@@ -90,7 +91,12 @@ class NewsController(BaseController):
             c.item.title = title
             c.item.update_content(content)
         c.item.is_anonymous = form_data['is_anonymous']
-        c.item.avatar_id = form_data['avatar_id']
+        #c.item.avatar_id = form_data['avatar_id']
+        if form_data['avatar_id']:
+            av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()
+            c.item.avatar = av
+        else:
+            c.item.avatar = None
         model.Session.commit()
         h.redirect_to('/news')
 

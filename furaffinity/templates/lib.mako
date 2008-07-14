@@ -66,7 +66,7 @@
 <div class="entry${extra_class}">
     <div class="header">
         <div class="title">${h.link_to(entry.title, h.url(controller='journal', action='view', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id))}</div>
-        <div class="avatar FINISHME"><img src="http://userpic.livejournal.com/41114350/600603" alt="avatar"/></div>
+        <div class="avatar">${h.image_tag(h.get_avatar_url(entry), entry.user.display_name)}</div>
         <div class="author">By: ${user_link(entry.user)}</div>
         <div class="date">Date: ${h.format_time(entry.time)}</div>
     </div>
@@ -101,7 +101,7 @@
 %>
     <div class="header">
         <div class="title">${note.subject}${icon}</div>
-        <div class="avatar FINISHME"><img src="http://userpic.livejournal.com/41114350/600603" alt="avatar"/></div>
+        <div class="avatar">${h.image_tag(h.get_avatar_url(owner), owner.display_name)}/div>
         % if note.sender == owner:
         <div class="author">${h.image_tag('/images/icons/go-next.png', 'Sent to')} ${user_link(note.recipient)}</div>
         % else:

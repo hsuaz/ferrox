@@ -461,6 +461,11 @@ class GalleryController(BaseController):
             ownership_status = 'primary',
             review_status = 'normal'
         )
+        if form_data['avatar_id']:
+            av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()
+            user_submission.avatar = av
+        else:
+            user_submission.avatar = None
         submission.user_submission.append(user_submission)
 
         model.Session.commit()
@@ -469,8 +474,7 @@ class GalleryController(BaseController):
 
         # update xapian
         if search_enabled:
-            xapian_database = xapian.WritableDatabase('submission.xapian',
-                                                      xapian.DB_OPEN)
+            xapian_database = xapian.WritableDatabase('submission.xapian', xapian.DB_OPEN)
             xapian_document = submission.to_xapian()
             xapian_database.add_document(xapian_document)
 

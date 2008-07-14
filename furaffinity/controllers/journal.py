@@ -198,13 +198,17 @@ class JournalController(BaseController):
             title=form_data['title'],
             content=''
         )
+        if form_data['avatar_id']:
+            av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()
+            journal_entry.avatar = av
+        else:
+            journal_entry.avatar = None
         journal_entry.update_content(form_data['content'])
         model.Session.save(journal_entry)
         model.Session.commit()
 
         if search_enabled:
-            xapian_database = xapian.WritableDatabase('journal.xapian',
-                                                      xapian.DB_OPEN)
+            xapian_database = xapian.WritableDatabase('journal.xapian', xapian.DB_OPEN)
             xapian_document = journal_entry.to_xapian()
             xapian_database.add_document(xapian_document)
 
@@ -226,6 +230,7 @@ class JournalController(BaseController):
         c.form = FormGenerator()
         c.form.defaults['title'] = journal_entry.title
         c.form.defaults['content'] = journal_entry.content
+        c.entry = journal_entry
         return render('/journal/post.mako')
 
     @check_perms(['post_journal','administrate'])
@@ -256,15 +261,21 @@ class JournalController(BaseController):
             journal_entry.editlog.update(editlog_entry)
             journal_entry.title = form_data['title']
             journal_entry.update_content(form_data['content'])
+        if form_data['avatar_id']:
+            av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()
+            journal_entry.avatar = av
+        else:
+            journal_entry.avatar = None
+           
         model.Session.commit()
 
-        if search_enabled:
-            xapian_database = xapian.WritableDatabase('journal.xapian',
-                                                      xapian.DB_OPEN)
+        if search_enabled and hasattr(journal_entry, 'content_plain'):
+            xapian_database = xapian.WritableDatabase('journal.xapian', xapian.DB_OPEN)
             xapian_document = journal_entry.to_xapian()
             xapian_database.replace_document("I%d" % journal_entry.id, xapian_document)
 
-        h.redirect_to(h.url_for(controller='journal', action='view', id=journal_entry.id, username=journal_entry.user.display_name))
+        #h.redirect_to(h.url_for(controller='journal', action='view', id=journal_entry.id, username=journal_entry.user.display_name))
+        h.redirect_to(h.url_for(controller='journal', action='view', username=c.route['username'], id=c.route['id'], year=c.route['year'], month=c.route['month'], day=c.route['day']))
 
     @check_perms(['post_journal','administrate'])
     def delete(self,id=None):

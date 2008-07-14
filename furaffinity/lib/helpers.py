@@ -17,7 +17,7 @@ def normalize_newlines(string):
 def to_dict(model):
     '''Convert a SQLAlchemy model instance into a dictionary'''
     model_dict = {}
-    for propname in model.c.keys():
+    for propname in model.__table__.c.keys():
         model_dict[propname] = getattr(model, propname)
     return model_dict
 
@@ -157,6 +157,8 @@ def get_avatar_url(object = None):
         elif hasattr(object, 'author'):
             av = object.author.default_avatar
         elif hasattr(object, 'user'):
+            av = object.user.default_avatar
+        elif hasattr(object, 'default_avatar') and object.default_avatar:
             av = object.user.default_avatar
         if av:
             return url_for(controller='gallery', action='file', filename=av.mogile_key)

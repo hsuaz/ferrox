@@ -94,6 +94,7 @@ class SubmitEditForm(formencode.Schema):
     title = formencode.validators.String(not_empty=True)
     tags = formencode.validators.String(not_empty=True)
     description = formencode.validators.NotEmpty(not_empty=True)
+    avatar_id = validators.Int()
 
 class SubmitForm(SubmitEditForm):
     fullfile = FileUploadValidator(not_empty=True)
@@ -104,6 +105,7 @@ class EditForm(SubmitEditForm):
 class JournalForm(formencode.Schema):
     title = validators.String(not_empty=True)
     content = validators.NotEmpty(not_empty=True)
+    avatar_id = validators.Int()
 
 class DeleteForm(formencode.Schema):
     confirm = formencode.validators.PlainText(not_empty=False, if_missing=None)

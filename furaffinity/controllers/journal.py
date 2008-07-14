@@ -94,7 +94,7 @@ class JournalController(BaseController):
         if c.page_owner and not watchstream:
             journal_q = journal_q.filter_by(user_id = c.page_owner.id)
         journal_q = journal_q.filter_by(status = 'normal')
-        journal_q = journal_q.filter(model.JournalEntry.c.time >= earliest).filter(model.JournalEntry.c.time < latest)
+        journal_q = journal_q.filter(model.JournalEntry.time >= earliest).filter(model.JournalEntry.time < latest)
 
 
         #   ... grab c.page_owner's relationships and add them to the where clause
@@ -102,7 +102,7 @@ class JournalController(BaseController):
             watchstream_where = []
             for r in c.page_owner.relationships:
                 if 'watching_journals' in r.relationship:
-                    watchstream_where.append(model.UserSubmission.c.user_id == r.to_user_id)
+                    watchstream_where.append(model.UserSubmission.user_id == r.to_user_id)
             if watchstream_where:
                 journal_q = journal_q.filter(or_(*watchstream_where))
             else:
@@ -112,7 +112,7 @@ class JournalController(BaseController):
                 c.error_title = "No journals found. User '%s' isn't watching anyone."%c.page_owner.display_name
                 return render('/error.mako')
 
-        journal_q = journal_q.order_by(model.JournalEntry.c.time.desc())
+        journal_q = journal_q.order_by(model.JournalEntry.time.desc())
         c.journals = journal_q.limit(max_per_page).offset(pageno * max_per_page).all()
         num_journals = journal_q.count()
         
@@ -194,13 +194,17 @@ class JournalController(BaseController):
             title=form_data['title'],
             content=''
         )
+        if form_data['avatar_id']:
+            av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()
+            journal_entry.avatar = av
+        else:
+            journal_entry.avatar = None
         journal_entry.update_content(form_data['content'])
         model.Session.save(journal_entry)
         model.Session.commit()
 
         if search_enabled:
-            xapian_database = xapian.WritableDatabase('journal.xapian',
-                                                      xapian.DB_OPEN)
+            xapian_database = xapian.WritableDatabase('journal.xapian', xapian.DB_OPEN)
             xapian_document = journal_entry.to_xapian()
             xapian_database.add_document(xapian_document)
 
@@ -222,6 +226,7 @@ class JournalController(BaseController):
         c.form = FormGenerator()
         c.form.defaults['title'] = journal_entry.title
         c.form.defaults['content'] = journal_entry.content
+        c.entry = journal_entry
         return render('/journal/post.mako')
 
     @check_perms(['post_journal','administrate'])
@@ -252,15 +257,21 @@ class JournalController(BaseController):
             journal_entry.editlog.update(editlog_entry)
             journal_entry.title = form_data['title']
             journal_entry.update_content(form_data['content'])
+        if form_data['avatar_id']:
+            av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()
+            journal_entry.avatar = av
+        else:
+            journal_entry.avatar = None
+           
         model.Session.commit()
 
-        if search_enabled:
-            xapian_database = xapian.WritableDatabase('journal.xapian',
-                                                      xapian.DB_OPEN)
+        if search_enabled and hasattr(journal_entry, 'content_plain'):
+            xapian_database = xapian.WritableDatabase('journal.xapian', xapian.DB_OPEN)
             xapian_document = journal_entry.to_xapian()
             xapian_database.replace_document("I%d" % journal_entry.id, xapian_document)
 
-        h.redirect_to(h.url_for(controller='journal', action='view', id=journal_entry.id, username=journal_entry.user.display_name))
+        #h.redirect_to(h.url_for(controller='journal', action='view', id=journal_entry.id, username=journal_entry.user.display_name))
+        h.redirect_to(h.url_for(controller='journal', action='view', username=c.route['username'], id=c.route['id'], year=c.route['year'], month=c.route['month'], day=c.route['day']))
 
     @check_perms(['post_journal','administrate'])
     def delete(self,id=None):
@@ -334,7 +345,7 @@ class JournalController(BaseController):
         numlines = len(lines)
         randomwords = lambda x: ' '.join([lines[random.randint(0,numlines-1)] for x in xrange(x)])
 
-        cur_time = datetime.datetime.fromtimestamp(model.Session.query(model.JournalEntry).max(model.JournalEntry.c.time))
+        cur_time = datetime.datetime.fromtimestamp(model.Session.query(model.JournalEntry).max(model.JournalEntry.time))
         cur_time = datetime.datetime(2005,1,1) if cur_time < datetime.datetime(2005,1,1) else cur_time
                 
         for i in xrange(num_rows):

@@ -5,14 +5,12 @@ import pylons
 from furaffinity.lib import helpers as h
 import furaffinity.lib.bbcode_for_fa as bbcode
 from furaffinity.lib.image import ImageClass
-from furaffinity.lib.mimetype import get_mime_type
 
 from sqlalchemy import Column, ForeignKey, types, sql
-from sqlalchemy import and_, or_, not_
+from sqlalchemy import and_
 from sqlalchemy.orm import relation
-from sqlalchemy.databases.mysql import MSInteger, MSSet
 from sqlalchemy.exceptions import IntegrityError, InvalidRequestError
-from sqlalchemy.orm import eagerload, eagerload_all
+from sqlalchemy.orm import eagerload
 
 from datetime import datetime, timedelta
 import hashlib

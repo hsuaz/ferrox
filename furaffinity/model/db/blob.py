@@ -8,23 +8,18 @@ from furaffinity.lib import helpers as h
 import furaffinity.lib.bbcode_for_fa as bbcode
 
 from sqlalchemy import Column, MetaData, Table, ForeignKey, types, sql
-from sqlalchemy.orm import mapper, object_mapper, relation
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import object_mapper, relation
 from sqlalchemy.exceptions import InvalidRequestError
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import and_
 
-from binascii import crc32
 import cStringIO
 import chardet
 import codecs
-from datetime import datetime, timedelta
-import hashlib
+from datetime import datetime
 import mimetypes
 import os.path
 import random
 import re
-import sys
 import time
 
 from furaffinity.model.db import BaseTable, DateTime, Enum, Session
@@ -62,6 +57,7 @@ class EditLog(BaseTable):
     id                  = Column(types.Integer, primary_key=True)
     last_edited_at      = Column(DateTime, nullable=False, default=datetime.now)
     last_edited_by_id   = Column(types.Integer, ForeignKey('users.id'))
+    last_edited_by      = relation(User)
 
     def __init__(self,user):
         self.last_edited_by = user
@@ -82,7 +78,8 @@ class EditLogEntry(BaseTable):
     previous_title      = Column(types.UnicodeText, nullable=False)
     previous_text       = Column(types.UnicodeText, nullable=False)
     previous_text_parsed= Column(types.UnicodeText, nullable=False)
-    #mysql_engine='InnoDB
+    editlog             = relation(EditLog, backref='entries')
+    edited_by           = relation(User)
 
     def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed):
         self.edited_by = user
@@ -105,6 +102,9 @@ class JournalEntry(BaseTable):
     status              = Column(journal_status_type, index=True )
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
     avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
+    avatar              = relation(UserAvatar, uselist=False, lazy=False)
+    editlog             = relation(EditLog)
+    user                = relation(User, backref='journals')
 
     def __init__(self, user_id, title, content):
         content = h.escape_once(content)
@@ -169,6 +169,9 @@ class News(BaseTable):
     is_deleted          = Column(types.Boolean, nullable=False, default=False)
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
     avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
+    author              = relation(User)
+    avatar              = relation(UserAvatar, uselist=False, lazy=False)
+    editlog             = relation(EditLog)
 
     def __init__(self, title, content, author):
         self.title = title
@@ -197,6 +200,7 @@ class Submission(BaseTable):
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    editlog             = relation(EditLog)
 
     def __init__(self):
         self.title = ''
@@ -516,6 +520,8 @@ class HistoricSubmission(BaseTable):
     mimetype            = Column(types.String(35), nullable=False)
     edited_at           = Column(DateTime, nullable=False, default=datetime.now)
     edited_by_id        = Column(types.Integer, ForeignKey('users.id'))
+    edited_by           = relation(User)
+    submission          = relation(Submission, backref='historic_submission')
 
     def __init__(self, user):
         self.edited_by = user
@@ -537,7 +543,9 @@ class UserSubmission(BaseTable):
     ownership_status    = Column(user_submission_ownership_status_type, nullable=False)
     review_status       = Column(user_submission_review_status_type, nullable=False)
     avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
-
+    avatar              = relation(UserAvatar, uselist=False, lazy=False)
+    submission          = relation(Submission, backref='user_submission')
+    user                = relation(User, backref='user_submission')
 
     def __init__(self, user, relationship, ownership_status, review_status):
         self.user = user
@@ -545,7 +553,6 @@ class UserSubmission(BaseTable):
         self.ownership_status = ownership_status
         self.review_status = review_status
         self.avatar_id = None
-
 
 Submission.primary_artist = relation(User, secondary=UserSubmission.__table__,
     primaryjoin=and_(Submission.id == UserSubmission.submission_id,
@@ -565,6 +572,8 @@ class Comment(BaseTable):
     content_parsed      = Column(types.UnicodeText, nullable=False)
     content_short       = Column(types.UnicodeText, nullable=False)
     avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
+    avatar              = relation(UserAvatar, uselist=False, lazy=False)
+    user                = relation(User, backref='comments')
 
     def add_to_nested_set(self, parent, discussion):
         """Call on a new Comment to fix the affected nested set values.
@@ -616,7 +625,7 @@ class Comment(BaseTable):
                 break
 
         join = sql.exists([1],
-            sql.and_(
+            and_(
                 foreign_column == discussion.id,
                 bridge_table.c.comment_id == comment_table.c.id,
                 )
@@ -626,7 +635,7 @@ class Comment(BaseTable):
             column = getattr(comment_table.c, side)
             Session.execute(
                 comment_table.update(
-                    sql.and_(column >= parent_right, join),
+                    and_(column >= parent_right, join),
                     values={column: column + 2}
                     )
                 )
@@ -660,7 +669,6 @@ class Comment(BaseTable):
         self.content_short = content
         self.avatar_id = None
 
-
 class NewsComment(BaseTable):
     __tablename__       = 'news_comments'
     news_id             = Column(types.Integer, ForeignKey('news.id'), primary_key=True)
@@ -677,6 +685,10 @@ class SubmissionComment(BaseTable):
     submission_id       = Column(types.Integer, ForeignKey('submissions.id'), primary_key=True)
     comment_id          = Column(types.Integer, ForeignKey('comments.id'), primary_key=True)
     
+JournalEntry.comments = relation(Comment, secondary=JournalEntryComment.__table__, backref='journal_entry', order_by=Comment.left)
+News.comments = relation(Comment, secondary=NewsComment.__table__, backref='news', order_by=Comment.left)
+Submission.comments = relation(Comment, secondary=SubmissionComment.__table__, backref='submission', order_by=Comment.left)
+
 class Tag(BaseTable):
     __tablename__       = 'tags'
     id                  = Column(types.Integer, primary_key=True, autoincrement=True)
@@ -739,35 +751,4 @@ class SubmissionTag(BaseTable):
     def __init__(self, tag):
         self.tag = tag
 
-
-EditLog.last_edited_by = relation(User)
-
-EditLogEntry.editlog = relation(EditLog, backref='entries')
-EditLogEntry.edited_by = relation(User)
-
-News.author = relation(User)
-News.editlog = relation(EditLog)
-News.comments = relation(Comment, secondary=NewsComment.__table__, backref='news', order_by=Comment.left)
-
-UserSubmission.submission = relation(Submission, backref='user_submission')
-UserSubmission.user = relation(User, backref='user_submission')
-
-Submission.editlog = relation(EditLog)
-Submission.comments = relation(Comment, secondary=SubmissionComment.__table__, backref='submission', order_by=Comment.left)
-
-HistoricSubmission.submission = relation(Submission, backref='historic_submission')
-HistoricSubmission.edited_by = relation(User)
-
-JournalEntry.editlog = relation(EditLog)
-JournalEntry.comments = relation(Comment, secondary=JournalEntryComment.__table__, backref='journal_entry', order_by=Comment.left)
-JournalEntry.user = relation(User, backref='journals')
-
-Comment.user = relation(User, backref='comments')
-
-Tag.submissions = relation(Submission, backref='tags', secondary=SubmissionTag.__table__)
-
-JournalEntry.avatar = relation(UserAvatar, primaryjoin=(JournalEntry.avatar_id == UserAvatar.id), uselist=False, lazy=False)
-News.avatar = relation(UserAvatar, primaryjoin=(News.avatar_id == UserAvatar.id), uselist=False, lazy=False)
-UserSubmission.avatar = relation(UserAvatar, primaryjoin=(UserSubmission.avatar_id == UserAvatar.id), uselist=False, lazy=False)
-Comment.avatar = relation(UserAvatar, primaryjoin=(Comment.avatar_id == UserAvatar.id), uselist=False, lazy=False)
-
+Submission.tags = relation(Submission, backref='submissions', secondary=SubmissionTag.__table__)

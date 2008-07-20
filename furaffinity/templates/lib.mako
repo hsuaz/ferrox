@@ -9,10 +9,10 @@
 %>
 <div class="entry${extra_class}">
     <div class="header">
-        <div class="title">${entry.title}</div>
+        <div class="title">${entry.subject}</div>
         <div class="avatar">
             % if not entry.is_anonymous:
-            ${h.image_tag(h.get_avatar_url(entry), entry.author.username)}
+            ${h.image_tag(h.get_avatar_url(entry), entry.user.username)}
             % else:
             <img src="${h.get_avatar_url()}" alt="default avatar"/>
             % endif
@@ -21,7 +21,7 @@
             if entry.is_anonymous:
                 author_string = 'FA Staff'
             else:
-                author_string = capture(user_link, entry.author)
+                author_string = capture(user_link, entry.user)
         %>
         <div class="author">By: ${author_string}</div>
         <div class="date">Date: ${h.format_time(entry.time)}</div>

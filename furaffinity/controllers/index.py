@@ -14,9 +14,10 @@ class IndexController(BaseController):
     def index(self):
         """Main site index page."""
         c.news = model.Session.query(model.News) \
-                 .filter_by(is_deleted=False) \
-                 .order_by(model.News.time.desc()) \
-                 .limit(5)
+                      .join('message') \
+                      .filter_by(is_deleted=False) \
+                      .order_by(model.Message.time.desc()) \
+                      .limit(5)
 
         c.recent_submissions = find_submissions(page_size=12)[0]
         return render('/index.mako')

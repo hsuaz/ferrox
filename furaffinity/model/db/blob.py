@@ -24,6 +24,7 @@ import time
 
 from furaffinity.model.db import BaseTable, DateTime, Enum, Session
 from furaffinity.model.db.user import *
+from furaffinity.model.db.messages import *
 
 
 # -- This stuff is tied to class Submission --
@@ -155,36 +156,6 @@ class JournalEntry(BaseTable):
             return xapian_document
         else:
             return None
-
-class News(BaseTable):
-    __tablename__       = 'news'
-    id                  = Column(types.Integer, primary_key=True)
-    author_user_id      = Column(types.Integer, ForeignKey('users.id'))
-    title               = Column(types.UnicodeText, nullable=False)
-    content             = Column(types.UnicodeText, nullable=False)
-    content_parsed      = Column(types.UnicodeText, nullable=False)
-    content_short       = Column(types.UnicodeText, nullable=False)
-    time                = Column(DateTime, nullable=False, default=datetime.now)
-    is_anonymous        = Column(types.Boolean, nullable=False, default=False)
-    is_deleted          = Column(types.Boolean, nullable=False, default=False)
-    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
-    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
-    author              = relation(User)
-    avatar              = relation(UserAvatar, uselist=False, lazy=False)
-    editlog             = relation(EditLog)
-
-    def __init__(self, title, content, author):
-        self.title = title
-        self.content = content
-        self.content_parsed = bbcode.parser_long.parse(content)
-        self.content_short = bbcode.parser_short.parse(content)
-        self.author = author
-        self.avatar_id = None
-
-    def update_content (self, content):
-        self.content = h.escape_once(content)
-        self.content_parsed = bbcode.parser_long.parse(content)
-        self.content_short = bbcode.parser_short.parse(content)
 
 
 class Submission(BaseTable):

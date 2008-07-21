@@ -8,7 +8,7 @@ from furaffinity.lib import helpers as h
 import furaffinity.lib.bbcode_for_fa as bbcode
 
 from sqlalchemy import Column, MetaData, Table, ForeignKey, types, sql
-from sqlalchemy.orm import object_mapper, relation
+from sqlalchemy.orm import relation
 from sqlalchemy.exceptions import InvalidRequestError
 from sqlalchemy.sql import and_
 
@@ -423,115 +423,6 @@ Submission.primary_artist = relation(User, secondary=UserSubmission.__table__,
                      UserSubmission.ownership_status == 'primary'),
     secondaryjoin=(UserSubmission.user_id == User.id),
     uselist=False)
-
-class Comment(BaseTable):
-    __tablename__       = 'comments'
-    id                  = Column(types.Integer, primary_key=True)
-    user_id             = Column(types.Integer, ForeignKey('users.id'))
-    left                = Column(types.Integer, nullable=False)
-    right               = Column(types.Integer, nullable=False)
-    subject             = Column(types.UnicodeText, nullable=False)
-    time                = Column(DateTime, nullable=False, default=datetime.now)
-    content             = Column(types.UnicodeText, nullable=False)
-    content_parsed      = Column(types.UnicodeText, nullable=False)
-    content_short       = Column(types.UnicodeText, nullable=False)
-    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
-    avatar              = relation(UserAvatar, uselist=False, lazy=False)
-    user                = relation(User, backref='comments')
-
-    def add_to_nested_set(self, parent, discussion):
-        """Call on a new Comment to fix the affected nested set values.
-        
-        discussion paremeter is the news/journal/submission this comment
-        belongs to, so we don't have to hunt it down again.
-        """
-
-        # Easy parts; remember the parent/discussion and add to bridge table
-        self._parent = parent
-        self._discussion = discussion
-
-        discussion.comments.append(self)
-
-        if not parent:
-            # This comment is a brand new top-level one; its left and right
-            # need to be higher than the highest right
-            last_comment = Session.query(Comment) \
-                .with_parent(discussion, property='comments') \
-                .order_by(Comment.right.desc()) \
-                .first()
-            if last_comment:
-                self.left = last_comment.right + 1
-                self.right = last_comment.right + 2
-            else:
-                # First comment at all
-                self.left = 1
-                self.right = 2
-
-            return
-
-        # Otherwise, we're replying to an existing comment.
-        # The new comment's left should be the parent's old right, as it's
-        # being inserted as the last descendant, and every left or right
-        # value to the right of that should be bumped up by two.
-        parent_right = parent.right
-
-        self.left = parent_right
-        self.right = parent_right + 1
-
-        # Sure wish this reflection stuff were documented
-        bridge_table = object_mapper(discussion) \
-                       .get_property('comments') \
-                       .secondary
-        foreign_column = None
-        for c in bridge_table.c:
-            if c.name != 'comment_id':
-                foreign_column = c
-                break
-
-        join = sql.exists([1],
-            and_(
-                foreign_column == discussion.id,
-                bridge_table.c.comment_id == comment_table.c.id,
-                )
-            )
-
-        for side in ['left', 'right']:
-            column = getattr(comment_table.c, side)
-            Session.execute(
-                comment_table.update(
-                    and_(column >= parent_right, join),
-                    values={column: column + 2}
-                    )
-                )
-
-    def get_discussion(self):
-        """Returns this comment's associated news/journal/submission."""
-        if not hasattr(self, '_discussion'):
-            self._discussion = (self.news
-                                or self.journal_entry
-                                or self.submission)[0]
-        return self._discussion
-
-    def get_parent(self):
-        """Returns this comment's parent."""
-        if not hasattr(self, '_parent'):
-            self._parent = Session.query(Comment) \
-                .with_parent(self.get_discussion(), property='comments') \
-                .filter(Comment.left < self.left) \
-                .filter(Comment.right > self.left) \
-                .order_by(Comment.left.desc()) \
-                .first()
-        return self._parent
-
-    def __init__(self, user, subject, content):
-        self.user_id = user.id
-        self.subject = subject
-        self.left = 0
-        self.right = 0
-        self.content = content
-        self.content_parsed = content
-        self.content_short = content
-        self.avatar_id = None
 
 class NewsComment(BaseTable):
     __tablename__       = 'news_comments'

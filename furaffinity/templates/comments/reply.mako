@@ -20,7 +20,7 @@ ${comments.comment_tree([c.comment], c.discussion_url)}
     % endif
     <dl class="standard-form">
         <dt>Subject</dt>
-        <dd>${c.form.text_field('subject')}</dd>
+        <dd>${c.form.text_field('title')}</dd>
         <dt>Message</dt>
         <dd>${c.form.text_area('content', size='80x10')}</dd>
     </dl>

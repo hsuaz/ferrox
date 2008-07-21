@@ -19,7 +19,7 @@ class CommentsController(BaseController):
         if route['action'] != 'view':
             abort(404)
 
-        if route['controller'] == 'news':
+        if route['controller'] == u'news':
             table = model.News
         elif route['controller'] == 'journal':
             table = model.JournalEntry
@@ -90,7 +90,7 @@ class CommentsController(BaseController):
 
         comment = model.Comment(
             user = c.auth_user,
-            subject = h.escape_once(form_data['subject']),
+            title = h.escape_once(form_data['title']),
             content = h.escape_once(form_data['content']),
         )
         model.Session.save(comment)

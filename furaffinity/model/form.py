@@ -153,7 +153,7 @@ class SendNoteForm(formencode.Schema):
         return formencode.Schema._to_python(self, value, state)
 
 class CommentForm(formencode.Schema):
-    subject = validators.String(if_empty='(no subject)')
+    title = validators.String(if_empty='(no subject)')
     content = validators.String(not_empty=True)
 
 class WatchForm(formencode.Schema):

@@ -9,7 +9,7 @@ ${single_comment(comment, discussion_url)}
 <%def name="single_comment(comment, discussion_url)">
 <div class="comment entry" style="margin-left: ${40 * comment.indent}px;">
     <div class="header">
-        <div class="title">${comment.subject}</div>
+        <div class="title">${comment.title}</div>
         <div class="avatar FINISHME"><img src="http://userpic.livejournal.com/41114350/600603" alt="avatar"/></div>
         <div class="author">${lib.user_link(comment.user)}</div>
         <div class="date">${h.format_time(comment.time)}</div>

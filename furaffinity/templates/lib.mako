@@ -100,8 +100,8 @@
         icon = h.image_tag('/images/icons/mail-unread.png', 'Unread')
 %>
     <div class="header">
-        <div class="title">${note.subject}${icon}</div>
-        <div class="avatar">${h.image_tag(h.get_avatar_url(owner), owner.display_name)}/div>
+        <div class="title">${note.title}${icon}</div>
+        <div class="avatar">${h.image_tag(h.get_avatar_url(owner), owner.display_name)}</div>
         % if note.sender == owner:
         <div class="author">${h.image_tag('/images/icons/go-next.png', 'Sent to')} ${user_link(note.recipient)}</div>
         % else:
@@ -122,7 +122,7 @@
 <%def name="note_collapsed_entry(note, owner)">
 <div class="entry collapsed">
     <div class="header">
-        <div class="title">${h.link_to(note.subject, h.url(controller='notes', action='view', username=owner.username, id=note.id), class_='js-expand-note')}</div>
+        <div class="title">${h.link_to(note.title, h.url(controller='notes', action='view', username=owner.username, id=note.id), class_='js-expand-note')}</div>
     </div>
 </div>
 </%def>

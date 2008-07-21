@@ -17,5 +17,5 @@
     % endfor
 </div>
 
-<%def name="title()">${c.note.subject}</%def>
+<%def name="title()">${c.note.title}</%def>
 

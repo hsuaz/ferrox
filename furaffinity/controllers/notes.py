@@ -55,11 +55,12 @@ class NotesController(BaseController):
 
         note_q = model.Session.query(model.Note)
         c.all_notes = note_q.filter_by(original_note_id=note_thread_id) \
+            .join('message') \
             .filter(sql.or_(
-                model.Note.from_user_id == c.page_owner.id,
+                model.Message.user_id == c.page_owner.id,
                 model.Note.to_user_id == c.page_owner.id
                 )) \
-            .order_by(model.Note.time.asc())
+            .order_by(model.Message.time.asc())
 
         c.latest_note = c.note.latest_note(c.page_owner)
 
@@ -128,23 +129,23 @@ class NotesController(BaseController):
             return render('notes/send.mako')
 
         original_note_id = None
-        to_user_id = None
+        recipient = None
         if 'reply_to_note' in form_data:
             reply_to_note = form_data['reply_to_note']
             self._enforce_ownership(reply_to_note)
             original_note_id = reply_to_note.original_note_id
 
             if reply_to_note.recipient == c.auth_user:
-                to_user_id = reply_to_note.sender.id
+                recipient = reply_to_note.sender
             elif reply_to_note.sender == c.auth_user:
-                to_user_id = reply_to_note.recipient.id
+                recipient = reply_to_note.recipient
         else:
-            to_user_id = form_data['recipient'].id
+            recipient = form_data['recipient']
 
         note = model.Note(
-            from_user_id = c.auth_user.id,
-            to_user_id = to_user_id,
-            subject = h.escape_once(form_data['subject']),
+            sender = c.auth_user,
+            recipient = recipient,
+            title = h.escape_once(form_data['subject']),
             content = h.escape_once(form_data['content']),
             original_note_id = original_note_id,
         )

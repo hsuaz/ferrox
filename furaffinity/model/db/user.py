@@ -29,7 +29,6 @@ else:
 
 ### Custom types
 
-note_status_type = Enum('unread', 'read')
 user_relationship_type = Enum('watching_submissions', 'watching_journals', 'friend_to', 'blocking')
 
 ### Dummy classes
@@ -203,6 +202,9 @@ class User(BaseTable):
         Returns the number of unread notes this user has.
         """
 
+        # Eh.  Import recursion.  Note needs User, and we need Note here.
+        from furaffinity.model.db.messages import Note
+
         return Session.query(Note) \
             .filter(Note.to_user_id == self.id) \
             .filter(Note.status == 'unread') \
@@ -215,6 +217,9 @@ class User(BaseTable):
         however desired.
         """
 
+        # Avoid import recursion
+        from furaffinity.model.db.messages import Message, Note
+
         # Group-wise maximum, as inspired by the MySQL manual.  The only
         # difference between this and the example in the manual is that I add
         # the receipient's user id to the ON clause, ensuring that rows
@@ -224,20 +229,24 @@ class User(BaseTable):
         # and I think it's pretty fucking cool -- enough that I am going to put
         # my name on it.                                             -- Eevee
 
-        older_note_a = note_table.alias()
+        older_note_a = Note.__table__.alias()
+        older_message_a = Message.__table__.alias()
 
-        note_q = Session.query(Note).select_from(note_table
-            .outerjoin(older_note_a,
+        newer_note_join = Note.__table__.join(Message.__table__)
+        older_note_join = older_note_a.join(older_message_a)
+
+        note_q = Session.query(Note).select_from(newer_note_join
+            .outerjoin(older_note_join,
                 sql.and_(
-                    note_table.c.original_note_id == older_note_a.c.original_note_id,
-                    note_table.c.to_user_id == older_note_a.c.to_user_id,
-                    note_table.c.time < older_note_a.c.time
+                    Note.original_note_id == older_note_a.c.original_note_id,
+                    Note.to_user_id == older_note_a.c.to_user_id,
+                    Message.time < older_message_a.c.time
                     )
                 )
             ) \
             .filter(older_note_a.c.id == None) \
             .filter(Note.to_user_id == self.id) \
-            .order_by(Note.time.desc())
+            .order_by(Message.time.desc())
 
         return note_q
 
@@ -317,62 +326,6 @@ class UserMetadata(BaseTable):
     
     user            = relation(User, backref='metadata')
     field           = relation(UserMetadataField, lazy=False)
-
-### Notes
-
-class Note(BaseTable):
-    __tablename__   = 'notes'
-    id              = Column(types.Integer, primary_key=True)
-    from_user_id    = Column(types.Integer, ForeignKey('users.id'))
-    to_user_id      = Column(types.Integer, ForeignKey('users.id'))
-    original_note_id= Column(types.Integer, ForeignKey('notes.id'))
-    subject         = Column(types.UnicodeText, nullable=False)
-    content         = Column(types.UnicodeText, nullable=False)
-    content_parsed  = Column(types.UnicodeText, nullable=False)
-    status          = Column(note_status_type, nullable=False)
-    time            = Column(DateTime, nullable=False, default=datetime.now)
-
-    sender          = relation(User, primaryjoin=(from_user_id==User.id))
-    recipient       = relation(User, primaryjoin=(to_user_id==User.id))
-
-    def __init__(self, from_user_id, to_user_id, subject, content, original_note_id=None):
-        self.from_user_id = from_user_id
-        self.to_user_id = to_user_id
-        self.subject = subject
-        self.content = content
-        self.content_parsed = bbcode.parser.parse(content)
-        self.original_note_id = original_note_id
-        self.status = 'unread'
-        self.time = datetime.now()
-
-    def update_content (self, content):
-        self.content = h.escape_once(content)
-        self.content_parsed = bbcode.parser.parse(content)
-
-    def latest_note(self, recipient):
-        """
-        Returns the latest note in this note's thread, preferring one that was
-        addressed to the provided recipient.
-        """
-        note_q = Session.query(Note).filter_by(original_note_id=self.original_note_id)
-        latest_note = note_q.filter_by(to_user_id=recipient.id) \
-            .order_by(Note.time.desc()) \
-            .first()
-
-        # TODO perf
-        if not latest_note:
-            # No note from this user on this thread
-            latest_note = note_q.order_by(Note.time.desc()) \
-                .first()
-
-        return latest_note
-
-    def base_subject(self):
-        """
-        Returns the subject without any prefixes attached.
-        """
-        return re.sub('^(Re: |Fwd: )+', '', self.subject)
-
 
 class UserAvatar(BaseTable):
     __tablename__       = 'user_avatars'

@@ -22,7 +22,7 @@
         % endif
         <td> ${h.format_time(note.time)} </td>
         <td> ${lib.user_link(note.sender)} </td>
-        <td> ${h.link_to(note.subject, h.url(controller='notes', action='view', username=c.page_owner.username, id=note.id))} </td>
+        <td> ${h.link_to(note.title, h.url(controller='notes', action='view', username=c.page_owner.username, id=note.id))} </td>
     </tr>
     % endfor
     </table>

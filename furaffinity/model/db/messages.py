@@ -53,6 +53,10 @@ class Message(BaseTable):
     """
     Table to contain any sort of "message", as a lot of these columns were
     grossly duplicated across half a dozen other tables.
+
+    Tables that join to this should have classes that also inherit from
+    MessageDelegator; this will allow you to access Message columns as if
+    they were in your class, without confusing SQLalchemy.
     """
     # XXX constructor inheritance
 
@@ -251,3 +255,55 @@ class Comment(BaseTable, MessageDelegator):
                 .order_by(Comment.left.desc()) \
                 .first()
         return self._parent
+
+class Note(BaseTable, MessageDelegator):
+    __tablename__   = 'notes'
+    id              = Column(types.Integer, primary_key=True)
+    message_id          = Column(types.Integer, ForeignKey('messages.id'))
+    to_user_id      = Column(types.Integer, ForeignKey('users.id'))
+    original_note_id= Column(types.Integer, ForeignKey('notes.id'))
+    status          = Column(Enum('unread', 'read'), nullable=False, default='unread')
+    message             = relation(Message, lazy=False)
+    recipient       = relation(User)
+
+    # Create a 'sender' wrapper property, as the usual 'user' property that
+    # Message has is a bit vague with two user relations
+    def __set_sender(self, sender):
+        self.message.user = sender
+    def __get_sender(self):
+        return self.message.user
+    sender          = property(__get_sender, __set_sender)
+
+
+    def __init__(self, sender, recipient, title, content, original_note_id=None):
+        self.message = Message(title=title, content=content, user=sender)
+        self.recipient = recipient
+        self.original_note_id = original_note_id
+
+    def latest_note(self, recipient):
+        """
+        Returns the latest note in this note's thread, preferring one that was
+        addressed to the provided recipient.
+        """
+        note_q = Session.query(Note).filter_by(original_note_id=self.original_note_id)
+        latest_note = note_q.filter_by(to_user_id=recipient.id) \
+            .join('message') \
+            .order_by(Message.time.desc()) \
+            .first()
+
+        # TODO perf
+        if not latest_note:
+            # No note from this user on this thread
+            latest_note = note_q \
+                .join('message') \
+                .order_by(Message.time.desc()) \
+                .first()
+
+        return latest_note
+
+    def base_subject(self):
+        """
+        Returns the subject without any prefixes attached.
+        """
+        return re.sub('^(Re: |Fwd: )+', '', self.title)
+

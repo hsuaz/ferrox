@@ -1,28 +1,76 @@
 from furaffinity.model.db import BaseTable, DateTime, Enum, IP, Session
 from furaffinity.model.db.user import *
 
+search_enabled = True
+try:
+    import xapian
+    if xapian.major_version() < 1:
+        search_enabled = False
+except ImportError:
+    search_enabled = False
+
+
+class EditLog(BaseTable):
+    __tablename__       = 'editlog'
+    id                  = Column(types.Integer, primary_key=True)
+    last_edited_at      = Column(DateTime, nullable=False, default=datetime.now)
+    last_edited_by_id   = Column(types.Integer, ForeignKey('users.id'))
+    last_edited_by      = relation(User)
+
+    def __init__(self,user):
+        self.last_edited_by = user
+        self.last_edited_at = datetime.now
+
+    def update(self,editlog_entry):
+        self.last_edited_by = editlog_entry.edited_by
+        self.last_edited_at = editlog_entry.edited_at
+        self.entries.append(editlog_entry)
+
+class EditLogEntry(BaseTable):
+    __tablename__       = 'editlog_entries'
+    id                  = Column(types.Integer, primary_key=True)
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    edited_at           = Column(DateTime, nullable=False, default=datetime.now)
+    edited_by_id        = Column(types.Integer, ForeignKey('users.id'))
+    reason              = Column(types.String(length=250))
+    previous_title      = Column(types.UnicodeText, nullable=False)
+    previous_text       = Column(types.UnicodeText, nullable=False)
+    previous_text_parsed= Column(types.UnicodeText, nullable=False)
+    editlog             = relation(EditLog, backref='entries')
+    edited_by           = relation(User)
+
+    def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed):
+        self.edited_by = user
+        self.edited_at = datetime.now()
+        self.reason = reason
+        self.previous_title = previous_title
+        self.previous_text = previous_text
+        self.previous_text_parsed = previous_text_parsed
+
 class Message(BaseTable):
     """
     Table to contain any sort of "message", as a lot of these columns were
     grossly duplicated across half a dozen other tables.
     """
+    # XXX constructor inheritance
 
     __tablename__       = 'messages'
     id                  = Column(types.Integer, primary_key=True)
     user_id             = Column(types.Integer, ForeignKey('users.id'))
     avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
-#    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+#    discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
     time                = Column(DateTime, nullable=False, default=datetime.now)
-    subject             = Column(types.Unicode(length=160), nullable=False, default='(no subject)')
+    title               = Column(types.Unicode(length=160), nullable=False, default='(no subject)')
     content             = Column(types.UnicodeText, nullable=False)
     content_parsed      = Column(types.UnicodeText, nullable=False)
     content_short       = Column(types.UnicodeText, nullable=False)
     avatar              = relation(UserAvatar)
-#    editlog             = relation(EditLog)
+    editlog             = relation(EditLog)
     user                = relation(User)
 
-    def __init__(self, subject, content, user):
-        self.subject = subject
+    def __init__(self, title, content, user):
+        self.title = title
         self.content = content
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
@@ -37,9 +85,15 @@ class Message(BaseTable):
 class MessageDelegator(object):
     """Tiny base class for delegating to self.message when appropriate."""
     def __getattr__(self, name):
-        if self.message and hasattr(self.message, name):
+        if hasattr(Message, name):
             return getattr(self.message, name)
         raise AttributeError
+
+    def __setattr__(self, name, value):
+        if hasattr(Message, name):
+            setattr(self.message, name, value)
+        else:
+            self.__dict__[name] = value
 
 class News(BaseTable, MessageDelegator):
     __tablename__       = 'news'
@@ -50,5 +104,51 @@ class News(BaseTable, MessageDelegator):
     message             = relation(Message, lazy=False)
 
     def __init__(self, title, content, author):
-        self.message = Message(subject=title, content=content, user=author)
+        self.message = Message(title=title, content=content, user=author)
 
+class JournalEntry(BaseTable, MessageDelegator):
+    __tablename__       = 'journal_entries'
+    id                  = Column(types.Integer, primary_key=True)
+    message_id          = Column(types.Integer, ForeignKey('messages.id'))
+    status              = Column(Enum('normal', 'under_review', 'removed_by_admin', 'deleted'), index=True, default='normal')
+    message             = relation(Message, lazy=False)
+
+    def __init__(self, user, title, content):
+        content = h.escape_once(content)
+        self.message = Message(title=title, content=content, user=user)
+
+    def __str__(self):
+        return "Journal entry titled %s" % self.title
+    
+    def update_content (self, content):
+        self.content = h.escape_once(content)
+        self.content_parsed = bbcode.parser_long.parse(content)
+        self.content_short = bbcode.parser_short.parse(content)
+        self.content_plain = bbcode.parser_plaintext.parse(content)
+
+    def to_xapian(self):
+        if not search_enabled:
+            return None
+
+        xapian_document = xapian.Document()
+        xapian_document.add_term("I%d" % self.id)
+        xapian_document.add_value(0, "I%d" % self.id)
+        xapian_document.add_term("A%s" % self.user.id)
+
+        # Title
+        words = []
+        rmex = re.compile(r'[^a-z0-9-]')
+        for word in self.title.lower().split(' '):
+            words.append(rmex.sub('', word[0:20]))
+        for word in set(words):
+            xapian_document.add_term("T%s" % word)
+
+        # Description
+        words = []
+        # FIX ME: needs bbcode parser. should be plain text representation.
+        for word in self.content_plain.lower().split(' '):
+            words.append(rmex.sub('', word[0:20]))
+        for word in set(words):
+            xapian_document.add_term("P%s" % word)
+
+        return xapian_document

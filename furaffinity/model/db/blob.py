@@ -40,122 +40,15 @@ try:
         search_enabled = False
 except ImportError:
     search_enabled = False
-# -- end --
 
 
 # Database specific types
-journal_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'deleted')
 submission_type_type = Enum('image', 'video', 'audio', 'text')
 submission_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'unlinked', 'deleted')
 derived_submission_derivetype_type = Enum('thumb', 'halfview')
 user_submission_ownership_status_type = Enum('primary', 'normal')
 user_submission_review_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'deleted')
 user_submission_relationship_type = Enum('artist', 'commissioner', 'gifted', 'isin')
-
-
-class EditLog(BaseTable):
-    __tablename__       = 'editlog'
-    id                  = Column(types.Integer, primary_key=True)
-    last_edited_at      = Column(DateTime, nullable=False, default=datetime.now)
-    last_edited_by_id   = Column(types.Integer, ForeignKey('users.id'))
-    last_edited_by      = relation(User)
-
-    def __init__(self,user):
-        self.last_edited_by = user
-        self.last_edited_at = datetime.now
-
-    def update(self,editlog_entry):
-        self.last_edited_by = editlog_entry.edited_by
-        self.last_edited_at = editlog_entry.edited_at
-        self.entries.append(editlog_entry)
-
-class EditLogEntry(BaseTable):
-    __tablename__       = 'editlog_entries'
-    id                  = Column(types.Integer, primary_key=True)
-    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
-    edited_at           = Column(DateTime, nullable=False, default=datetime.now)
-    edited_by_id        = Column(types.Integer, ForeignKey('users.id'))
-    reason              = Column(types.String(length=250))
-    previous_title      = Column(types.UnicodeText, nullable=False)
-    previous_text       = Column(types.UnicodeText, nullable=False)
-    previous_text_parsed= Column(types.UnicodeText, nullable=False)
-    editlog             = relation(EditLog, backref='entries')
-    edited_by           = relation(User)
-
-    def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed):
-        self.edited_by = user
-        self.edited_at = datetime.now()
-        self.reason = reason
-        self.previous_title = previous_title
-        self.previous_text = previous_text
-        self.previous_text_parsed = previous_text_parsed
-
-class JournalEntry(BaseTable):
-    __tablename__       = 'journal_entries'
-    id                  = Column(types.Integer, primary_key=True)
-    user_id             = Column(types.Integer, ForeignKey('users.id'))
-    discussion_id       = Column(types.Integer, nullable=False)
-    title               = Column(types.UnicodeText, nullable=False)
-    content             = Column(types.UnicodeText, nullable=False)
-    content_parsed      = Column(types.UnicodeText, nullable=False)
-    content_short       = Column(types.UnicodeText, nullable=False)
-    time                = Column(DateTime, nullable=False, default=datetime.now)
-    status              = Column(journal_status_type, index=True )
-    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
-    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
-    avatar              = relation(UserAvatar, uselist=False, lazy=False)
-    editlog             = relation(EditLog)
-    user                = relation(User, backref='journals')
-
-    def __init__(self, user_id, title, content):
-        content = h.escape_once(content)
-        self.user_id = user_id
-        self.discussion_id = 0
-        self.title = title
-        self.content = content
-        self.content_parsed = bbcode.parser_long.parse(content)
-        self.content_short = bbcode.parser_short.parse(content)
-        self.avatar_id = None
-
-        self.status = 'normal'
-
-    def __str__(self):
-        return "Journal entry titled %s" % self.title
-    
-    def update_content (self, content):
-        self.content = h.escape_once(content)
-        self.content_parsed = bbcode.parser_long.parse(content)
-        self.content_short = bbcode.parser_short.parse(content)
-        self.content_plain = bbcode.parser_plaintext.parse(content)
-
-    def to_xapian(self):
-        if search_enabled:
-            xapian_document = xapian.Document()
-            xapian_document.add_term("I%d"%self.id)
-            xapian_document.add_value(0,"I%d"%self.id)
-            xapian_document.add_term("A%s"%self.user.id)
-
-            # title
-            words = []
-            rmex = re.compile(r'[^a-z0-9-]')
-            for word in self.title.lower().split(' '):
-                words.append(rmex.sub('',word[0:20]))
-            words = set(words)
-            for word in words:
-                xapian_document.add_term("T%s"%word)
-
-            # description
-            words = []
-            # FIX ME: needs bbcode parser. should be plain text representation.
-            for word in self.content_plain.lower().split(' '):
-                words.append(rmex.sub('',word[0:20]))
-            words = set(words)
-            for word in words:
-                xapian_document.add_term("P%s"%word)
-
-            return xapian_document
-        else:
-            return None
 
 
 class Submission(BaseTable):

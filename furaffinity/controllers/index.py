@@ -14,8 +14,8 @@ class IndexController(BaseController):
     def index(self):
         """Main site index page."""
         c.news = model.Session.query(model.News) \
-                      .join('message') \
                       .filter_by(is_deleted=False) \
+                      .join('message') \
                       .order_by(model.Message.time.desc()) \
                       .limit(5)
 

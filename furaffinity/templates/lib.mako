@@ -9,7 +9,7 @@
 %>
 <div class="entry${extra_class}">
     <div class="header">
-        <div class="title">${entry.subject}</div>
+        <div class="title">${entry.title}</div>
         <div class="avatar">
             % if not entry.is_anonymous:
             ${h.image_tag(h.get_avatar_url(entry), entry.user.username)}
@@ -78,9 +78,9 @@
         % endif
     </div>
     % if c.auth_user.can('administrate'):
-    ${c.empty_form.start(h.url(controller='journal', action='edit', username=entry.user.username, id=entry.id), method='post')}
+    ${c.empty_form.start(h.url(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), method='post')}
     <ul class="inline admin">
-        <li>${h.link_to("Edit", h.url(controller='journal', action='edit', username=entry.user.username, id=entry.id))}</li>
+        <li>${h.link_to("Edit", h.url(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id))}</li>
         % if entry.status == 'deleted':
         <li>${c.empty_form.submit('Undelete')}</li>
         % else:

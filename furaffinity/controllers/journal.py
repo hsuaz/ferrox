@@ -36,8 +36,6 @@ def get_journal(id=None, eagerloads=[]):
     try:
         id = int(id)
     except ValueError:
-        c.error_text = 'Journal Entry ID must be a number.'
-        c.error_title = 'Not Found'
         abort(404)
 
     journal_entry = None
@@ -90,11 +88,13 @@ class JournalController(BaseController):
         max_per_page = int(pylons.config.get('journal.default_perpage',20))
         pageno = int(request.params.get('page',1)) - 1
         
-        journal_q = model.Session.query(model.JournalEntry)
+        journal_q = model.Session.query(model.JournalEntry) \
+                         .filter_by(status = 'normal') \
+                         .join('message') \
+                         .filter(model.Message.time >= earliest) \
+                         .filter(model.Message.time < latest)
         if c.page_owner and not watchstream:
             journal_q = journal_q.filter_by(user_id = c.page_owner.id)
-        journal_q = journal_q.filter_by(status = 'normal')
-        journal_q = journal_q.filter(model.JournalEntry.time >= earliest).filter(model.JournalEntry.time < latest)
 
 
         #   ... grab c.page_owner's relationships and add them to the where clause
@@ -112,7 +112,7 @@ class JournalController(BaseController):
                 c.error_title = "No journals found. User '%s' isn't watching anyone."%c.page_owner.display_name
                 return render('/error.mako')
 
-        journal_q = journal_q.order_by(model.JournalEntry.time.desc())
+        journal_q = journal_q.order_by(model.Message.time.desc())
         c.journals = journal_q.limit(max_per_page).offset(pageno * max_per_page).all()
         num_journals = journal_q.count()
         
@@ -178,7 +178,7 @@ class JournalController(BaseController):
     @check_perm('post_journal')
     def post_commit(self):
         """Form handler for posting a journal entry."""
-        # -- validate form input --
+        # Validate form input
         validator = model.form.JournalForm()
         try:
             form_data = validator.to_python(request.params)
@@ -187,10 +187,9 @@ class JournalController(BaseController):
             c.form = FormGenerator(form_error=error)
             return render('/journal/post.mako')
 
-        # -- put journal in database --
-        #form_data['content'] = h.escape_once(form_data['content'])
+        # Add journal to database
         journal_entry = model.JournalEntry(
-            user_id=c.auth_user.id,
+            user=c.auth_user,
             title=form_data['title'],
             content=''
         )
@@ -208,7 +207,6 @@ class JournalController(BaseController):
             xapian_document = journal_entry.to_xapian()
             xapian_database.add_document(xapian_document)
 
-        #return journal_entry.id
         h.redirect_to(h.url_for(controller='journal', action='view',
                                 username=c.auth_user.username,
                                 id=journal_entry.id,
@@ -349,6 +347,7 @@ class JournalController(BaseController):
         cur_time = datetime.datetime(2005,1,1) if cur_time < datetime.datetime(2005,1,1) else cur_time
                 
         for i in xrange(num_rows):
+            # XXX this won't work any more; need a real user
             entry = model.JournalEntry(random.randint(1,3), randomwords(random.randint(4,10)), randomwords(random.randint(10,50)))
             entry.time = cur_time
             cur_time += datetime.timedelta(seconds=random.randint(0,3600))

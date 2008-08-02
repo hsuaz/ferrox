@@ -29,6 +29,10 @@ def setup_config(command, filename, section, vars):
     null_role.sigil = ' '
     model.Session.save(null_role)
 
+    banned_role = model.Role('Banned', 'User who has been banned.')
+    banned_role.sigil = '-'
+    model.Session.save(banned_role)
+
     normal_role = model.Role('Member', 'Regular user')
     normal_role.sigil = '~'
     login_perm = model.Permission('log_in',

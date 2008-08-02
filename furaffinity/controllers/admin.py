@@ -54,6 +54,15 @@ class AdminController(BaseController):
             return render('/login.mako')
     
     @authed_admin()
+    def ban(self):
+        c.bans = model.Session.query(model.UserBan).all()
+        return render('/admin/ban.mako')
+
+    #@authed_admin()
+    #def ban_commit(self):
+    #    h.redirect_to(h.url_for(controller='admin', action='index'))
+
+    @authed_admin()
     def ip(self):
         """Shows a list of recently-used IPs."""
 

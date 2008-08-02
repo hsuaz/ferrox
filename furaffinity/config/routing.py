@@ -131,6 +131,7 @@ def make_map():
     map.connect('/admin/auth', controller='admin', action='auth')
     map.connect('/admin/auth_verify', controller='admin', action='auth_verify')
     map.connect('/admin/ip', controller='admin', action='ip')
+    map.connect('/admin/ban', controller='admin', action='ban')
     
     map.connect('/stylesheets/:sheet/:color', controller='stylesheets', action='index', color=None)
 

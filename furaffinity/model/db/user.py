@@ -416,3 +416,20 @@ class UserAvatar(BaseTable):
 User.avatars = relation(UserAvatar, backref='user')
 User.default_avatar = relation(UserAvatar, primaryjoin=and_(User.id == UserAvatar.user_id, UserAvatar.default == True), uselist=False, lazy=False)
 
+class UserBan(BaseTable):
+    __tablename__       = 'user_bans'
+    id                  = Column(types.Integer, primary_key=True, autoincrement=True)
+    user_id             = Column(types.Integer, ForeignKey('users.id'))
+    admin_user_id       = Column(types.Integer, ForeignKey('users.id'))
+    expires             = Column(DateTime) # NULL = Never
+    revert_to_id        = Column(types.Integer, ForeignKey('roles.id'))
+    reason              = Column(types.UnicodeText, nullable=False)
+    admin_message       = Column(types.UnicodeText, nullable=False)
+
+    revert_to           = relation(Role)
+
+UserBan.admin = relation(User, primaryjoin=(User.id == UserBan.admin_user_id))
+User.bans = relation(UserBan, backref='user', primaryjoin=(User.id == UserBan.user_id))
+
+    
+

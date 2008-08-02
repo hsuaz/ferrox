@@ -16,7 +16,10 @@ class DateTime(types.TypeDecorator):
         return int(time.mktime(value.timetuple()))
         
     def convert_result_value(self, value, engine):
-        return datetime.fromtimestamp(value)
+        if value == None:
+            return None
+        else:
+            return datetime.fromtimestamp(value)
         
     def is_mutable(self):
         return False

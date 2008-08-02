@@ -54,13 +54,39 @@ class AdminController(BaseController):
             return render('/login.mako')
     
     @authed_admin()
-    def ban(self):
+    def show_bans(self):
         c.bans = model.Session.query(model.UserBan).all()
-        return render('/admin/ban.mako')
+        return render('/admin/showbans.mako')
 
-    #@authed_admin()
-    #def ban_commit(self):
-    #    h.redirect_to(h.url_for(controller='admin', action='index'))
+    @authed_admin()
+    def ban(self, username=None):
+        c.roles = model.Session.query(model.Role).all()
+        c.form = FormGenerator()
+        c.form.defaults['username'] = username
+        return render('/admin/addban.mako')
+
+    @authed_admin()
+    def ban_commit(self, username=None):
+        validator = model.form.BanForm()
+        try:
+            form_data = validator.to_python(request.params)
+        except formencode.Invalid, error:
+            return render('/error.mako')
+
+        user_ban = model.UserBan()
+        user_ban.admin = c.auth_user
+        user_ban.expires = form_data['expiration']
+        user_ban.revert_to = form_data['username'].role
+        user_ban.reason = form_data['reason']
+        user_ban.admin_message = form_data['notes']
+        model.Session.save(user_ban)
+
+        form_data['username'].bans.append(user_ban)
+        form_data['username'].role = form_data['role_id']
+        model.Session.commit()
+
+
+        h.redirect_to(h.url_for(controller='admin', action='show_bans'))
 
     @authed_admin()
     def ip(self):

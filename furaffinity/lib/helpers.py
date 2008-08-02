@@ -164,3 +164,14 @@ def get_avatar_url(object = None):
             return url_for(controller='gallery', action='file', filename=av.mogile_key)
     
     return pylons.config.get('avatar.default', '/default_avatar.png')
+
+
+def objects_to_option_tags(objects, default=None, id_attr='id', name_attr='name'):
+    output = ''
+    
+    for o in objects:
+        output += """<option value="%d"%s>%s</option>""" % (getattr(o, id_attr), 
+                ' selected="selected"' if default==getattr(o, id_attr) else '', getattr(o, name_attr))
+
+    return output
+    

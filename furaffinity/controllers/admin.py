@@ -3,6 +3,7 @@ import furaffinity.lib.paginate as paginate
 from furaffinity.model import form
 from furaffinity.lib.formgen import FormGenerator
 
+import formencode
 import time
 import logging
 
@@ -71,6 +72,10 @@ class AdminController(BaseController):
         try:
             form_data = validator.to_python(request.params)
         except formencode.Invalid, error:
+            #c.roles = model.Session.query(model.Role).all()
+            #c.form = FormGenerator()
+            #c.form.defaults['username'] = username
+            print error
             return render('/error.mako')
 
         user_ban = model.UserBan()
@@ -79,6 +84,7 @@ class AdminController(BaseController):
         user_ban.revert_to = form_data['username'].role
         user_ban.reason = form_data['reason']
         user_ban.admin_message = form_data['notes']
+        user_ban.expired = False
         model.Session.save(user_ban)
 
         form_data['username'].bans.append(user_ban)

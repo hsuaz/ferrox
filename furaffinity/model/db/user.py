@@ -425,11 +425,13 @@ class UserBan(BaseTable):
     revert_to_id        = Column(types.Integer, ForeignKey('roles.id'))
     reason              = Column(types.UnicodeText, nullable=False)
     admin_message       = Column(types.UnicodeText, nullable=False)
+    expired             = Column(types.Boolean, default=False)
 
     revert_to           = relation(Role)
 
 UserBan.admin = relation(User, primaryjoin=(User.id == UserBan.admin_user_id))
 User.bans = relation(UserBan, backref='user', primaryjoin=(User.id == UserBan.user_id))
+User.active_bans = relation(UserBan, primaryjoin=and_(User.id == UserBan.user_id, UserBan.expired == False))
 
     
 

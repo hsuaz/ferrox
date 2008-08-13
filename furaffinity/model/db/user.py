@@ -433,5 +433,4 @@ UserBan.admin = relation(User, primaryjoin=(User.id == UserBan.admin_user_id))
 User.bans = relation(UserBan, backref='user', primaryjoin=(User.id == UserBan.user_id))
 User.active_bans = relation(UserBan, primaryjoin=and_(User.id == UserBan.user_id, UserBan.expired == False))
 
-    
 

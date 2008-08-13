@@ -11,6 +11,7 @@ from pylons.i18n import _, ungettext, N_
 from pylons.templating import render
 from routes import request_config
 from sqlalchemy.exceptions import InvalidRequestError
+from sqlalchemy.orm import eagerload, eagerload_all
 
 from furaffinity.lib.formgen import FormGenerator
 import furaffinity.lib.helpers as h
@@ -79,7 +80,9 @@ class BaseController(WSGIController):
         if 'user_id' in session:
             try:
                 user_id = session['user_id']
-                c.auth_user = model.Session.query(model.User).get(user_id)
+                c.auth_user = model.Session.query(model.User) \
+                    .options(eagerload('active_bans')) \
+                    .get(user_id)
             except InvalidRequestError:
                 # User may have been deleted in the interim
                 del session['user_id']
@@ -98,7 +101,17 @@ class BaseController(WSGIController):
                 last_ip_record.end_time = datetime.now()
             else:
                 model.Session.save(model.IPLogEntry(user_id, ip))
+
+            # Check to see if there are any active bans to expire
+            if c.auth_user.active_bans:
+                for ban in c.auth_user.active_bans:
+                    if ban.expires <= datetime.now():
+                        ban.expired = True
+                        c.auth_user.role = ban.revert_to
+
+            # Magical commit.
             model.Session.commit()
+
         else:
             c.auth_user = model.GuestUser()
 

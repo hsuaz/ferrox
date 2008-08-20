@@ -334,27 +334,5 @@ class JournalController(BaseController):
                 return False
         return True
 
-    def fill(self):
-        return 'go away'
-        time_sub = 94608000
-        
-        num_rows = 1000
-
-        f = open('/usr/share/dict/words','r')
-        lines = [x.strip() for x in f.readlines()]
-        numlines = len(lines)
-        randomwords = lambda x: ' '.join([lines[random.randint(0,numlines-1)] for x in xrange(x)])
-
-        cur_time = datetime.datetime.fromtimestamp(model.Session.query(model.JournalEntry).max(model.JournalEntry.time))
-        cur_time = datetime.datetime(2005,1,1) if cur_time < datetime.datetime(2005,1,1) else cur_time
-                
-        for i in xrange(num_rows):
-            entry = model.JournalEntry(random.randint(1,3), randomwords(random.randint(4,10)), randomwords(random.randint(10,50)))
-            entry.time = cur_time
-            cur_time += datetime.timedelta(seconds=random.randint(0,3600))
-            model.Session.save(entry)
-            
-        model.Session.commit()
-        return cur_time
             
             

@@ -107,10 +107,10 @@ Role.permissions = relation(Permission, secondary=RolePermission.__table__)
 class User(BaseTable):
     __tablename__   = 'users'
     id              = Column(types.Integer, primary_key=True)
-    username        = Column(types.String(32), nullable=False)
+    username        = Column(types.Unicode(32), nullable=False, unique=True)
     email           = Column(types.String(256), nullable=False)
     password        = Column(types.String(256), nullable=False)
-    display_name    = Column(types.UnicodeText, nullable=False)
+    display_name    = Column(types.Unicode(32), nullable=False, unique=True)
     role_id         = Column(types.Integer, ForeignKey('roles.id'), default=1)
 
     role            = relation(Role)

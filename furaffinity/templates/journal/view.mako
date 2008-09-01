@@ -9,6 +9,6 @@
     ${c.misc}
 </div>
 
-${comments.comment_tree(c.journal_entry.comments, h.url_for(**c.route))}
+${comments.comment_tree(c.journal_entry.discussion.comments, h.url_for(**c.route))}
 
 <%def name="title()">${c.journal_entry.title} by ${c.journal_entry.user.display_name}</%def>

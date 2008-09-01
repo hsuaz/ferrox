@@ -12,9 +12,9 @@ from sqlalchemy import sql
 log = logging.getLogger(__name__)
 
 class CommentsController(BaseController):
-    def _get_discussion(self, discussion_url):
+    def _get_parent_post(self, post_url):
         # Need to prepend a slash to make this an absolute URL
-        route = config['routes.map'].match('/' + discussion_url)
+        route = config['routes.map'].match('/' + post_url)
 
         if route['action'] != 'view':
             abort(404)
@@ -35,49 +35,49 @@ class CommentsController(BaseController):
         else:
             abort(404)
 
-    def view(self, discussion_url, id=None):
+    def view(self, post_url, id=None):
         """View a comment subtree, or all comments if no id is given."""
-        c.discussion_url = discussion_url
-        discussion = self._get_discussion(discussion_url)
+        c.post_url = post_url
+        post = self._get_parent_post(post_url)
 
         if id == None:
             # No parent
-            c.comments = discussion.comments
+            c.comments = post.discussion.comments
         else:
             # Parent and its children
             parent = model.Session.query(model.Comment).get(id)
 
-            if parent.get_discussion() != discussion:
+            if not parent or parent.discussion != post.discussion:
                 abort(404)
 
             c.comments = model.Session.query(model.Comment) \
-                .with_parent(discussion, property='comments') \
+                .filter(model.Comment.discussion_id == parent.discussion.id) \
                 .filter(model.Comment.left >= parent.left) \
                 .filter(model.Comment.left <= parent.right) \
                 .all()
 
         return render('comments/view.mako')
 
-    def reply(self, discussion_url, id=None):
+    def reply(self, post_url, id=None):
         """Post a comment, either top-level or replying to another comment."""
-        discussion = self._get_discussion(discussion_url)
+        post = self._get_parent_post(post_url)
         c.form = FormGenerator()
         if id:
             c.comment = model.Session.query(model.Comment).get(id)
 
-            if c.comment.get_discussion() != discussion:
+            if c.comment.discussion != post.discussion:
                 abort(404)
         else:
             c.comment = None
         return render('comments/reply.mako')
 
-    def reply_commit(self, discussion_url, id=None):
+    def reply_commit(self, post_url, id=None):
         """Form handler for reply to a comment."""
-        discussion = self._get_discussion(discussion_url)
+        post = self._get_parent_post(post_url)
         if id:
             c.parent = model.Session.query(model.Comment).get(id)
 
-            if c.parent.get_discussion() != discussion:
+            if c.parent.discussion != post.discussion:
                 abort(404)
         else:
             c.parent = None
@@ -92,12 +92,12 @@ class CommentsController(BaseController):
             user = c.auth_user,
             title = h.escape_once(form_data['title']),
             content = h.escape_once(form_data['content']),
+            discussion = post.discussion,
+            parent = c.parent,
         )
         model.Session.save(comment)
-
-        comment.add_to_nested_set(c.parent, discussion)
-
         model.Session.commit()
+
         h.redirect_to(h.url_for(controller='comments', action='view',
-                                discussion_url=discussion_url,
+                                post_url=post_url,
                                 id=comment.id))

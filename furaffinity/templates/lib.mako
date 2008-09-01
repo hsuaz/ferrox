@@ -48,8 +48,8 @@
 
 <% news_url = h.url_for(controller='news', action='view', id=entry.id) %>
     <ul class="inline">
-        <li>${h.link_to('View comments', h.url(controller='comments', action='view', discussion_url=news_url))}</li>
-        <li>${h.link_to('Reply', h.url(controller='comments', action='reply', discussion_url=news_url))}</li>
+        <li>${h.link_to('View comments', h.url(controller='comments', action='view', post_url=news_url))}</li>
+        <li>${h.link_to('Reply', h.url(controller='comments', action='reply', post_url=news_url))}</li>
     </ul>
 </div>
 </%def>

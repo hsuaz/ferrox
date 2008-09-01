@@ -60,12 +60,12 @@ def make_map():
     map.connect('/news/:id/editlog', controller='editlog', action='news')
     map.connect('/news/:id', controller='news', action='view')
 
-    map.connect('/*discussion_url/comments', controller='comments', action='view')
-    map.connect('/*discussion_url/comments/reply', controller='comments', action='reply')
-    map.connect('/*discussion_url/comments/reply_commit', controller='comments', action='reply_commit')
-    map.connect('/*discussion_url/comments/:id', controller='comments', action='view')
-    map.connect('/*discussion_url/comments/:id/reply', controller='comments', action='reply')
-    map.connect('/*discussion_url/comments/:id/reply_commit', controller='comments', action='reply_commit')
+    map.connect('/*post_url/comments', controller='comments', action='view')
+    map.connect('/*post_url/comments/reply', controller='comments', action='reply')
+    map.connect('/*post_url/comments/reply_commit', controller='comments', action='reply_commit')
+    map.connect('/*post_url/comments/:id', controller='comments', action='view')
+    map.connect('/*post_url/comments/:id/reply', controller='comments', action='reply')
+    map.connect('/*post_url/comments/:id/reply_commit', controller='comments', action='reply_commit')
 
     map.connect('/users/:username/notes', controller='notes', action='user_index')
     map.connect('/users/:username/notes/write', controller='notes', action='write')

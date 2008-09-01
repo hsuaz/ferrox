@@ -101,27 +101,116 @@ class MessageDelegator(object):
         else:
             BaseTable.__setattr__(self, name, value)
 
+class Discussion(BaseTable):
+    __tablename__       = 'discussions'
+    id                  = Column(types.Integer, primary_key=True)
+    comment_count       = Column(types.Integer, nullable=False, default=0)
+
+    def get_parent_post(self):
+        """Returns this discussion's associated news/journal/submission."""
+        if not hasattr(self, '_parent_post'):
+            self._parent_post = (self.news
+                            or self.journal_entry
+                            or self.submission)[0]
+        return self._parent_post
+
+class Comment(BaseTable, MessageDelegator):
+    __tablename__       = 'comments'
+    id                  = Column(types.Integer, primary_key=True)
+    discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
+    message_id          = Column(types.Integer, ForeignKey('messages.id'))
+    left                = Column(types.Integer, nullable=False, default=0)
+    right               = Column(types.Integer, nullable=False, default=0)
+    message             = relation(Message, lazy=False)
+
+    def __init__(self, user, title, content, discussion, parent=None):
+        """Creates a new comment.  If a parent is specified, the other
+        comments in this discussion will have their left/right values adjusted
+        appropriately.
+        """
+        # Easy parts; save columns and remember the parent
+        self.message = Message(title=title, content=content, user=user)
+        self.discussion_id = discussion.id
+        self._parent = parent
+
+        if not parent:
+            # This comment is a brand new top-level one; its left and right
+            # need to be higher than the highest right
+            last_comment = Session.query(Comment) \
+                .filter(Comment.discussion_id == self.discussion_id) \
+                .order_by(Comment.right.desc()) \
+                .first()
+            if last_comment:
+                self.left = last_comment.right + 1
+                self.right = last_comment.right + 2
+            else:
+                # First comment at all
+                self.left = 1
+                self.right = 2
+
+            return
+
+        # Otherwise, we're replying to an existing comment.
+        # The new comment's left should be the parent's old right, as it's
+        # being inserted as the last descendant, and every left or right
+        # value to the right of that should be bumped up by two.
+        parent_right = parent.right
+
+        self.left = parent_right
+        self.right = parent_right + 1
+
+        for side in ['left', 'right']:
+            column = getattr(Comment.__table__.c, side)
+            Session.execute(
+                Comment.__table__.update(
+                    and_(column >= parent_right,
+                         Comment.discussion_id == self.discussion_id
+                         ),
+                    values={column: column + 2}
+                    )
+                )
+
+    def get_parent(self):
+        """Returns this comment's parent."""
+        if not hasattr(self, '_parent'):
+            self._parent = Session.query(Comment) \
+                .filter(Comment.discussion_id == self.discussion_id) \
+                .filter(Comment.left < self.left) \
+                .filter(Comment.right > self.left) \
+                .order_by(Comment.left.desc()) \
+                .first()
+        return self._parent
+
+Discussion.comments = relation(Comment, backref='discussion', order_by=Comment.left)
+
+
 class News(BaseTable, MessageDelegator):
     __tablename__       = 'news'
     id                  = Column(types.Integer, primary_key=True)
     message_id          = Column(types.Integer, ForeignKey('messages.id'))
+    discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
     is_anonymous        = Column(types.Boolean, nullable=False, default=False)
     is_deleted          = Column(types.Boolean, nullable=False, default=False)
     message             = relation(Message, lazy=False)
+    discussion          = relation(Discussion, backref='news')
 
     def __init__(self, title, content, author):
         self.message = Message(title=title, content=content, user=author)
+        self.discussion = Discussion()
 
 class JournalEntry(BaseTable, MessageDelegator):
     __tablename__       = 'journal_entries'
     id                  = Column(types.Integer, primary_key=True)
     message_id          = Column(types.Integer, ForeignKey('messages.id'))
+    discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
     status              = Column(Enum('normal', 'under_review', 'removed_by_admin', 'deleted'), index=True, default='normal')
     message             = relation(Message, lazy=False)
+    discussion          = relation(Discussion, backref='journal_entry')
 
     def __init__(self, user, title, content):
         content = h.escape_once(content)
         self.message = Message(title=title, content=content, user=user)
+        self.discussion = Discussion()
 
     def __str__(self):
         return "Journal entry titled %s" % self.title
@@ -159,112 +248,15 @@ class JournalEntry(BaseTable, MessageDelegator):
 
         return xapian_document
 
-class Comment(BaseTable, MessageDelegator):
-    __tablename__       = 'comments'
+class Note(BaseTable, MessageDelegator):
+    __tablename__       = 'notes'
     id                  = Column(types.Integer, primary_key=True)
     message_id          = Column(types.Integer, ForeignKey('messages.id'))
-    left                = Column(types.Integer, nullable=False)
-    right               = Column(types.Integer, nullable=False)
+    to_user_id          = Column(types.Integer, ForeignKey('users.id'))
+    original_note_id    = Column(types.Integer, ForeignKey('notes.id'))
+    status              = Column(Enum('unread', 'read'), nullable=False, default='unread')
     message             = relation(Message, lazy=False)
-
-    def __init__(self, user, title, content):
-        self.message = Message(title=title, content=content, user=user)
-        self.left = 0
-        self.right = 0
-
-    def add_to_nested_set(self, parent, discussion):
-        """Call on a new Comment to fix the affected nested set values.
-        
-        discussion paremeter is the news/journal/submission this comment
-        belongs to, so we don't have to hunt it down again.
-        """
-
-        # Easy parts; remember the parent/discussion and add to bridge table
-        self._parent = parent
-        self._discussion = discussion
-
-        discussion.comments.append(self)
-
-        if not parent:
-            # This comment is a brand new top-level one; its left and right
-            # need to be higher than the highest right
-            last_comment = Session.query(Comment) \
-                .with_parent(discussion, property='comments') \
-                .order_by(Comment.right.desc()) \
-                .first()
-            if last_comment:
-                self.left = last_comment.right + 1
-                self.right = last_comment.right + 2
-            else:
-                # First comment at all
-                self.left = 1
-                self.right = 2
-
-            return
-
-        # Otherwise, we're replying to an existing comment.
-        # The new comment's left should be the parent's old right, as it's
-        # being inserted as the last descendant, and every left or right
-        # value to the right of that should be bumped up by two.
-        parent_right = parent.right
-
-        self.left = parent_right
-        self.right = parent_right + 1
-
-        # Sure wish this reflection stuff were documented
-        bridge_table = object_mapper(discussion) \
-                       .get_property('comments') \
-                       .secondary
-        foreign_column = None
-        for c in bridge_table.c:
-            if c.name != 'comment_id':
-                foreign_column = c
-                break
-
-        join = sql.exists([1],
-            and_(
-                foreign_column == discussion.id,
-                bridge_table.c.comment_id == Comment.id,
-                )
-            )
-
-        for side in ['left', 'right']:
-            column = getattr(Comment.__table__.c, side)
-            Session.execute(
-                Comment.__table__.update(
-                    and_(column >= parent_right, join),
-                    values={column: column + 2}
-                    )
-                )
-
-    def get_discussion(self):
-        """Returns this comment's associated news/journal/submission."""
-        if not hasattr(self, '_discussion'):
-            self._discussion = (self.news
-                                or self.journal_entry
-                                or self.submission)[0]
-        return self._discussion
-
-    def get_parent(self):
-        """Returns this comment's parent."""
-        if not hasattr(self, '_parent'):
-            self._parent = Session.query(Comment) \
-                .with_parent(self.get_discussion(), property='comments') \
-                .filter(Comment.left < self.left) \
-                .filter(Comment.right > self.left) \
-                .order_by(Comment.left.desc()) \
-                .first()
-        return self._parent
-
-class Note(BaseTable, MessageDelegator):
-    __tablename__   = 'notes'
-    id              = Column(types.Integer, primary_key=True)
-    message_id          = Column(types.Integer, ForeignKey('messages.id'))
-    to_user_id      = Column(types.Integer, ForeignKey('users.id'))
-    original_note_id= Column(types.Integer, ForeignKey('notes.id'))
-    status          = Column(Enum('unread', 'read'), nullable=False, default='unread')
-    message             = relation(Message, lazy=False)
-    recipient       = relation(User)
+    recipient           = relation(User)
 
     # Create a 'sender' wrapper property, as the usual 'user' property that
     # Message has is a bit vague with two user relations

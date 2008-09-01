@@ -43,6 +43,6 @@
     </div>
 </div>
 
-${comments.comment_tree(c.submission.comments, h.url_for(**c.route))}
+${comments.comment_tree(c.submission.discussion.comments, h.url_for(**c.route))}
 
 <%def name="title()">${c.submission.title} by ${c.submission.primary_artist.display_name}</%def>

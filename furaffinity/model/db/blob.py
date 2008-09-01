@@ -54,16 +54,17 @@ user_submission_relationship_type = Enum('artist', 'commissioner', 'gifted', 'is
 class Submission(BaseTable):
     __tablename__       = 'submissions'
     id                  = Column(types.Integer, primary_key=True)
+    discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
     title               = Column(types.String(length=128), nullable=False)
     description         = Column(types.UnicodeText, nullable=False)
     description_parsed  = Column(types.UnicodeText, nullable=False)
     type                = Column(submission_type_type, nullable=False)
-    discussion_id       = Column(types.Integer, nullable=False)
     time                = Column(DateTime, nullable=False, default=datetime.now)
     status              = Column(submission_status_type, index=True, nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
-    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    discussion          = relation(Discussion, backref='submission')
     editlog             = relation(EditLog)
 
     def __init__(self):
@@ -76,6 +77,7 @@ class Submission(BaseTable):
         self.file_blob = None
         self.old_mogile_key = None
         self.mogile_key = None
+        self.discussion = Discussion()
 
     def get_derived_by_type (self, type):
         for ds in self.derived_submission:
@@ -424,26 +426,6 @@ Submission.primary_artist = relation(User, secondary=UserSubmission.__table__,
     secondaryjoin=(UserSubmission.user_id == User.id),
     uselist=False)
 
-class NewsComment(BaseTable):
-    __tablename__       = 'news_comments'
-    news_id             = Column(types.Integer, ForeignKey('news.id'), primary_key=True)
-    comment_id          = Column(types.Integer, ForeignKey('comments.id'), primary_key=True)
-
-class JournalEntryComment(BaseTable):
-    __tablename__       = 'journal_entry_comments'
-    journal_entry_id    = Column(types.Integer, ForeignKey('journal_entries.id'), primary_key=True)
-    comment_id          = Column(types.Integer, ForeignKey('comments.id'), primary_key=True)
-
-
-class SubmissionComment(BaseTable):
-    __tablename__       = 'submission_comments'
-    submission_id       = Column(types.Integer, ForeignKey('submissions.id'), primary_key=True)
-    comment_id          = Column(types.Integer, ForeignKey('comments.id'), primary_key=True)
-    
-JournalEntry.comments = relation(Comment, secondary=JournalEntryComment.__table__, backref='journal_entry', order_by=Comment.left)
-News.comments = relation(Comment, secondary=NewsComment.__table__, backref='news', order_by=Comment.left)
-Submission.comments = relation(Comment, secondary=SubmissionComment.__table__, backref='submission', order_by=Comment.left)
-
 class Tag(BaseTable):
     __tablename__       = 'tags'
     id                  = Column(types.Integer, primary_key=True, autoincrement=True)
@@ -506,4 +488,4 @@ class SubmissionTag(BaseTable):
     def __init__(self, tag):
         self.tag = tag
 
-Submission.tags = relation(Submission, backref='submissions', secondary=SubmissionTag.__table__)
+Submission.tags = relation(Tag, backref='submissions', secondary=SubmissionTag.__table__)

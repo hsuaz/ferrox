@@ -15,6 +15,6 @@
     ${c.newsnav}
 </p>
 
-${comments.comment_tree(c.news.comments, h.url_for(**c.route))}
+${comments.comment_tree(c.news.discussion.comments, h.url_for(**c.route))}
 
 <%def name="title()">${c.news.title} - News</%def>

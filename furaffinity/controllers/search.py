@@ -16,6 +16,7 @@ if xapian.major_version() < 1:
     raise ImportError("xapian needs >=1.0 found %s" % xapian.version_string())
 
 class SearchController(BaseController):
+    @check_perm('search.do')
     def index(self):
         """Form for full-text search."""
 
@@ -23,6 +24,7 @@ class SearchController(BaseController):
         c.form.defaults['perpage'] = int(pylons.config.get('gallery.default_perpage',12))
         return render('search/index.mako')
 
+    @check_perm('search.do')
     def do(self):
         """Form handler for full-text search."""
 

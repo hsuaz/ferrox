@@ -6,6 +6,7 @@ from furaffinity.controllers.journal import get_journal
 
 class EditlogController(BaseController):
 
+    @check_perm('editlog')
     def news(self, id=None):
         """Edit log for a news post."""
 
@@ -19,6 +20,7 @@ class EditlogController(BaseController):
 
         return render('/editlog/show.mako')
 
+    @check_perm('editlog')
     def journal(self, id=None):
         """Edit log for a journal entry."""
 
@@ -30,6 +32,7 @@ class EditlogController(BaseController):
 
         return render('/editlog/show.mako')
 
+    @check_perm('editlog')
     def submission(self, id=None):
         """Edit log for a submission's description."""
 

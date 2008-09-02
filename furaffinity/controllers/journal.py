@@ -55,6 +55,7 @@ def get_journal(id=None, eagerloads=[]):
 
 
 class JournalController(BaseController):
+    @check_perm('journal.view')
     def index(self, username=None, month=None, year=None, day=None, watchstream=False):
         """Journal index for a user."""
         if username:
@@ -168,14 +169,14 @@ class JournalController(BaseController):
             
         return render('/journal/index.mako')
 
-    @check_perm('post_journal')
+    @check_perm('journal.post')
     def post(self):
         """Form for posting a journal entry."""
         c.form = FormGenerator()
         c.is_edit = False
         return render('/journal/post.mako')
 
-    @check_perm('post_journal')
+    @check_perm('journal.post')
     def post_commit(self):
         """Form handler for posting a journal entry."""
         # -- validate form input --
@@ -216,7 +217,7 @@ class JournalController(BaseController):
                                 month=journal_entry.time.month,
                                 day=journal_entry.time.day))
 
-    @check_perms(['post_journal','administrate'])
+    @check_perm('journal.post')
     def edit(self,id=None):
         """Form for editing a journal entry."""
         journal_entry = get_journal(id)
@@ -229,7 +230,7 @@ class JournalController(BaseController):
         c.entry = journal_entry
         return render('/journal/post.mako')
 
-    @check_perms(['post_journal','administrate'])
+    @check_perm('journal.post')
     def edit_commit(self, id=None):
         """Form handler for editing a journal entry."""
         # -- validate form input --
@@ -273,7 +274,7 @@ class JournalController(BaseController):
         #h.redirect_to(h.url_for(controller='journal', action='view', id=journal_entry.id, username=journal_entry.user.display_name))
         h.redirect_to(h.url_for(controller='journal', action='view', username=c.route['username'], id=c.route['id'], year=c.route['year'], month=c.route['month'], day=c.route['day']))
 
-    @check_perms(['post_journal','administrate'])
+    @check_perm('journal.post')
     def delete(self,id=None):
         """Form for deleting a journal entry."""
         journal_entry = get_journal(id)
@@ -284,7 +285,7 @@ class JournalController(BaseController):
         c.fields = {}
         return render('/confirm.mako')
 
-    @check_perms(['post_journal','administrate'])
+    @check_perm('journal.post')
     def delete_commit(self, id=None):
         """Form handler for deleting a journal entry."""
         # -- validate form input --
@@ -314,6 +315,7 @@ class JournalController(BaseController):
             h.redirect_to(h.url_for(controller='journal', action='view',
                                     id=journal_entry.id))
 
+    @check_perm('journal.view')
     def view(self, id=None, month=None, day=None, year=None):
         """View a single journal entry."""
         c.journal_entry = get_journal(id)
@@ -324,7 +326,7 @@ class JournalController(BaseController):
     def is_my_journal(self, journal_entry, abort=False):
         """Returns whether or not the given journal entry can be seen by the
         given user."""
-        if not c.auth_user or (not c.auth_user.can('administrate') and
+        if not c.auth_user or (not c.auth_user.can('admin.auth') and
                                c.auth_user.id != journal_entry.user_id):
             if abort:
                 c.error_text = 'You cannot edit this journal entry.'

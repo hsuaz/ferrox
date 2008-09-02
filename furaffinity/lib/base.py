@@ -90,7 +90,7 @@ class BaseController(WSGIController):
 
         if c.auth_user:
             ip = request.environ['REMOTE_ADDR']
-            if c.auth_user.can('administrate'):
+            if c.auth_user.can('admin.auth'):
                 session['admin_ip'] = ip
 
             # Log IPs

@@ -34,6 +34,7 @@ class NotesController(BaseController):
         self._enforce_ownership(c.note)
 
 
+    @check_perm('notes.view')
     def user_index(self, username):
         """Inbox (well, only box for now) for a user."""
         c.page_owner = model.User.get_by_name(username)
@@ -46,6 +47,7 @@ class NotesController(BaseController):
         c.notes_nav = c.notes_page.navigator(link_var='page')
         return render('notes/index.mako')
 
+    @check_perm('notes.view')
     def view(self, username, id):
         """View of a single note thread."""
         self._note_setup(username, id)
@@ -84,6 +86,7 @@ class NotesController(BaseController):
         self._note_setup(username, id)
         return render('notes/ajax_expand.mako')
 
+    @check_perm('notes.write')
     def write(self, username):
         """Form for sending a new note."""
         c.form = FormGenerator()
@@ -91,6 +94,7 @@ class NotesController(BaseController):
             c.form.defaults['recipient'] = request.params['recipient']
         return render('notes/send.mako')
 
+    @check_perm('notes.write')
     def reply(self, username, id):
         """Form for replying to a note."""
         self._note_setup(username, id)
@@ -108,6 +112,7 @@ class NotesController(BaseController):
 
         return render('notes/send.mako')
 
+    @check_perm('notes.write')
     def forward(self, username, id):
         """Form for forwarding a note."""
         self._note_setup(username, id)
@@ -118,6 +123,7 @@ class NotesController(BaseController):
 
         return render('notes/send.mako')
 
+    @check_perm('notes.write')
     def write_send(self, username):
         """Form handler for sending any note."""
         validator = model.form.SendNoteForm()

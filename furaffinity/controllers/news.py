@@ -29,13 +29,13 @@ class NewsController(BaseController):
             abort(404)
         return render('news/view.mako')
 
-    @check_perm('administrate')
+    @check_perm('news.manage')
     def post(self):
         """Form for posting news."""
         c.form = FormGenerator()
         return render('news/post.mako')
 
-    @check_perm('administrate')
+    @check_perm('news.manage')
     def do_post(self):
         """Form handler for posting news."""
         c.form = FormGenerator()
@@ -59,7 +59,7 @@ class NewsController(BaseController):
         model.Session.commit()
         h.redirect_to('/news')
 
-    @check_perm('administrate')
+    @check_perm('news.manage')
     def edit(self):
         """Form for editing news."""
         c.form = FormGenerator()
@@ -67,7 +67,7 @@ class NewsController(BaseController):
         c.form.defaults = h.to_dict(c.item)
         return render('news/edit.mako')
 
-    @check_perm('administrate')
+    @check_perm('news.manage')
     def edit_commit(self, id):
         """Form handler for editing news."""
         c.item = model.Session.query(model.News).get(id)
@@ -100,7 +100,7 @@ class NewsController(BaseController):
         model.Session.commit()
         h.redirect_to('/news')
 
-    @check_perm('administrate')
+    @check_perm('news.manage')
     def delete(self):
         """Form handler for deleting news."""
         news_q = model.Session.query(model.News)
@@ -110,7 +110,7 @@ class NewsController(BaseController):
         model.Session.commit()
         h.redirect_to('/news')
 
-    @check_perm('administrate')
+    @check_perm('news.manage')
     def undelete(self):
         """Form handler for restoring deleted news."""
         news_q = model.Session.query(model.News)

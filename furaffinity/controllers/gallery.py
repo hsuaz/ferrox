@@ -254,6 +254,7 @@ class GalleryController(BaseController):
 
         return render('/gallery/index.mako')
 
+    @check_perm('gallery.view')
     def index(self, username=None):
         """Gallery index, either globally or for one user."""
         if username:
@@ -271,6 +272,7 @@ class GalleryController(BaseController):
         else:
             return self._generic_gallery()
 
+    @check_perm('gallery.view')
     def watchstream(self, username):
         """Watches for a given user."""
         c.page_owner = model.User.get_by_name(username)
@@ -288,6 +290,7 @@ class GalleryController(BaseController):
                         )
         return self._generic_gallery(joined_tables=joined_tables)
 
+    @check_perm('gallery.view')
     def favorites(self, username):
         """Favorites for a given user."""
         c.page_owner = model.User.get_by_name(username)
@@ -302,7 +305,7 @@ class GalleryController(BaseController):
                         )
         return self._generic_gallery(joined_tables=joined_tables)
 
-    #@check_perm('can_favorite')
+    @check_perm('gallery.favorite')
     def favorite(self, id=None, username=None):
         submission = get_submission(id)
 
@@ -314,7 +317,7 @@ class GalleryController(BaseController):
         model.Session.commit()
         h.redirect_to(h.url_for(controller='gallery', action='view', id=id, username=username))
     
-    @check_perm('submit_art')
+    @check_perm('gallery.upload')
     def submit(self):
         """Form for uploading new art."""
 
@@ -322,7 +325,7 @@ class GalleryController(BaseController):
         c.form = FormGenerator()
         return render('/gallery/submit.mako')
 
-    @check_perms(['submit_art','administrate'])
+    @check_perm('gallery.upload')
     def edit(self, id=None):
         """Form for editing a submission."""
 
@@ -338,7 +341,7 @@ class GalleryController(BaseController):
         c.form.defaults['tags'] = tagging.make_tag_string(submission.tags)
         return render('/gallery/submit.mako')
 
-    @check_perms(['submit_art','administrate'])
+    @check_perm('gallery.upload')
     def delete(self, id=None):
         """Form for deleting a submission."""
 
@@ -350,7 +353,7 @@ class GalleryController(BaseController):
         c.fields = {}
         return render('/confirm.mako')
 
-    @check_perms(['submit_art','administrate'])
+    @check_perm('gallery.upload')
     def edit_commit(self, id=None):
         """Form handler for editing a submission."""
 
@@ -449,7 +452,7 @@ class GalleryController(BaseController):
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id, username=submission.primary_artist.username))
 
 
-    @check_perms(['submit_art','administrate'])
+    @check_perm('gallery.upload')
     def delete_commit(self, id=None):
         """Form handler for deleting a submission."""
 
@@ -479,7 +482,7 @@ class GalleryController(BaseController):
         else:
             h.redirect_to(h.url_for(controller='gallery', action='view', id=submission.id, username=redirect_username))
 
-    @check_perm('submit_art')
+    @check_perm('gallery.upload')
     def submit_upload(self):
         """Form handler for uploading new art."""
 
@@ -530,12 +533,14 @@ class GalleryController(BaseController):
                                 id=submission.id,
                                 username=c.auth_user.username))
 
+    @check_perm('gallery.view')
     def view(self, id=None):
         """View a single submission."""
 
         c.submission = get_submission(id)
         return render('/gallery/view.mako')
 
+    @check_perm('gallery.view')
     def file(self, filename=None):
         """Sets up headers for downloading the requested file and returns its
         contents.
@@ -558,7 +563,7 @@ class GalleryController(BaseController):
         doesn't belong to the current user.
         """
 
-        if not c.auth_user or (not c.auth_user.can('administrate') and
+        if not c.auth_user or (not c.auth_user.can('admin.auth') and
                                c.auth_user.id != journal_entry.user_id):
             if abort:
                 c.error_text = 'You cannot edit this submission.'

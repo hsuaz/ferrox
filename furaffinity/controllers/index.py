@@ -22,6 +22,7 @@ class IndexController(BaseController):
         c.recent_submissions = find_submissions(page_size=12)[0]
         return render('/index.mako')
 
+    @check_perm('index.register')
     def register(self):
         """User registration."""
         c.form = FormGenerator()
@@ -32,6 +33,7 @@ class IndexController(BaseController):
                            'password_confirm': ''}
         return render('/register.mako')
 
+    @check_perm('index.register')
     def register_check(self):
         """User registration POST target."""
         schema = model.form.RegisterForm()
@@ -58,6 +60,7 @@ class IndexController(BaseController):
                                                           code=hash))
         return render('/register_success.mako')
 
+    @check_perm('index.register')
     def verify(self):
         """Account verification."""
         username = request.params['username']
@@ -94,7 +97,7 @@ class IndexController(BaseController):
         user = user_q.filter_by(username = username).first()
         c.form = FormGenerator()
         if user and user.check_password(request.params.get('password')):
-            if not user.can('log_in'):
+            if not user.can('index.login'):
                 c.error_msgs.append(
                     "This account (%s) still needs to be verified. " \
                     "Please check the email address provided for the " \

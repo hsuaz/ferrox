@@ -53,6 +53,7 @@ def get_journal(id=None, eagerloads=[]):
 
 
 class JournalController(BaseController):
+    @check_perm('journal.view')
     def index(self, username=None, month=None, year=None, day=None, watchstream=False):
         """Journal index for a user."""
         if username:
@@ -168,14 +169,14 @@ class JournalController(BaseController):
             
         return render('/journal/index.mako')
 
-    @check_perm('post_journal')
+    @check_perm('journal.post')
     def post(self):
         """Form for posting a journal entry."""
         c.form = FormGenerator()
         c.is_edit = False
         return render('/journal/post.mako')
 
-    @check_perm('post_journal')
+    @check_perm('journal.post')
     def post_commit(self):
         """Form handler for posting a journal entry."""
         # Validate form input
@@ -214,7 +215,7 @@ class JournalController(BaseController):
                                 month=journal_entry.time.month,
                                 day=journal_entry.time.day))
 
-    @check_perms(['post_journal','administrate'])
+    @check_perm('journal.post')
     def edit(self,id=None):
         """Form for editing a journal entry."""
         journal_entry = get_journal(id)
@@ -227,7 +228,7 @@ class JournalController(BaseController):
         c.entry = journal_entry
         return render('/journal/post.mako')
 
-    @check_perms(['post_journal','administrate'])
+    @check_perm('journal.post')
     def edit_commit(self, id=None):
         """Form handler for editing a journal entry."""
         # -- validate form input --
@@ -271,7 +272,7 @@ class JournalController(BaseController):
         #h.redirect_to(h.url_for(controller='journal', action='view', id=journal_entry.id, username=journal_entry.user.display_name))
         h.redirect_to(h.url_for(controller='journal', action='view', username=c.route['username'], id=c.route['id'], year=c.route['year'], month=c.route['month'], day=c.route['day']))
 
-    @check_perms(['post_journal','administrate'])
+    @check_perm('journal.post')
     def delete(self,id=None):
         """Form for deleting a journal entry."""
         journal_entry = get_journal(id)
@@ -282,7 +283,7 @@ class JournalController(BaseController):
         c.fields = {}
         return render('/confirm.mako')
 
-    @check_perms(['post_journal','administrate'])
+    @check_perm('journal.post')
     def delete_commit(self, id=None):
         """Form handler for deleting a journal entry."""
         # -- validate form input --
@@ -312,6 +313,7 @@ class JournalController(BaseController):
             h.redirect_to(h.url_for(controller='journal', action='view',
                                     id=journal_entry.id))
 
+    @check_perm('journal.view')
     def view(self, id=None, month=None, day=None, year=None):
         """View a single journal entry."""
         c.journal_entry = get_journal(id)
@@ -322,7 +324,7 @@ class JournalController(BaseController):
     def is_my_journal(self, journal_entry, abort=False):
         """Returns whether or not the given journal entry can be seen by the
         given user."""
-        if not c.auth_user or (not c.auth_user.can('administrate') and
+        if not c.auth_user or (not c.auth_user.can('admin.auth') and
                                c.auth_user.id != journal_entry.user_id):
             if abort:
                 c.error_text = 'You cannot edit this journal entry.'
@@ -332,28 +334,6 @@ class JournalController(BaseController):
                 return False
         return True
 
-    def fill(self):
-        return 'go away'
-        time_sub = 94608000
-        
-        num_rows = 1000
-
-        f = open('/usr/share/dict/words','r')
-        lines = [x.strip() for x in f.readlines()]
-        numlines = len(lines)
-        randomwords = lambda x: ' '.join([lines[random.randint(0,numlines-1)] for x in xrange(x)])
-
-        cur_time = datetime.datetime.fromtimestamp(model.Session.query(model.JournalEntry).max(model.JournalEntry.time))
-        cur_time = datetime.datetime(2005,1,1) if cur_time < datetime.datetime(2005,1,1) else cur_time
-                
-        for i in xrange(num_rows):
             # XXX this won't work any more; need a real user
-            entry = model.JournalEntry(random.randint(1,3), randomwords(random.randint(4,10)), randomwords(random.randint(10,50)))
-            entry.time = cur_time
-            cur_time += datetime.timedelta(seconds=random.randint(0,3600))
-            model.Session.save(entry)
-            
-        model.Session.commit()
-        return cur_time
             
             

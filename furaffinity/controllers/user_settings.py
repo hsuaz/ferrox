@@ -20,12 +20,14 @@ class UserSettingsController(BaseController):
 
         return render('/user/settings/index.mako')
 
+    @check_perm('user_settings.avatars')
     def avatars(self, username=None, sub_domain=None):
         c.user = model.User.get_by_name(username, ['avatars'])
         if not c.user:
             abort(404)
         return render('/user/settings/avatars.mako')
 
+    @check_perm('user_settings.avatars')
     def avatars_update(self, username=None, sub_domain=None):
         c.user = model.User.get_by_name(username, ['avatars'])
         if not c.user:
@@ -80,6 +82,7 @@ class UserSettingsController(BaseController):
         model.Session.commit()
         h.redirect_to(h.url_for(controller='user_settings', action='avatars', username=c.user.username))
 
+    @check_perm('user_settings.avatars')
     def avatars_upload(self, username=None, sub_domain=None):
         validator = model.form.AvatarForm() 
         try:
@@ -108,6 +111,7 @@ class UserSettingsController(BaseController):
         model.Session.commit()
         h.redirect_to(h.url_for(controller='user_settings', action='avatars', username=c.user.username))
 
+    @check_perm('user_settings.relationships')
     def relationships(self, username=None, sub_domain=None):
         """Edit user's relationships"""
         c.user = model.User.get_by_name(username)
@@ -134,6 +138,7 @@ class UserSettingsController(BaseController):
 
         return render('user/settings/relationships.mako')
 
+    @check_perm('user_settings.relationships')
     def relationships_commit(self, username=None, sub_domain=None):
         c.user = model.User.get_by_name(username)
         if not c.user:

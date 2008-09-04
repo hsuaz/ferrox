@@ -172,7 +172,12 @@ class AvatarForm(formencode.Schema):
     #delete = formencode.validators.Int(repeating=True)
     #delete = formencode.ForEach(formencode.All(formencode.validators.Int()))
 
-
+class BanForm(formencode.Schema):
+    username = ExistingUserValidator()
+    expiration = formencode.validators.DateConverter()
+    role_id = PrimaryKeyValidator(table=model.Role)
+    reason = formencode.validators.String(not_empty=True)
+    notes = formencode.validators.String(not_empty=False, if_missing="")
 
 
 

@@ -24,35 +24,201 @@ def setup_config(command, filename, section, vars):
     ### Roles
 
     print "    ...roles"
-    null_role = model.Role('Unverified',
-                           'User who has not verified eir email')
+    # .manage = You can manage other people's entries from this controller.
+    avalable_permissions = [
+        # admin
+        ['admin.auth', 'Can log into admin panel.'],
+        ['admin.ban', 'Can manage bans.'],
+        ['admin.ip', 'Can see user IP addresses.'],
+        ['admin.roles', 'Can manage user roles. (God mode cheat.)'],
+
+        # back_compat probably doesn't need permissions
+        
+        # comments
+        ['comments.reply', 'Can make comments.'],
+
+        # debug
+        ['debug', 'Can use debug functions.'],
+
+        # editlog
+        ['editlog', 'Can view edit logs.'],
+
+        # gallery
+        ['gallery.view', 'Can browse galleries and view pictures.'],
+        ['gallery.upload', 'Can upload submissions.'],
+        ['gallery.favorite', 'Can manage own favorites.'],
+        ['gallery.manage', 'Can manage other people\'s submissions.'],
+
+        # index
+        ['index.register', 'Can register a new account. (Don\'t enable this.)'],
+        ['index.login', 'Can log in to site.'],
+
+        # journal
+        ['journal.view', 'Can browse journals and view entries.'],
+        ['journal.post', 'Can post journals.'],
+        ['journal.manage', 'Can manage other people\'s journals.'],
+
+        # news
+        ['news.manage', 'Can manage site news.'],
+
+        # notes
+        ['notes.view', 'Can view notes.'],
+        ['notes.write', 'Can write notes.'],
+        ['notes.manage', 'Can view other people\'s notes.'],
+        
+        # search
+        ['search.do', 'Can use site\'s search function.'],
+        
+        # stylesheets probably doesn't need permissions
+        
+        # template probably doesn't need permissions
+        
+        # user is view-only?
+
+        # user_settings
+        ['user_settings.avatars', 'Can manage own avatars.'],
+        ['user_settings.relationships', 'Can manage own relationships.'],
+        ['user_settings.manage', 'Can manage other people\'s settings.'],
+    ]
+
+    permissions = {}
+    for p in avalable_permissions:
+        permissions[p[0]] = model.Permission(*p)
+        model.Session.save(permissions[p[0]])
+
+    '''
+    .permissions.append(permissions['admin.auth'])
+    .permissions.append(permissions['admin.ban'])
+    .permissions.append(permissions['admin.ip'])
+    .permissions.append(permissions['admin.roles'])
+    .permissions.append(permissions['comments.reply'])
+    .permissions.append(permissions['debug'])
+    .permissions.append(permissions['editlog'])
+    .permissions.append(permissions['gallery.view'])
+    .permissions.append(permissions['gallery.upload'])
+    .permissions.append(permissions['gallery.favorite'])
+    .permissions.append(permissions['gallery.manage'])
+    .permissions.append(permissions['index.register'])
+    .permissions.append(permissions['index.login'])
+    .permissions.append(permissions['journal.view'])
+    .permissions.append(permissions['journal.post'])
+    .permissions.append(permissions['journal.manage'])
+    .permissions.append(permissions['news.manage'])
+    .permissions.append(permissions['notes.view'])
+    .permissions.append(permissions['notes.write'])
+    .permissions.append(permissions['notes.manage'])
+    .permissions.append(permissions['search.do'])
+    .permissions.append(permissions['user_settings.avatars'])
+    .permissions.append(permissions['user_settings.relationships'])
+    .permissions.append(permissions['user_settings.manage'])
+    '''
+    
+    null_role = model.Role('Null Role', 
+                           'User who can\'t do anything. Literally.')
     null_role.sigil = ' '
     model.Session.save(null_role)
 
+    guest_role = model.Role('Guest Role',
+                            'Non-registered Users')
+    guest_role.sigil = ' '
+    guest_role.permissions.append(permissions['gallery.view'])
+    guest_role.permissions.append(permissions['index.register'])
+    guest_role.permissions.append(permissions['journal.view'])
+    guest_role.permissions.append(permissions['search.do'])
+    model.Session.save(guest_role)
+    
+
+    unverified_role = model.Role('Unverified',
+                                 'User who has not verified eir email')
+    unverified_role.sigil = '?'
+    unverified_role.permissions.append(permissions['gallery.view'])
+    unverified_role.permissions.append(permissions['journal.view'])
+    unverified_role.permissions.append(permissions['notes.view'])
+    unverified_role.permissions.append(permissions['notes.write'])
+    unverified_role.permissions.append(permissions['search.do'])
+    model.Session.save(unverified_role)
+
+    banned_role = model.Role('Banned', 'User who has been banned.')
+    banned_role.sigil = '-'
+    banned_role.permissions.append(permissions['gallery.view'])
+    banned_role.permissions.append(permissions['gallery.favorite'])
+    banned_role.permissions.append(permissions['index.login'])
+    banned_role.permissions.append(permissions['journal.view'])
+    banned_role.permissions.append(permissions['notes.view'])
+    banned_role.permissions.append(permissions['search.do'])
+    model.Session.save(banned_role)
+
     normal_role = model.Role('Member', 'Regular user')
     normal_role.sigil = '~'
-    login_perm = model.Permission('log_in',
-                                  'Can log in.')
-    normal_role.permissions.append(login_perm)
-    submit_perm = model.Permission('submit_art',
-                                  'Can submit content to site.')
-    normal_role.permissions.append(submit_perm)
-    journal_perm = model.Permission('post_journal',
-                                  'Can post journals to site.')
-    normal_role.permissions.append(journal_perm)
+    normal_role.permissions.append(permissions['comments.reply'])
+    normal_role.permissions.append(permissions['gallery.view'])
+    normal_role.permissions.append(permissions['gallery.upload'])
+    normal_role.permissions.append(permissions['gallery.favorite'])
+    normal_role.permissions.append(permissions['index.login'])
+    normal_role.permissions.append(permissions['journal.view'])
+    normal_role.permissions.append(permissions['journal.post'])
+    normal_role.permissions.append(permissions['notes.view'])
+    normal_role.permissions.append(permissions['notes.write'])
+    normal_role.permissions.append(permissions['search.do'])
+    normal_role.permissions.append(permissions['user_settings.avatars'])
+    normal_role.permissions.append(permissions['user_settings.relationships'])
+    normal_role.permissions.append(permissions['user_settings.manage'])
     model.Session.save(normal_role)
 
-    admin_role = model.Role('Administrator', 'Administrator')
+    admin_role = model.Role('Administrator', 'Site Administrator')
     admin_role.sigil = '@'
-    admin_perm = model.Permission('debug',
-                                  'Access to developer debugging tools.')
-    admin_perm = model.Permission('administrate',
-                                  'General access to administration tools.')
-    admin_role.permissions.append(admin_perm)
-    admin_role.permissions.append(login_perm)
-    admin_role.permissions.append(submit_perm)
-    admin_role.permissions.append(journal_perm)
+    admin_role.permissions.append(permissions['admin.auth'])
+    admin_role.permissions.append(permissions['admin.ban'])
+    admin_role.permissions.append(permissions['admin.ip'])
+    admin_role.permissions.append(permissions['admin.roles'])
+    admin_role.permissions.append(permissions['comments.reply'])
+    admin_role.permissions.append(permissions['editlog'])
+    admin_role.permissions.append(permissions['gallery.view'])
+    admin_role.permissions.append(permissions['gallery.upload'])
+    admin_role.permissions.append(permissions['gallery.favorite'])
+    admin_role.permissions.append(permissions['gallery.manage'])
+    admin_role.permissions.append(permissions['index.register'])
+    admin_role.permissions.append(permissions['index.login'])
+    admin_role.permissions.append(permissions['journal.view'])
+    admin_role.permissions.append(permissions['journal.post'])
+    admin_role.permissions.append(permissions['journal.manage'])
+    admin_role.permissions.append(permissions['news.manage'])
+    admin_role.permissions.append(permissions['notes.view'])
+    admin_role.permissions.append(permissions['notes.write'])
+    admin_role.permissions.append(permissions['notes.manage'])
+    admin_role.permissions.append(permissions['search.do'])
+    admin_role.permissions.append(permissions['user_settings.avatars'])
+    admin_role.permissions.append(permissions['user_settings.relationships'])
+    admin_role.permissions.append(permissions['user_settings.manage'])
     model.Session.save(admin_role)
+
+    sysadmin_role = model.Role('System Administrator', 'Users that have access to the underlying software.')
+    sysadmin_role.sigil = '^'
+    sysadmin_role.permissions.append(permissions['admin.auth'])
+    sysadmin_role.permissions.append(permissions['admin.ban'])
+    sysadmin_role.permissions.append(permissions['admin.ip'])
+    sysadmin_role.permissions.append(permissions['admin.roles'])
+    sysadmin_role.permissions.append(permissions['comments.reply'])
+    sysadmin_role.permissions.append(permissions['debug'])
+    sysadmin_role.permissions.append(permissions['editlog'])
+    sysadmin_role.permissions.append(permissions['gallery.view'])
+    sysadmin_role.permissions.append(permissions['gallery.upload'])
+    sysadmin_role.permissions.append(permissions['gallery.favorite'])
+    sysadmin_role.permissions.append(permissions['gallery.manage'])
+    sysadmin_role.permissions.append(permissions['index.register'])
+    sysadmin_role.permissions.append(permissions['index.login'])
+    sysadmin_role.permissions.append(permissions['journal.view'])
+    sysadmin_role.permissions.append(permissions['journal.post'])
+    sysadmin_role.permissions.append(permissions['journal.manage'])
+    sysadmin_role.permissions.append(permissions['news.manage'])
+    sysadmin_role.permissions.append(permissions['notes.view'])
+    sysadmin_role.permissions.append(permissions['notes.write'])
+    sysadmin_role.permissions.append(permissions['notes.manage'])
+    sysadmin_role.permissions.append(permissions['search.do'])
+    sysadmin_role.permissions.append(permissions['user_settings.avatars'])
+    sysadmin_role.permissions.append(permissions['user_settings.relationships'])
+    sysadmin_role.permissions.append(permissions['user_settings.manage'])
+    model.Session.save(sysadmin_role)
 
     print "    ...user metadata"
     metadata_fields = (

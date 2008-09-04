@@ -58,6 +58,7 @@ class CommentsController(BaseController):
 
         return render('comments/view.mako')
 
+    @check_perm('comments.reply')
     def reply(self, post_url, id=None):
         """Post a comment, either top-level or replying to another comment."""
         post = self._get_parent_post(post_url)
@@ -71,6 +72,7 @@ class CommentsController(BaseController):
             c.comment = None
         return render('comments/reply.mako')
 
+    @check_perm('comments.reply')
     def reply_commit(self, post_url, id=None):
         """Form handler for reply to a comment."""
         post = self._get_parent_post(post_url)

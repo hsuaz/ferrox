@@ -1,7 +1,7 @@
 <%def name="news_entry(entry, short)">
 <%
     if entry.is_deleted:
-        if not c.auth_user.can('administrate'):
+        if not c.auth_user.can('admin.auth'):
             return ''
         extra_class = ' deleted'
     else:
@@ -33,7 +33,7 @@
             ${entry.content_parsed}
         % endif
     </div>
-    % if c.auth_user.can('administrate'):
+    % if c.auth_user.can('admin.auth'):
     ${c.empty_form.start(h.url(controller='news', action='edit', id=entry.id), method='post')}
     <ul class="inline admin">
         <li>${h.link_to('Edit', h.url(controller='news', action='edit', id=entry.id))}</li>
@@ -57,7 +57,7 @@
 <%def name="journal_entry(entry, short)">
 <%
     if entry.status == 'deleted':
-        if not c.auth_user.can('administrate'):
+        if not c.auth_user.can('admin.auth'):
             return ''
         extra_class = ' deleted'
     else:
@@ -77,7 +77,7 @@
             ${entry.content_parsed}
         % endif
     </div>
-    % if c.auth_user.can('administrate'):
+    % if c.auth_user.can('admin.auth'):
     ${c.empty_form.start(h.url(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), method='post')}
     <ul class="inline admin">
         <li>${h.link_to("Edit", h.url(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id))}</li>

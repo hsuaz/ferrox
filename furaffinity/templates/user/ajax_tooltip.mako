@@ -16,11 +16,11 @@
     % elif c.blocking:
     <div class="rel rel-blocked">Is blocked</div>
     % endif
-    <div class="links">
-        <a href="${h.url_for(controller='user', action='view', username=c.user.username)}">Profile</a> |
-        <a href="${h.url_for(controller='gallery', action='index', username=c.user.username)}">Gallery</a> |
-        <a href="${h.url_for(controller='journal', action='index', username=c.user.username)}">Journal</a>
-    </div>
+    <ul class="links inline">
+        <li><a href="${h.url_for(controller='user', action='view', username=c.user.username)}">Profile</a></li>
+        <li><a href="${h.url_for(controller='gallery', action='index', username=c.user.username)}">Gallery</a></li>
+        <li><a href="${h.url_for(controller='journal', action='index', username=c.user.username)}">Journal</a></li>
+    </ul>
     % if c.user.is_online():
     <div class="online">online</div>
     % else:

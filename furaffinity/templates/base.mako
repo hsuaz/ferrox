@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <title>${self.title()} -- Fur Affinity [dot] net</title>
-    <link rel="shortcut icon" type="image/png" href="/images/icons/pawprint.png"/>
+    <link rel="shortcut icon" type="image/png" href="/images/icons/favicon.png"/>
     ${self.css_links()}
     ${self.javascript_includes()}
 </head>
@@ -27,64 +27,50 @@
         ${c.empty_form.submit('Login')}
         ${c.empty_form.end()}
         % else:
-        ${c.empty_form.start(h.url(controller='index', action='logout'), method='post')}
-        <p>Welcome back, ${lib.user_link(c.auth_user)}!  ${c.empty_form.submit('Log out')}</p>
-        ${c.empty_form.end()}
-        <ul class="inline">
-            <li>${h.link_to("Profile", h.url(controller='user', action='view', username=c.auth_user.username))}</li>
-            <li>${h.link_to("Journal", h.url(controller='journal', action='index', username=c.auth_user.username))}</li>
-            <li>${h.link_to("Gallery", h.url(controller='gallery', action='index', username=c.auth_user.username))}</li>
-        </ul>
-        <ul class="inline">
-            <li>${h.link_to('Control Panel', h.url(controller='user_settings', action='index', username=c.auth_user.username))}</li>
-            <li>${h.link_to("Submit Art", h.url(controller='gallery', action='submit', username=c.auth_user.username))}</li>
-        </ul>
+        <div id="user-links">
+            <ul>
+                <li>${h.link_to("%s Settings" % h.image_tag('/images/icons/link-settings.png', ''), h.url(controller='user_settings', action='index', username=c.auth_user.username))}</li>
+                <li>${h.link_to("%s Upload" % h.image_tag('/images/icons/link-upload.png', ''), h.url(controller='gallery', action='submit', username=c.auth_user.username))}</li>
+                <li>${h.link_to("%s Write" % h.image_tag('/images/icons/link-write.png', ''), h.url(controller='journal', action='post', username=c.auth_user.username))}</li>
+                <li>${h.link_to("%s Watchstream" % h.image_tag('/images/icons/link-watchstream.png', ''), h.url(controller='gallery', action='watchstream', username=c.auth_user.username))}</li>
+            </ul>
+            <ul>
+                <% note_count = c.auth_user.unread_note_count() %>
+                <li${' class="new"' if note_count else ''}> ${h.link_to("%s %d new note%s" % (h.image_tag('/images/icons/link-notes.png', ''), note_count, 's' if note_count != 1 else ''), h.url(controller='notes', action='user_index', username=c.auth_user.username))} </li>
+                <li class="new FINISHME"> ${h.link_to(h.image_tag('/images/icons/link-comments.png', '') + " 25 comments", "")} </li>
+                <li class="new FINISHME"> ${h.link_to(h.image_tag('/images/icons/link-messages.png', '') + " 124 other", "")} </li>
+            </ul>
+        </div>
+        <div id="user-info">
+            ${c.empty_form.start(h.url(controller='index', action='logout'), method='post')}
+            <p>${lib.user_link(c.auth_user)}</p>
+            <p id="user-avatar"><img src="${h.get_avatar_url()}" alt="[default avatar]"/></p>
+            <p>${c.empty_form.submit('Log out', class_='small')}</p>
+            ${c.empty_form.end()}
+        </div>
+        % endif
+    </div>
+    <h1 id="banner">${h.image_tag('/images/banner.png', '')}</h1>
+    <h1 id="logo">${h.image_tag('/images/logo.png', 'FurAffinity')}</h1>
+    ${c.empty_form.start(h.url(controller='search', action='do'), method='post', id='search')}
+    <p>
+        ${c.empty_form.text_field('query_main', class_='search')}
+        ${c.empty_form.submit('Search')}
+    </p>
+    ${c.empty_form.end()}
+    <ul id="main-navigation">
+        <li>${h.link_to("%s Browse" % h.image_tag('/images/icons/link-browse.png', ''), h.url(controller='gallery', action='index'))}</li>
+        <li>${h.link_to("%s Forum" % h.image_tag('/images/icons/link-forum.png', ''), 'http://www.furaffinityforums.net')}</li>
+        <li>${h.link_to("%s News" % h.image_tag('/images/icons/link-news.png', ''), h.url(controller='news'))}</li>
+        <li>${h.link_to("%s Support" % h.image_tag('/images/icons/link-wiki.png', ''), 'http://www.wikiffinity.net/')}</li>
+        <li>${h.link_to("%s Staff" % h.image_tag('/images/icons/link-staff.png', ''), h.url(controller='staff'))}</li>
         % if c.auth_user.can('admin.auth'):
-        <p id="superpowers">${h.link_to("Activate Superpowers", h.url(controller='admin', action='auth'), class_='admin')}</p>
+        <li id="superpowers">${h.link_to("%s Activate Superpowers" % h.image_tag('/images/icons/link-admin.png', ''), h.url(controller='admin', action='auth'), id='admin')}</li>
         % endif
-        <ul id="messages">
-        <% note_count = c.auth_user.unread_note_count() %>
-            <li${' class="new"' if note_count else ''}> ${h.link_to("%s%d new note%s" % (h.image_tag('/images/icons/internet-mail.png', ''), note_count, 's' if note_count != 1 else ''), h.url(controller='notes', action='user_index', username=c.auth_user.username))} </li>
-            <li class="new FINISHME"> ${h.link_to(h.image_tag('/images/icons/internet-group-chat.png', '') + "5 new feedback", "")} </li>
-            <li class="FINISHME"> ${h.link_to(h.image_tag('/images/icons/internet-news-reader.png', '') + "No new watches", "")} </li>
-        </ul>
-        % endif
-    </div>
-    <h1 id="logo">${h.link_to(h.image_tag('/images/banner.jpg', 'FurAffinity'), h.url(controller='index', action='index'))}</h1>
+    </ul>
+    <div id="css-shadow"></div>
 </div>
-<div id="navigation">
-    <div class="basic-box" id="site-nav">
-        <h2>Site</h2>
-        <ul>
-            <li>${h.link_to("Home", h.url(controller='index', action='index'))}</li>
-            <li>${h.link_to("Browse", h.url(controller='gallery', action='index'))}</li>
-            <li>${h.link_to("News", h.url(controller='news'))}</li>
-            <li>${h.link_to("Staff", h.url(controller='staff'))}</li>
-        </ul>
-    </div>
-    <div class="basic-box" id="community-nav">
-        <h2>Community</h2>
-        <ul>
-            <li>${h.link_to("Forums", 'http://www.furaffinityforums.net')}</li>
-            <li>${h.link_to("Chat", 'http://www.wikiffinity.net/index.php?title=IRC_Chat')}</li>
-            <li>${h.link_to("Support", 'http://www.wikiffinity.net/')}</li>
-        </ul>
-    </div>
-    <div class="basic-box" id="search">
-        <h2>Search gallery</h2>
-        ${c.empty_form.start(h.url(controller='search', action='do'), method='post')}
-        <p>
-            ${c.empty_form.text_field('query_main')}<br>
-            ${c.empty_form.check_box('search_title', checked=True)} Title
-            ${c.empty_form.check_box('search_description', checked=True)} Description
-            ${c.empty_form.hidden_field('search_for', value='submissions')}
-            ${c.empty_form.hidden_field('query_author', value='')}
-            ${c.empty_form.hidden_field('query_tags', value='')}
-            ${c.empty_form.submit('Search')}
-        </p>
-        ${c.empty_form.end()}
-    </div>
-</div>
+
 <ul id="ads">
     <li>${h.image_tag('/images/ad1.gif', 'Ad 1')}</li>
     <li>${h.image_tag('/images/ad2.gif', 'Ad 2')}</li>
@@ -101,6 +87,10 @@
 
 <div id="content">
     ${next.body()}
+</div>
+
+<div id="static-footer-ad">
+    ${h.image_tag('http://servbot.furaffinity.net/www/images/cs_base.jpg')}
 </div>
 
 <div id="footer">
@@ -120,8 +110,11 @@
     sql_time = c.query_log.time_elapsed()
     sql_percent = sql_time / total_time * 100
 %>
-        <div id="python-bar" style="width: ${100 - sql_percent}%;">&nbsp;</div>
         <p> Page generated in ${"%.4f" % total_time}s; ${"%.1f" % sql_percent}% SQL, ${len(c.query_log.queries)} quer${'y' if len(c.query_log.queries) == 1 else 'ies'} </p>
+        <div id="stats-bar">
+            <div id="stats-bar-python" style="width: ${(total_time - sql_time) / 0.05}em;"></div>
+            <div id="stats-bar-sql" style="width: ${sql_time / 0.05}em;"></div>
+        </div>
     </div>
     % if c.auth_user.can('debug'):
     <table id="query-log">
@@ -142,10 +135,15 @@
 </html>
 
 <%def name="css_links()">
+    <link rel="stylesheet" type="text/css" href="/stylesheets/reset.css"/>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/powder/common.css"/>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/powder/index.css"/>
+<!--
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet='gallery')}"/>
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet='reset')}"/>
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet='common')}"/>
     <link rel="stylesheet" type="text/css" href="${h.url_for(controller='stylesheets', action='index', sheet=c.auth_user.preference('style_sheet'), color=c.auth_user.preference('style_color'))}"/>
+-->
 </%def>
 
 <%def name="javascript_includes()">

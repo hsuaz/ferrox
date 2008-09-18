@@ -130,7 +130,7 @@
 <%def name="user_link(user, care_about_online=True)">
 <span class="userlink">
     <a href="${h.url_for(controller='user', action='view', username=user.username)}"><img src="/images/foxy.gif" alt="[user]"/></a>
-    <a href="${h.url_for(controller='user', action='view', username=user.username)}" class="js-userlink-target">${user.username}</a>
+    <a href="${h.url_for(controller='user', action='view', username=user.username)}" class="js-userlink-target">maxblackrabbit</a>
 </span>
 </%def>
 

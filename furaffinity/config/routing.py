@@ -121,7 +121,7 @@ def make_map():
     map.connect('/admin/ban_commit', controller='admin', action='ban_commit', **require_post)
     map.connect('/users/:username/ban', controller='admin', action='ban')
     
-    map.connect('/stylesheets/:sheet/:color', controller='stylesheets', action='index', color=None)
+    #map.connect('/stylesheets/:sheet/:color', controller='stylesheets', action='index', color=None)
 
     map.connect('/debug', controller='debug', action='index')
     map.connect('/debug/crash', controller='debug', action='crash')

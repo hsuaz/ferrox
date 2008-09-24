@@ -37,14 +37,14 @@
             <ul>
                 <% note_count = c.auth_user.unread_note_count() %>
                 <li${' class="new"' if note_count else ''}> ${h.link_to("%s %d new note%s" % (h.image_tag('/images/icons/link-notes.png', ''), note_count, 's' if note_count != 1 else ''), h.url(controller='notes', action='user_index', username=c.auth_user.username))} </li>
-                <li class="new FINISHME"> ${h.link_to(h.image_tag('/images/icons/link-comments.png', '') + " 25 comments", "")} </li>
-                <li class="new FINISHME"> ${h.link_to(h.image_tag('/images/icons/link-messages.png', '') + " 124 other", "")} </li>
+                <li class="new TODO"> ${h.link_to(h.image_tag('/images/icons/link-comments.png', '') + " 25 comments", "")} </li>
+                <li class="new TODO"> ${h.link_to(h.image_tag('/images/icons/link-messages.png', '') + " 124 other", "")} </li>
             </ul>
         </div>
         <div id="user-info">
             ${c.empty_form.start(h.url(controller='index', action='logout'), method='post')}
             <p>${lib.user_link(c.auth_user)}</p>
-            <p id="user-avatar"><img src="${h.get_avatar_url()}" alt="[default avatar]"/></p>
+            <p id="user-avatar">${h.image_tag(h.get_avatar_url(), '[default avatar]')}</p>
             <p>${c.empty_form.submit('Log out', class_='small')}</p>
             ${c.empty_form.end()}
         </div>

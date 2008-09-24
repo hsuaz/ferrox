@@ -135,21 +135,44 @@
 </%def>
 
 <%def name="user_linkbar(user)">
-<ul class="mini-linkbar">
-    <li class="not-link">${user.display_name}:</li>
-    <li>${h.link_to('Overview', h.url_for(controller='user', action='view', username=user.username))}</li>
-    <li>${h.link_to('Profile', h.url_for(controller='user', action='profile', username=user.username))}</li>
-    <li>${h.link_to('Gallery', h.url_for(controller='gallery', action='index', username=user.username))}</li>
-    <li>${h.link_to('Journal', h.url_for(controller='journal', action='index', username=user.username))}</li>
-    % if c.auth_user:
-    <li class="not-link"></li>
-    <li>${h.link_to(h.image_tag('/images/icons/list-add.png', 'Watch'), h.url_for(controller='user', action='watch', username=user.username)) }</li>
-    <li>${h.link_to(h.image_tag('/images/icons/mail-message-new.png', 'Send note'), h.url_for(controller='notes', action='write', username=c.auth_user.username, recipient=user.username))}</li>
-    <li>${h.link_to(h.image_tag('/images/icons/process-stop.png', 'Block'), h.url_for(controller='user', action='block', username=user.username)) }</li>
-    <li>${h.link_to(h.image_tag('/images/icons/list-add.png', 'Befriend'), h.url_for(controller='user', action='friend', username=user.username)) }</li>
-    % endif
-</ul>
-
+<div id="user-header">
+    ${h.image_tag(h.get_avatar_url(), '[default avatar]', class_='avatar')}
+    <div id="user-header-name">
+        <span id="user-header-name-handle">${user.role.sigil}${user.display_name}</span>
+        <span id="user-header-name-alias" class="TODO">aka..  Eevee?</span>
+        % if c.auth_user:
+        ${h.link_to("%s %s %s" % ( \
+            h.image_tag('/images/icons/rel-friend-off.png', 'Not a friend'), \
+            h.image_tag('/images/icons/rel-watching-off.png', 'Not watched'), \
+            h.image_tag('/images/icons/rel-blocked-off.png', 'Not blocked'), \
+        ), h.url_for(controller='user', action='relationships_edit', username=c.auth_user.username, other_user=user.username), class_='TODO button')}
+        ${h.link_to("%s Send note" % h.image_tag('/images/icons/link-user-note.png', ''), h.url_for(controller='notes', action='write', username=c.auth_user.username, recipient=user.username), class_='button')}
+        % endif
+    </div>
+    <div id="user-header-status">${user.role.name} since <span class="TODO">Aug 15, 2006</span></div>
+    <div id="user-header-stats">
+        <dl class="reversed TODO">
+            <dt>pageviews</dt>
+            <dd>unknown</dd>
+            <dt>submissions</dt>
+            <dd>dunno</dd>
+            <dt>journals</dt>
+            <dd>shrug</dd>
+        </dl>
+        ${h.link_to('More stats...', h.url(controller='user', action='stats', username=user.username), class_='TODO')}
+    </div>
+    <div id="user-header-blurb" class="TODO">Short user status blurb; "taking commissions" or "on vacation" or whatever, plain text only</div>
+    <div id="user-header-admin" class="TODO">Admin note, I suppose</div>
+    <ul class="tab-bar">
+        % for title, image, route in ('Profile',         'profile',     dict(controller='user', action='profile')), \
+                                     ('Recent Activity', 'recent',      dict(controller='user', action='view')), \
+                                     ('Commissions',     'commissions', dict(controller='user', action='commissions')), \
+                                     ('Journal',         'journal',     dict(controller='journal', action='index')), \
+                                     ('Gallery',         'gallery',     dict(controller='gallery', action='index')):
+        <li>${h.link_to("%s %s" % (h.image_tag('/images/icons/link-user-%s.png' % image, ''), title), h.url(username=user.username, **route))}</li>
+        % endfor
+    </ul>
+</div>
 </%def>
 
 <%def name="avatar_selector(user, default=0, name='avatar_id')">

@@ -136,7 +136,7 @@
 
 <%def name="user_linkbar(user)">
 <div id="user-header">
-    ${h.image_tag(h.get_avatar_url(), '[default avatar]', class_='avatar')}
+    ${h.image_tag(h.get_avatar_url(), '[default avatar]', class_='avatar TODO')}
     <div id="user-header-name">
         <span id="user-header-name-handle">${user.role.sigil}${user.display_name}</span>
         <span id="user-header-name-alias" class="TODO">aka..  Eevee?</span>

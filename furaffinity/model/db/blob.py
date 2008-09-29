@@ -377,6 +377,10 @@ Submission.thumbnail = relation(DerivedSubmission,
     primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,
                      DerivedSubmission.derivetype == 'thumb'),
     uselist=False)
+Submission.halfview = relation(DerivedSubmission,
+    primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,
+                     DerivedSubmission.derivetype == 'halfview'),
+    uselist=False)
 
 class HistoricSubmission(BaseTable):
     __tablename__       = 'historic_submissions'
@@ -424,7 +428,13 @@ Submission.primary_artist = relation(User, secondary=UserSubmission.__table__,
     primaryjoin=and_(Submission.id == UserSubmission.submission_id,
                      UserSubmission.ownership_status == 'primary'),
     secondaryjoin=(UserSubmission.user_id == User.id),
-    uselist=False)
+    uselist=False,
+)
+Submission.artists = relation(User, secondary=UserSubmission.__table__,
+    primaryjoin=and_(Submission.id == UserSubmission.submission_id,
+                     UserSubmission.ownership_status == 'primary'),
+    secondaryjoin=(UserSubmission.user_id == User.id),
+)
 
 class Tag(BaseTable):
     __tablename__       = 'tags'

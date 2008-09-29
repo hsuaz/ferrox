@@ -11,14 +11,15 @@ a:active { color: #2c873a; }
 
 a img { vertical-align: middle; }
 
-h2 { font-size: 1.75em; line-height: 30px; text-align: center; border: 1px solid #2d4779; background: url(/images/bits/heading-background.png) #829fd2 center center repeat-x; }
-
 /* Common classes */
 .small { font-size: 0.8em; }
 
+.message { text-align: justify; }
+
 /* Button-like standard links */
-a.button { padding: 0.33em 0.33em; line-height: 2; vertical-align: middle; background: #f2f6fd; -moz-border-radius: 0.5em; -webkit-border-radius: 0.5em; -moz-outline-radius: 0.5em; -webkit-outline-radius: 0.5em; }
+a.button { padding: 0.33em 0.33em; line-height: 2; vertical-align: middle; white-space: nowrap; background: #f2f6fd; border: 1px solid #eaeefd; -moz-border-radius: 0.67em; -webkit-border-radius: 0.67em; -moz-outline-radius: 0.67em; -webkit-outline-radius: 0.67em; }
 a.button img { vertical-align: text-bottom; }
+a.button.admin { background-color: #ffe8c1; border-color: #b56f44; }
 
 /* Bullet-delimited inline list */
 ul.inline li { display: inline; }
@@ -33,6 +34,21 @@ input[type='submit']:hover { background-color: #e1a1a1; border-color: #872c2c; }
 input[type='submit']:active { background-color: #a1e1ab; border-color: #2c873a; }
 
 input.search { padding-left: 24px; background-image: url(/images/icons/textbox-search.png); background-position: 0.25em center; background-repeat: no-repeat; }
+
+/* Columns, source order left to right! */
+.columns-left { width: 50%; float: left; }
+.columns-right { width: 50%; margin-left: 50%; }
+.columns-right:after { content: 'float clear'; display: block; clear: left; height: 0; visibility: hidden; }
+
+/* Simple box */
+.basic-box { padding: 0.5em; }
+.basic-box + .basic-box { margin-top: 2em; }
+.basic-box h2 { font-size: 1.75em; line-height: 32px; text-align: center; border: 1px solid #2d4779; background: url(/images/bits/heading-background.png) #829fd2 center center repeat-x; vertical-align: bottom; }
+.basic-box h2 img { float: left; margin-left: 0.25em; }
+.basic-box h3 { margin: 0.33em 0; font-size: 1.5em; font-weight: bold; }
+.basic-box .timestamp { font-style: italic; }
+.basic-box h3 + .timestamp { margin-top: -0.5em; }
+.basic-box > p { margin: 0.5em 0; }
 
 /* Row of tabs */
 .tab-bar { overflow: auto /* float wrapping */; }
@@ -66,7 +82,7 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 #header #logo { position: absolute; z-index: 2 /* above banner */; top: 3em; left: 2em; }
 #header #css-shadow { position: absolute; top: 160px; height: 32px; left: 0; right: 0; background: url(/images/bits/header-shadow.png) repeat-x; }
 
-#header #user { position: absolute; z-index: 2 /* above banner */; right: 0; top: 0; bottom: 0; margin: 0.5em; padding: 0.5em; width: 22em; line-height: 100%; vertical-align: middle; background: rgba(100%, 100%, 100%, 0.67); }
+#header #user { position: absolute; z-index: 2 /* above banner */; right: 0; top: 0; bottom: 0; margin: 0.5em; padding: 0.5em; width: 22em; line-height: 100%; vertical-align: middle; background: #bdc7db; background: rgba(100%, 100%, 100%, 0.67); }
 #header #user #user-links { float: left; width: 10em; }
 #header #user #user-links ul + ul { margin-top: 0.25em; padding-top: 0.25em; border-top: 1px solid #2c4387; }
 #header #user #user-links ul li { padding: 0.125em; }
@@ -74,7 +90,7 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 
 #search { position: absolute; z-index: 2 /* above banner */; bottom: 0.5em; left: 0.5em; }
 
-#main-navigation { position: absolute; z-index: 2 /* above banner */; top: 0.5em; left: 0.5em; right: 24em /* #user width */; vertical-align: middle; background: rgba(100%, 100%, 100%, 0.67); }
+#main-navigation { position: absolute; z-index: 2 /* above banner */; top: 0.5em; left: 0.5em; right: 24em /* #user width */; vertical-align: middle; background: #bdc7db; background: rgba(100%, 100%, 100%, 0.67); }
 #main-navigation li { float: left; padding: 0.5em; }
 #main-navigation li#superpowers { float: right; }
 
@@ -99,6 +115,8 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 #footer #query-log td { font-family: monospace; padding: 0.33em; line-height: 1.2; }
 #footer #query-log tr:hover { outline: 2px solid darkgray; background: white; }
 
+
+
 /* * * Big but not-global page parts * * */
 
 /* User pages header */
@@ -120,7 +138,43 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 #user-header-stats dl dt { float: right; clear: right; width: 6em; margin-left: 0.25em; text-align: left; }
 #user-header-stats dl dd { text-align: right; }
 
-/* TEMPORARY XXX REMOVE */
+
+
+/* * * User pages * * */
+
+/* Featured/recent submissions on recent page */
+.latest-submission .halfview { margin: 0.5em 0; text-align: center; }
+.latest-submission .description { margin: 0.33em 0; }
+.latest-submission .admin-links { float: right; }
+
+.latest-journal .message { margin: 0.5em 0; }
+.latest-journal .admin-links { float: right; }
+
+/* Single row of featured/recent submissions */
+/* CONFIG: gallery.thumbnail_size */
+.thumbnail-row { height: 122px; overflow: hidden; margin: 1em; padding-top: 1em; border-top: 1px solid #446bb5; }
+.thumbnail-row li { float: left; height: 122px; width: 122px; padding: 0 0.5em; line-height: 118px; }
+.thumbnail-row li a { display: block; height: 122px; width: 122px; padding: 0 0.5em; margin: 0 -0.5em; text-align: center; }
+.thumbnail-row li a img { border: 1px solid transparent; }
+.thumbnail-row li a:hover img { border-color: #b56f44; }
+
+/* List of recent journal entries */
+.recent-journals { margin-top: 1em; padding-top: 0.33em; border-top: 1px solid #446bb5; }
+.recent-journals li { clear: right; overflow: auto; }
+.recent-journals li:hover { background-color: #ecf2fb; }
+.recent-journals li .timestamp { float: right; padding: 0.33em; }
+.recent-journals li .title a { display: block; padding: 0.33em; }
+
+/* Shoutbox */
+.shoutbox { overflow: hidden /* new float context */; }
+.shoutbox li { clear: left; margin-top: 1em; }
+.shoutbox li:after { content: 'float clear'; display: block; height: 0; visibility: hidden; clear: both; }
+.shoutbox li .avatar img { float: left; max-width: 50px; margin-right: 0.5em; }
+.shoutbox li .header { padding: 0.33em; background-color: #b7cbeb; }
+.shoutbox li .header .timestamp { margin-left: 1em; }
+.shoutbox li .message { margin: 0.5em 0; }
+
+/* TEMPORARY DEBUG STUFF */
 #ads { display: none; }
-TODO { outline: 1px dashed darkred; }
+.TODO { outline: 1px dashed darkred; }
 

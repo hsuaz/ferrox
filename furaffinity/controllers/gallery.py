@@ -58,6 +58,7 @@ class NoSuchTagsException(Exception):
     def __init__(self, *tags):
         self.tags = tags
 
+# TODO share this?
 def find_submissions(joined_tables=model.Submission.__table__,
                      where_clauses=[], tag_string=None,
                      page_num=1, page_size=None):
@@ -145,9 +146,11 @@ def find_submissions(joined_tables=model.Submission.__table__,
     # Actually fetch submissions
     submissions = model.Session.query(model.Submission) \
                     .filter(model.Submission.id.in_(submission_ids)) \
+                    .order_by(model.Submission.time.desc()) \
                     .options(eagerload('thumbnail'),
                              eagerload('primary_artist'),
-                             )
+                             ) \
+                    .all()
 
     return submissions, submission_ct
 
@@ -558,18 +561,18 @@ class GalleryController(BaseController):
         response.headers['Content-Length'] = len(data)
         return data
 
-    def is_my_submission(self, submission, abort=False):
-        """Returns false (or aborts, if abort=True) if the provided submission
-        doesn't belong to the current user.
+    def is_my_submission(self, submission, should_abort=False):
+        """Returns false (or aborts, if should_abort=True) if the provided
+        submission doesn't belong to the current user.
         """
 
-        if not c.auth_user or (not c.auth_user.can('admin.auth') and
-                               c.auth_user.id != journal_entry.user_id):
-            if abort:
-                c.error_text = 'You cannot edit this submission.'
-                c.error_title = 'Forbidden'
-                abort(403)
-            else:
-                return False
-        return True
+        if c.auth_user and (c.auth_user.can('admin.auth') or
+                            c.auth_user in submission.artists):
+            return True
 
+        if should_abort:
+            c.error_text = 'You cannot edit this submission.'
+            c.error_title = 'Forbidden'
+            abort(403)
+        else:
+            return False

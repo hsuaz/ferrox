@@ -317,7 +317,7 @@ class JournalController(BaseController):
     def view(self, id=None, month=None, day=None, year=None):
         """View a single journal entry."""
         c.journal_entry = get_journal(id)
-        c.is_mine = self.is_my_journal(c.journal_entry.user)
+        c.is_mine = self.is_my_journal(c.journal_entry)
 
         return render('/journal/view.mako')
 

@@ -1,8 +1,9 @@
+from furaffinity.controllers.gallery import find_submissions
 from furaffinity.lib.base import *
 #import furaffinity.lib.paginate as paginate
 from furaffinity.lib import pagination
-from furaffinity.model import form
 from furaffinity.lib.formgen import FormGenerator
+from furaffinity.model import form
 
 import pylons.config
 import logging
@@ -59,6 +60,23 @@ class UserController(BaseController):
         c.user = model.User.get_by_name(username)
         if not c.user:
             abort(404)
+
+        # Recent submissions
+        joined_tables = model.Submission.__table__ \
+                        .join(model.UserSubmission.__table__) \
+                        .join(model.User.__table__)
+        where = [model.User.id == c.user.id]
+        (c.recent_submissions,
+            submission_ct) = find_submissions(joined_tables=joined_tables,
+                                              where_clauses=where,
+                                              page_size=10)
+
+        c.recent_journals = model.Session.query(model.JournalEntry) \
+                            .filter_by(status='normal') \
+                            .join('message') \
+                            .filter_by(user_id=c.user.id) \
+                            .order_by(model.Message.time.desc()) \
+                            [:10].all()
         return render('user/view.mako')
 
     def profile(self, username=None, sub_domain=None):

@@ -63,7 +63,7 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 .userlink a { font-weight: bold; }
 .userlink a img { border: none; vertical-align: text-bottom; }
 
-.userlink-popup { position: absolute; width: 15em; padding: 0.5em; left: 0; z-index: 10; text-align: left; color: black; background: white; background: rgba(255, 255, 255, 0.9); border: 1px solid black; -moz-border-radius-topright: 1.5em; -webkit-border-top-right-radius: 1.5em; }
+.userlink-popup { position: absolute; width: 15em; padding: 0.5em; left: 0; z-index: 100; text-align: left; color: black; background: white; background: rgba(255, 255, 255, 0.9); border: 1px solid black; -moz-border-radius-topright: 1.5em; -webkit-border-top-right-radius: 1.5em; }
 .userlink-popup .avatar { float: right; height: 50px; }
 .userlink-popup .name { font-weight: bold; }
 .userlink-popup .role { font-style: italic; margin-bottom: 0.5em; }

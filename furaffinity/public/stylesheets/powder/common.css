@@ -19,7 +19,7 @@ a img { vertical-align: middle; }
 /* Button-like standard links */
 a.button { padding: 0.33em 0.33em; line-height: 2; vertical-align: middle; white-space: nowrap; background: #f2f6fd; border: 1px solid #eaeefd; -moz-border-radius: 0.67em; -webkit-border-radius: 0.67em; -moz-outline-radius: 0.67em; -webkit-outline-radius: 0.67em; }
 a.button img { vertical-align: text-bottom; }
-a.button.admin { background-color: #ffe8c1; border-color: #b56f44; }
+a.button.admin { background: url(/images/bits/button-background.png) #f0e4d0 center center repeat; border-color: #d19875; }
 
 /* Bullet-delimited inline list */
 ul.inline li { display: inline; }

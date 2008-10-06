@@ -3,7 +3,9 @@
 Consists of functions to typically be used within templates, but also
 available to Controllers. This module is available to both as 'h'.
 """
-from webhelpers import *
+from webhelpers.rails.wrapped import *
+from webhelpers.rails import asset_tag
+from routes import url_for, redirect_to
 import pylons.config
 
 import os
@@ -83,7 +85,7 @@ def image_tag(source, alt=None, size=None, **options):
     Also copies alt into title, if one isn't specified.
     """
 
-    options['src'] = rails.asset_tag.compute_public_path(source, 'images')
+    options['src'] = asset_tag.compute_public_path(source, 'images')
 
     if alt == None:
         alt = os.path.splitext(os.path.basename(source))[0].title()

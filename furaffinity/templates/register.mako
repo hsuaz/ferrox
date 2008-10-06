@@ -1,6 +1,6 @@
 <%inherit file="base.mako" />
 
-${c.form.start(h.url(controller='index', action='register_check'), method='post')}
+${c.form.start(h.url_for(controller='index', action='register_check'), method='post')}
 ${c.form.hidden_field('remote_addr', value=c.environ['REMOTE_ADDR'])}
 <dl class="standard-form">
     <dt>Username</dt>

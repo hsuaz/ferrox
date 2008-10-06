@@ -1,0 +1,15 @@
+# Usual temp garbage
+*.pyc
+*~
+.*.swp
+my*.ini
+Thumbs.db
+
+# Build and data stuff
+*.egg-info
+/furaffinity.db
+/.xapian
+/fakemogile
+/build
+/data
+/dist

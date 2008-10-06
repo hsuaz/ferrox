@@ -37,6 +37,15 @@ def make_app(global_conf, full_stack=True, **app_conf):
     app = PylonsApp()
 
     # CUSTOM MIDDLEWARE HERE (filtered by error handling middlewares)
+    
+    import pylons
+    if pylons.__version__ >= "0.9.7":
+        # Routing/Session/Cache Middleware
+        from beaker.middleware import CacheMiddleware, SessionMiddleware
+        from routes.middleware import RoutesMiddleware
+        app = RoutesMiddleware(app, config['routes.map'])
+        app = SessionMiddleware(app, config)
+        app = CacheMiddleware(app, config)
 
     if asbool(full_stack):
         # Handle Python exceptions

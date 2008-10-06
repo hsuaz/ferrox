@@ -1,6 +1,6 @@
 <%inherit file="base.mako" />
 
-${c.form.start(h.url(controller='index', action='login_check'), method='post')}
+${c.form.start(h.url_for(controller='index', action='login_check'), method='post')}
 <dl class="standard-form">
     <dt><label for="username">Username</label></dt>
     <dd>${c.form.text_field('username')}</dd>

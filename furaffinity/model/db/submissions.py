@@ -23,7 +23,7 @@ import re
 import time
 
 from furaffinity.model.db import BaseTable, DateTime, Enum, Session
-from furaffinity.model.db.user import *
+from furaffinity.model.db.users import *
 from furaffinity.model.db.messages import *
 
 

@@ -1,5 +1,5 @@
 from furaffinity.model.db import BaseTable, DateTime, Enum, IP, Session
-from furaffinity.model.db.user import *
+from furaffinity.model.db.users import *
 
 from sqlalchemy.orm import object_mapper, relation
 

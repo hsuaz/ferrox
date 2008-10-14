@@ -64,8 +64,6 @@ class Submission(BaseTable):
     status              = Column(submission_status_type, index=True, nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
-    discussion          = relation(Discussion, backref='submission')
-    editlog             = relation(EditLog)
 
     def __init__(self):
         self.title = ''
@@ -359,8 +357,6 @@ class FavoriteSubmission(BaseTable):
     user_id             = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
     submission_id       = Column(types.Integer, ForeignKey('submissions.id'), primary_key=True)
 
-Submission.favorited_by = relation(User, secondary=FavoriteSubmission.__table__, backref='favorite_submissions')
-
 class DerivedSubmission(BaseTable):
     __tablename__       = 'derived_submissions'
     id                  = Column(types.Integer, primary_key=True)
@@ -368,19 +364,10 @@ class DerivedSubmission(BaseTable):
     derivetype          = Column(derived_submission_derivetype_type, nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
-    submission          = relation(Submission, backref='derived_submission', lazy=False)
 
     def __init__(self, derivetype):
         self.derivetype = derivetype
 
-Submission.thumbnail = relation(DerivedSubmission,
-    primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,
-                     DerivedSubmission.derivetype == 'thumb'),
-    uselist=False)
-Submission.halfview = relation(DerivedSubmission,
-    primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,
-                     DerivedSubmission.derivetype == 'halfview'),
-    uselist=False)
 
 class HistoricSubmission(BaseTable):
     __tablename__       = 'historic_submissions'
@@ -390,8 +377,6 @@ class HistoricSubmission(BaseTable):
     mimetype            = Column(types.String(35), nullable=False)
     edited_at           = Column(DateTime, nullable=False, default=datetime.now)
     edited_by_id        = Column(types.Integer, ForeignKey('users.id'))
-    edited_by           = relation(User)
-    submission          = relation(Submission, backref='historic_submission')
 
     def __init__(self, user):
         self.edited_by = user
@@ -413,9 +398,6 @@ class UserSubmission(BaseTable):
     ownership_status    = Column(user_submission_ownership_status_type, nullable=False)
     review_status       = Column(user_submission_review_status_type, nullable=False)
     avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
-    avatar              = relation(UserAvatar, uselist=False, lazy=False)
-    submission          = relation(Submission, backref='user_submission')
-    user                = relation(User, backref='user_submission')
 
     def __init__(self, user, relationship, ownership_status, review_status):
         self.user = user
@@ -423,18 +405,6 @@ class UserSubmission(BaseTable):
         self.ownership_status = ownership_status
         self.review_status = review_status
         self.avatar_id = None
-
-Submission.primary_artist = relation(User, secondary=UserSubmission.__table__,
-    primaryjoin=and_(Submission.id == UserSubmission.submission_id,
-                     UserSubmission.ownership_status == 'primary'),
-    secondaryjoin=(UserSubmission.user_id == User.id),
-    uselist=False,
-)
-Submission.artists = relation(User, secondary=UserSubmission.__table__,
-    primaryjoin=and_(Submission.id == UserSubmission.submission_id,
-                     UserSubmission.ownership_status == 'primary'),
-    secondaryjoin=(UserSubmission.user_id == User.id),
-)
 
 class Tag(BaseTable):
     __tablename__       = 'tags'
@@ -498,4 +468,37 @@ class SubmissionTag(BaseTable):
     def __init__(self, tag):
         self.tag = tag
 
-Submission.tags = relation(Tag, backref='submissions', secondary=SubmissionTag.__table__)
+DerivedSubmission.submission    = relation(Submission, backref='derived_submission', lazy=False)
+
+HistoricSubmission.edited_by    = relation(User)
+HistoricSubmission.submission   = relation(Submission, backref='historic_submission')
+
+Submission.tags                 = relation(Tag, backref='submissions', secondary=SubmissionTag.__table__)
+Submission.discussion           = relation(Discussion, backref='submission')
+Submission.editlog              = relation(EditLog)
+Submission.favorited_by         = relation(User, secondary=FavoriteSubmission.__table__, backref='favorite_submissions')
+
+Submission.halfview             = relation(DerivedSubmission,
+    primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,
+                     DerivedSubmission.derivetype == 'halfview'),
+    uselist=False)
+Submission.thumbnail            = relation(DerivedSubmission,
+    primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,
+                     DerivedSubmission.derivetype == 'thumb'),
+    uselist=False)
+
+Submission.artists              = relation(User, secondary=UserSubmission.__table__,
+    primaryjoin=and_(Submission.id == UserSubmission.submission_id,
+                     UserSubmission.ownership_status == 'primary'),
+    secondaryjoin=(UserSubmission.user_id == User.id),
+    )
+Submission.primary_artist       = relation(User, secondary=UserSubmission.__table__,
+    primaryjoin=and_(Submission.id == UserSubmission.submission_id,
+                     UserSubmission.ownership_status == 'primary'),
+    secondaryjoin=(UserSubmission.user_id == User.id),
+    uselist=False,
+    )
+
+UserSubmission.avatar           = relation(UserAvatar, uselist=False, lazy=False)
+UserSubmission.submission       = relation(Submission, backref='user_submission')
+UserSubmission.user             = relation(User, backref='user_submission')

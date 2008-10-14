@@ -100,8 +100,6 @@ class RolePermission(BaseTable):
     role_id         = Column(types.Integer, ForeignKey('roles.id'), primary_key=True)
     permission_id   = Column(types.Integer, ForeignKey('permissions.id'), primary_key=True)
 
-Role.permissions = relation(Permission, secondary=RolePermission.__table__)
-
 ### Main user tables
 
 class User(BaseTable):
@@ -112,10 +110,6 @@ class User(BaseTable):
     password        = Column(types.String(256), nullable=False)
     display_name    = Column(types.Unicode(32), nullable=False, unique=True)
     role_id         = Column(types.Integer, ForeignKey('roles.id'), default=1)
-
-    role            = relation(Role)
-#    journals = relation(JournalEntry, backref='user')
-#    user_submission = relation(UserSubmission, backref='user')
 
     @classmethod
     def get_by_name(cls, username, eagerloads=[]):
@@ -278,9 +272,6 @@ class UserRelationship(BaseTable):
     def __init__(self):
         self.relationship = set()
 
-UserRelationship.user = relation(User, primaryjoin=UserRelationship.from_user_id==User.id, backref='relationships')
-UserRelationship.target = relation(User, primaryjoin=UserRelationship.to_user_id==User.id)
-
 class IPLogEntry(BaseTable):
     __tablename__   = 'ip_log'
     id              = Column(types.Integer, primary_key=True)
@@ -288,8 +279,6 @@ class IPLogEntry(BaseTable):
     ip              = Column(IP, nullable=False)
     start_time      = Column(DateTime, nullable=False, default=datetime.now)
     end_time        = Column(DateTime, nullable=False, default=datetime.now)
-
-    user            = relation(User, backref='ip_log')
 
     def __init__(self, user_id, ip_integer):
         self.user_id = user_id
@@ -302,8 +291,6 @@ class UserPreference(BaseTable):
     user_id         = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
     key             = Column(types.String(length=32), primary_key=True)
     value           = Column(types.String(length=256), nullable=False)
-
-    user            = relation(User, backref='preferences')
 
     def __init__(self, user, key, value):
         self.user = user
@@ -324,9 +311,6 @@ class UserMetadata(BaseTable):
     field_id        = Column(types.Integer, ForeignKey('user_metadata_fields.id'), primary_key=True)
     value           = Column(types.Unicode(length=255), nullable=False)
     
-    user            = relation(User, backref='metadata')
-    field           = relation(UserMetadataField, lazy=False)
-
 class UserAvatar(BaseTable):
     __tablename__       = 'user_avatars'
     id                  = Column(types.Integer, primary_key=True, autoincrement=True)
@@ -364,9 +348,6 @@ class UserAvatar(BaseTable):
         store = mogilefs.Client(pylons.config['mogilefs.domain'], [pylons.config['mogilefs.tracker']])
         store.delete(self.mogile_key)
 
-User.avatars = relation(UserAvatar, backref='user')
-User.default_avatar = relation(UserAvatar, primaryjoin=and_(User.id == UserAvatar.user_id, UserAvatar.default == True), uselist=False, lazy=False)
-
 class UserBan(BaseTable):
     __tablename__       = 'user_bans'
     id                  = Column(types.Integer, primary_key=True, autoincrement=True)
@@ -378,10 +359,27 @@ class UserBan(BaseTable):
     admin_message       = Column(types.UnicodeText, nullable=False)
     expired             = Column(types.Boolean, default=False)
 
-    revert_to           = relation(Role)
+### Relations
 
-UserBan.admin = relation(User, primaryjoin=(User.id == UserBan.admin_user_id))
-User.bans = relation(UserBan, backref='user', primaryjoin=(User.id == UserBan.user_id))
-User.active_bans = relation(UserBan, primaryjoin=and_(User.id == UserBan.user_id, UserBan.expired == False))
+IPLogEntry.user         = relation(User, backref='ip_log')
 
+Role.permissions        = relation(Permission, secondary=RolePermission.__table__)
 
+User.active_bans        = relation(UserBan, primaryjoin=and_(User.id == UserBan.user_id, UserBan.expired == False))
+User.avatars            = relation(UserAvatar, backref='user')
+User.bans               = relation(UserBan, backref='user', primaryjoin=(User.id == UserBan.user_id))
+User.default_avatar     = relation(UserAvatar, primaryjoin=and_(User.id == UserAvatar.user_id, UserAvatar.default == True), uselist=False, lazy=False)
+#User.journals           = relation(JournalEntry, backref='user')
+User.role               = relation(Role)
+#User.submissions        = relation(UserSubmission, backref='user')
+
+UserBan.admin           = relation(User, primaryjoin=(User.id == UserBan.admin_user_id))
+UserBan.revert_to       = relation(Role)
+
+UserMetadata.field      = relation(UserMetadataField, lazy=False)
+UserMetadata.user       = relation(User, backref='metadata')
+
+UserPreference.user     = relation(User, backref='preferences')
+
+UserRelationship.target = relation(User, primaryjoin=UserRelationship.to_user_id==User.id)
+UserRelationship.user   = relation(User, primaryjoin=UserRelationship.from_user_id==User.id, backref='relationships')

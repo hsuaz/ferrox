@@ -16,6 +16,7 @@ def connect(engine):
 
     # MySQL has a real enum type
     if engine.url.drivername == 'mysql':
+        global Enum
         Enum = MSEnum
         # However, it sucks and requires us to quote everything even though
         # every enum value has to be a string.  So let's fix that

@@ -12,10 +12,10 @@ class DateTime(types.TypeDecorator):
     def __init__(self):
         pass
         
-    def convert_bind_param(self, value, engine):
+    def process_bind_param(self, value, engine):
         return int(time.mktime(value.timetuple()))
         
-    def convert_result_value(self, value, engine):
+    def process_result_value(self, value, engine):
         if value == None:
             return None
         else:
@@ -26,9 +26,9 @@ class DateTime(types.TypeDecorator):
         
     def compare_values(self, x, y):
         if type(x) == type(datetime.now()):
-            x = self.convert_bind_param(x, None)
+            x = self.process_bind_param(x, None)
         if type(y) == type(datetime.now()):
-            y = self.convert_bind_param(y, None)
+            y = self.process_bind_param(y, None)
         return x == y
 
 
@@ -47,12 +47,12 @@ class Enum(types.TypeDecorator):
             raise exceptions.AssertionError('Enum requires a list of values')
         self.values = list(values)
 
-    def convert_bind_param(self, value, engine):
+    def process_bind_param(self, value, engine):
         if value not in self.values:
             raise exceptions.AssertionError('"%s" not in Enum.values' % value)
         return self.values.index(value)
 
-    def convert_result_value(self, value, engine):
+    def process_result_value(self, value, engine):
         if value == None:
             return None
         return self.values[value]
@@ -62,9 +62,9 @@ class Enum(types.TypeDecorator):
 
     def compare_values(self, x, y):
         if type(x) == type(str()):
-            x = self.convert_bind_param(x, None)
+            x = self.process_bind_param(x, None)
         if type(y) == type(str()):
-            y = self.convert_bind_param(y, None)
+            y = self.process_bind_param(y, None)
         return x == y
 
 
@@ -75,10 +75,10 @@ class IP(types.TypeDecorator):
     def __init__(self):
         pass
         
-    def convert_bind_param(self, value, engine):
+    def process_bind_param(self, value, engine):
         return struct.unpack('i', socket.inet_aton(value))[0]
 
-    def convert_result_value(self, value, engine):
+    def process_result_value(self, value, engine):
         return socket.inet_ntoa(struct.pack('i', value))
 
     def is_mutable(self):

@@ -76,7 +76,8 @@ class UserController(BaseController):
                             .join('message') \
                             .filter_by(user_id=c.user.id) \
                             .order_by(model.Message.time.desc()) \
-                            [:10].all()
+                            .limit(10) \
+                            .all()
         return render('user/view.mako')
 
     def profile(self, username=None, sub_domain=None):

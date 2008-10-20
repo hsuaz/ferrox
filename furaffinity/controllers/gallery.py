@@ -338,7 +338,7 @@ class GalleryController(BaseController):
         c.edit = True
         c.form = FormGenerator()
         c.form.defaults['title'] = submission.title
-        c.form.defaults['description'] = submission.description
+        c.form.defaults['description'] = submission.message.content
         #tag_list = tagging.TagList()
         #tag_list.parse_tag_object_array(submission.tags, negative=False)
         c.form.defaults['tags'] = tagging.make_tag_string(submission.tags)
@@ -364,11 +364,11 @@ class GalleryController(BaseController):
         # Error handling needs submission, so we need to get it no matter what.
         submission = get_submission(id,[
             'tags',
-            'user_submission',
-            'user_submission.user',
+            'user_submissions',
+            'user_submissions.user',
             'derived_submission',
-            'editlog',
-            'editlog.entries'
+            'message.editlog',
+            'message.editlog.entries'
         ])
         self.is_my_submission(submission,True)
 
@@ -384,24 +384,23 @@ class GalleryController(BaseController):
             return render('/gallery/submit.mako')
 
 
-        if not submission.editlog:
+        if not submission.message.editlog:
             editlog = model.EditLog(c.auth_user)
             model.Session.save(editlog)
-            submission.editlog = editlog
+            submission.message.editlog = editlog
 
         editlog_entry = model.EditLogEntry(
             user = c.auth_user,
             reason = 'still no reason to the madness',
             previous_title = submission.title,
-            previous_text = submission.description,
-            previous_text_parsed = submission.description_parsed
+            previous_text = submission.message.content,
         )
         model.Session.save(editlog_entry)
-        submission.editlog.update(editlog_entry)
+        submission.message.editlog.update(editlog_entry)
 
         #form_data['description'] = h.escape_once(form_data['description'])
         submission.title = h.escape_once(form_data['title'])
-        submission.update_description(form_data['description'])
+        submission.message.update_content(form_data['description'])
         if form_data['fullfile']:
             submission.set_file(form_data['fullfile'])
             submission.generate_halfview()
@@ -474,7 +473,7 @@ class GalleryController(BaseController):
         if delete_form_data['confirm'] != None:
             # -- update submission in database --
             submission.status = 'deleted'
-            for user_submission in submission.user_submission:
+            for user_submission in submission.user_submissions:
                 user_submission.review_status = 'deleted'
             model.Session.commit()
 
@@ -497,11 +496,20 @@ class GalleryController(BaseController):
             c.form = FormGenerator(form_error=error)
             return render('/gallery/submit.mako')
 
-        submission = model.Submission()
+        # TODO make avatar selector control
+        avatar = None
+        if form_data['avatar_id']:
+            avatar = model.Session.query(model.UserAvatar) \
+                                  .filter_by(id=form_data['avatar_id']) \
+                                  .one()
 
-        #form_data['description'] = h.escape_once(form_data['description'])
-        submission.title = h.escape_once(form_data['title'])
-        submission.update_description(form_data['description'])
+        submission = model.Submission(
+            title=form_data['title'],
+            description=form_data['description'],
+            uploader=c.auth_user,
+            avatar=avatar,
+        )
+
         submission.set_file(form_data['fullfile'])
         submission.generate_thumbnail(form_data['thumbfile'])
         submission.generate_halfview()
@@ -509,22 +517,8 @@ class GalleryController(BaseController):
         for tag_text in tagging.break_apart_tag_string(form_data['tags']):
             submission.tags.append(model.Tag.get_by_text(tag_text, create=True))
 
-        user_submission = model.UserSubmission(
-            user = c.auth_user,
-            relationship = 'artist',
-            ownership_status = 'primary',
-            review_status = 'normal'
-        )
-        if form_data['avatar_id']:
-            av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()
-            user_submission.avatar = av
-        else:
-            user_submission.avatar = None
-        submission.user_submission.append(user_submission)
-
         model.Session.commit()
         submission.commit_mogile()
-
 
         # update xapian
         if search_enabled:

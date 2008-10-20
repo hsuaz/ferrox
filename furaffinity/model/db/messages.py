@@ -38,7 +38,9 @@ class EditLogEntry(BaseTable):
     previous_text       = Column(types.UnicodeText, nullable=False)
     previous_text_parsed= Column(types.UnicodeText, nullable=False)
 
-    def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed):
+    def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed=None):
+        if not previous_text_parsed:
+            previous_text_parsed = previous_text
         self.edited_by = user
         self.edited_at = datetime.now()
         self.reason = reason

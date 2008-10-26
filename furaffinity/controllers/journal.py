@@ -14,7 +14,7 @@ import os
 import sqlalchemy.exceptions
 from sqlalchemy.orm import eagerload
 from tempfile import TemporaryFile
-import datetime
+from datetime import date, timedelta
 from sqlalchemy import and_, or_, not_
 
 import time, random
@@ -71,20 +71,20 @@ class JournalController(BaseController):
         if c.page_owner:
             c.page_link_dict['username'] = c.page_owner.username
         if year and month and day:
-            today = earliest = datetime.date(int(year), int(month), int(day))
-            latest = earliest + datetime.timedelta(days=1)
+            today = earliest = date(int(year), int(month), int(day))
+            latest = earliest + timedelta(days=1)
             c.page_link_dict.update({'year':year, 'month':month, 'day':day})
         elif month and year:
-            today = earliest = datetime.date(int(year), int(month), 1)
-            latest = datetime.date(earliest.year + (earliest.month / 12), (earliest.month + 1) % 12, 1)
+            today = earliest = date(int(year), int(month), 1)
+            latest = date(earliest.year + (earliest.month / 12), (earliest.month + 1) % 12, 1)
             c.page_link_dict.update({'year':year, 'month':month})
         elif year:
-            today = earliest = datetime.date(int(year), 1, 1)
-            latest = datetime.date(earliest.year+1, earliest.month, earliest.day)
+            today = earliest = date(int(year), 1, 1)
+            latest = date(earliest.year+1, earliest.month, earliest.day)
             c.page_link_dict.update({'year':year})
         else:
-            today = latest = (datetime.date.today()+datetime.timedelta(days=1))
-            earliest = datetime.date(1970,1,1)
+            today = latest = (date.today()+timedelta(days=1))
+            earliest = date(1970,1,1)
             
         max_per_page = int(pylons.config.get('journal.default_perpage',20))
         pageno = int(request.params.get('page',1)) - 1
@@ -150,19 +150,19 @@ class JournalController(BaseController):
             c.last_month['year'] -= 1
         
         c.tomorrow = c.by_date_base.copy()
-        tomorrow = today + datetime.timedelta(days=1)
+        tomorrow = today + timedelta(days=1)
         c.tomorrow['year'] = tomorrow.year
         c.tomorrow['month'] = tomorrow.month
         c.tomorrow['day'] = tomorrow.day
         
         c.yesterday = c.by_date_base.copy()
-        yesterday = today - datetime.timedelta(days=1)
+        yesterday = today - timedelta(days=1)
         c.yesterday['year'] = yesterday.year
         c.yesterday['month'] = yesterday.month
         c.yesterday['day'] = yesterday.day
         
         c.year, c.month, c.day = year, month, day
-        c.today = datetime.date.today()
+        c.today = date.today()
         
         if month and year:
             c.days_this_month = max([x for x in calendar.Calendar().itermonthdays(int(year),int(month))])

@@ -1,5 +1,5 @@
 from furaffinity.model.db import BaseTable, DateTime, Enum, IP, Session
-from furaffinity.model.db.user import *
+from furaffinity.model.db.users import *
 
 from sqlalchemy.orm import object_mapper, relation
 
@@ -17,7 +17,6 @@ class EditLog(BaseTable):
     id                  = Column(types.Integer, primary_key=True)
     last_edited_at      = Column(DateTime, nullable=False, default=datetime.now)
     last_edited_by_id   = Column(types.Integer, ForeignKey('users.id'))
-    last_edited_by      = relation(User)
 
     def __init__(self,user):
         self.last_edited_by = user
@@ -38,8 +37,6 @@ class EditLogEntry(BaseTable):
     previous_title      = Column(types.UnicodeText, nullable=False)
     previous_text       = Column(types.UnicodeText, nullable=False)
     previous_text_parsed= Column(types.UnicodeText, nullable=False)
-    editlog             = relation(EditLog, backref='entries')
-    edited_by           = relation(User)
 
     def __init__(self, user, reason, previous_title, previous_text, previous_text_parsed):
         self.edited_by = user
@@ -71,9 +68,6 @@ class Message(BaseTable):
     content             = Column(types.UnicodeText, nullable=False)
     content_parsed      = Column(types.UnicodeText, nullable=False)
     content_short       = Column(types.UnicodeText, nullable=False)
-    avatar              = relation(UserAvatar)
-    editlog             = relation(EditLog)
-    user                = relation(User)
 
     def __init__(self, title, content, user):
         self.title = title
@@ -121,7 +115,6 @@ class Comment(BaseTable, MessageDelegator):
     message_id          = Column(types.Integer, ForeignKey('messages.id'))
     left                = Column(types.Integer, nullable=False, default=0)
     right               = Column(types.Integer, nullable=False, default=0)
-    message             = relation(Message, lazy=False)
 
     def __init__(self, user, title, content, discussion, parent=None):
         """Creates a new comment.  If a parent is specified, the other
@@ -181,9 +174,6 @@ class Comment(BaseTable, MessageDelegator):
                 .first()
         return self._parent
 
-Discussion.comments = relation(Comment, backref='discussion', order_by=Comment.left)
-
-
 class News(BaseTable, MessageDelegator):
     __tablename__       = 'news'
     id                  = Column(types.Integer, primary_key=True)
@@ -191,8 +181,6 @@ class News(BaseTable, MessageDelegator):
     discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
     is_anonymous        = Column(types.Boolean, nullable=False, default=False)
     is_deleted          = Column(types.Boolean, nullable=False, default=False)
-    message             = relation(Message, lazy=False)
-    discussion          = relation(Discussion, backref='news')
 
     def __init__(self, title, content, author):
         self.message = Message(title=title, content=content, user=author)
@@ -204,8 +192,6 @@ class JournalEntry(BaseTable, MessageDelegator):
     message_id          = Column(types.Integer, ForeignKey('messages.id'))
     discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
     status              = Column(Enum('normal', 'under_review', 'removed_by_admin', 'deleted'), index=True, default='normal')
-    message             = relation(Message, lazy=False)
-    discussion          = relation(Discussion, backref='journal_entry')
 
     def __init__(self, user, title, content):
         content = h.escape_once(content)
@@ -255,8 +241,6 @@ class Note(BaseTable, MessageDelegator):
     to_user_id          = Column(types.Integer, ForeignKey('users.id'))
     original_note_id    = Column(types.Integer, ForeignKey('notes.id'))
     status              = Column(Enum('unread', 'read'), nullable=False, default='unread')
-    message             = relation(Message, lazy=False)
-    recipient           = relation(User)
 
     # Create a 'sender' wrapper property, as the usual 'user' property that
     # Message has is a bit vague with two user relations
@@ -299,3 +283,26 @@ class Note(BaseTable, MessageDelegator):
         """
         return re.sub('^(Re: |Fwd: )+', '', self.title)
 
+### Relations
+
+Comment.message         = relation(Message, lazy=False)
+
+Discussion.comments     = relation(Comment, backref='discussion', order_by=Comment.left)
+
+EditLogEntry.edited_by  = relation(User)
+EditLogEntry.editlog    = relation(EditLog, backref='entries')
+
+EditLog.last_edited_by  = relation(User)
+
+JournalEntry.discussion = relation(Discussion, backref='journal_entry')
+JournalEntry.message    = relation(Message, lazy=False)
+
+Message.avatar          = relation(UserAvatar)
+Message.editlog         = relation(EditLog)
+Message.user            = relation(User)
+
+News.discussion         = relation(Discussion, backref='news')
+News.message            = relation(Message, lazy=False)
+
+Note.message            = relation(Message, lazy=False)
+Note.recipient          = relation(User)

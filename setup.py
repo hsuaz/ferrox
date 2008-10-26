@@ -12,7 +12,7 @@ setup(
     #author='',
     #author_email='',
     #url='',
-    install_requires=["Pylons>=0.9.6", "SQLAlchemy>=0.4.5", 'chardet'],
+    install_requires=["Pylons>=0.9.6", "SQLAlchemy>=0.5,>=0.5.0rc2", 'chardet'],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
     test_suite='nose.collector',

@@ -267,7 +267,7 @@ class UserRelationship(BaseTable):
     __tablename__       = 'user_relationships'
     from_user_id        = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
     to_user_id          = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
-    relationship        = Column(user_relationship_type, nullable=False)
+    relationship        = Column(user_relationship_type, primary_key=True)
 
     def __init__(self):
         self.relationship = set()

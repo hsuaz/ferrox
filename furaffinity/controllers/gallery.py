@@ -59,7 +59,7 @@ class NoSuchTagsException(Exception):
         self.tags = tags
 
 # TODO share this?
-def find_submissions(joined_tables=model.Submission.__table__,
+def find_submissions(joined_tables=None,
                      where_clauses=[], tag_string=None,
                      page_num=1, page_size=None):
     """Does all the grunt work for finding specific submissions, including
@@ -71,6 +71,10 @@ def find_submissions(joined_tables=model.Submission.__table__,
     """
 
     # Some defaults..
+    if not joined_tables:
+        joined_tables = model.Submission.__table__ \
+                        .join(model.UserSubmission.__table__)
+
     # XXX admins can see more than this
     where_clauses.append(model.UserSubmission.review_status == 'normal')
 

@@ -51,31 +51,36 @@ user_submission_review_status_type = Enum('normal', 'under_review', 'removed_by_
 user_submission_relationship_type = Enum('artist', 'commissioner', 'gifted', 'isin')
 
 
-class Submission(BaseTable):
+class Submission(BaseTable, MessageDelegator):
     __tablename__       = 'submissions'
     id                  = Column(types.Integer, primary_key=True)
+    message_id          = Column(types.Integer, ForeignKey('messages.id'))
     discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
-    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
-    title               = Column(types.String(length=128), nullable=False)
-    description         = Column(types.UnicodeText, nullable=False)
-    description_parsed  = Column(types.UnicodeText, nullable=False)
     type                = Column(submission_type_type, nullable=False)
     time                = Column(DateTime, nullable=False, default=datetime.now)
     status              = Column(submission_status_type, index=True, nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
 
-    def __init__(self):
-        self.title = ''
-        self.description = ''
-        self.description_parsed = ''
+    def __init__(self, title, description, uploader, avatar=None):
         self.type = None
-        self.discussion_id = 0
         self.status = 'normal'
         self.file_blob = None
         self.old_mogile_key = None
         self.mogile_key = None
+        self.message = Message(title=title, content=description, user=uploader)
+        if avatar and avatar.user == uploader:
+            self.message.avatar = avatar
         self.discussion = Discussion()
+
+        user_submission = UserSubmission(
+            user=uploader,
+            relationship='artist',
+            ownership_status='primary',
+            review_status='normal',
+        )
+        self.user_submissions.append(user_submission)
+
 
     def get_derived_by_type (self, type):
         for ds in self.derived_submission:
@@ -85,15 +90,10 @@ class Submission(BaseTable):
 
     def get_users_by_relationship (self, relationship):
         users = []
-        for index in xrange(0,len(self.user_submission)):
-            if self.user_submission[index].relationship == relationship:
-                users.append( self.user_submission[index].user )
+        for user_submission in self.user_submissions:
+            if user_submission.relationship == relationship:
+                users.append(user_submission)
         return users
-
-    def update_description (self, description):
-        self.description = description
-        self.description_parsed = bbcode.parser.parse(description)
-        self.description_plain = bbcode.parser_plaintext.parse(description)
 
     def to_xapian(self):
         if search_enabled:
@@ -118,7 +118,7 @@ class Submission(BaseTable):
             # description
             words = []
             # FIX ME: needs bbcode parser. should be plain text representation.
-            for word in self.description_plain.lower().split(' '):
+            for word in self.message.content.lower().split(' '):
                 words.append(rmex.sub('', word[0:20]))
             words = set(words)
             for word in words:
@@ -475,8 +475,8 @@ HistoricSubmission.submission   = relation(Submission, backref='historic_submiss
 
 Submission.tags                 = relation(Tag, backref='submissions', secondary=SubmissionTag.__table__)
 Submission.discussion           = relation(Discussion, backref='submission')
-Submission.editlog              = relation(EditLog)
 Submission.favorited_by         = relation(User, secondary=FavoriteSubmission.__table__, backref='favorite_submissions')
+Submission.message              = relation(Message, lazy=False)
 
 Submission.halfview             = relation(DerivedSubmission,
     primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,
@@ -500,5 +500,5 @@ Submission.primary_artist       = relation(User, secondary=UserSubmission.__tabl
     )
 
 UserSubmission.avatar           = relation(UserAvatar, uselist=False, lazy=False)
-UserSubmission.submission       = relation(Submission, backref='user_submission')
-UserSubmission.user             = relation(User, backref='user_submission')
+UserSubmission.submission       = relation(Submission, backref='user_submissions')
+UserSubmission.user             = relation(User, backref='user_submissions')

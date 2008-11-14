@@ -22,7 +22,7 @@
         <dt>Tags</dt>
         <dd>${c.form.text_field('tags')}</dd>
         <dt>Description</dt>
-        <dd>${h.text_area('description', size="80x10")}</dd>
+        <dd>${c.form.text_area('description', size="80x10")}</dd>
         <dt>Select Avatar:</dt>
         % if c.edit:
         <dd>${lib.avatar_selector(c.submission.primary_artist)}</dd>

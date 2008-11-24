@@ -1,4 +1,4 @@
-body { background: #a9bfe2; font-family: Bitstream Vera Sans, Helvetica, Verdana, Arial, sans-serif; font-size: 12px; /* fuck you IE */ }
+body { background: #a9bfe2; font-family: Bitstream Vera Sans, Helvetica, Verdana, Arial, sans-serif; font-size: 11px; /* fuck you IE */ }
 
 /* *:hover { outline: 3px solid blue; -moz-outline-radius: 3px; } */
 
@@ -6,7 +6,7 @@ a:link,
 a:visited { font-weight: bold; text-decoration: none; }
 a:link { color: #2c4387; }
 a:visited { color: #602c87; }
-a:hover { color: #872c2c; }
+a:hover { color: #2c7f87; }
 a:active { color: #2c873a; }
 
 a img { vertical-align: middle; }
@@ -17,7 +17,8 @@ a img { vertical-align: middle; }
 .message { text-align: justify; }
 
 /* Button-like standard links */
-a.button { padding: 0.33em 0.33em; line-height: 2; vertical-align: middle; white-space: nowrap; background: #f2f6fd; border: 1px solid #eaeefd; -moz-border-radius: 0.67em; -webkit-border-radius: 0.67em; -moz-outline-radius: 0.67em; -webkit-outline-radius: 0.67em; }
+a.button { padding: 0.33em 0.33em; line-height: 2; vertical-align: middle; white-space: nowrap; background: #f2f6fd; border: 1px solid #f2f6fd; -moz-border-radius: 0.67em; -webkit-border-radius: 0.67em; -moz-outline-radius: 0.67em; -webkit-outline-radius: 0.67em; }
+a.button:hover { background: #cedbef; border-color: #bacce8; }
 a.button img { vertical-align: text-bottom; }
 a.button.admin { background: url(/images/bits/button-background.png) #f0e4d0 center center repeat; border-color: #d19875; }
 
@@ -59,9 +60,9 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 
 
 /* User links */
-.userlink { position: relative; /* XXX breaks IE somehow */ word-spacing: -0.33em; }
+.userlink { position: relative; /* XXX breaks IE somehow */ word-spacing: -0.33em; white-space: nowrap; }
 .userlink a { font-weight: bold; }
-.userlink a img { border: none; vertical-align: text-bottom; }
+.userlink a img { border: none; vertical-align: bottom; }
 
 .userlink-popup { position: absolute; width: 15em; padding: 0.5em; left: 0; z-index: 100; text-align: left; color: black; background: white; background: rgba(255, 255, 255, 0.9); border: 1px solid black; -moz-border-radius-topright: 1.5em; -webkit-border-top-right-radius: 1.5em; }
 .userlink-popup .avatar { float: right; height: 50px; }
@@ -173,6 +174,28 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 .shoutbox li .header { padding: 0.33em; background-color: #bacce8; }
 .shoutbox li .header .timestamp { margin-left: 1em; }
 .shoutbox li .message { margin: 0.5em 0; }
+
+
+/* * * Generic messages * * */
+.entry .content { padding: 0.5em; line-height: 1.33; text-align: justify; }
+
+/* Comments */
+/* Note that links are .micro-linkbar */
+.comment { ; }
+.comment:after { content: 'float clear'; display: block; height: 0; visibility: hidden; clear: both; }
+.comment + .comment { margin-top: 1em; }
+.comment .header { position: relative; padding: 0.33em; background-color: #bacce8; }
+.comment .header .author { float: left; margin: -0.33em; margin-right: 0.33em; padding: 4px; padding-top: 0.33em; background-color: #bacce8; text-align: center; }
+.comment .header .author .avatar { width: 100px; }
+.comment .header .title { font-size: 1.33em; font-weight: bold; }
+.comment .header .title .notitle { font-style: italic; font-weight: normal; }
+.comment .header .date { margin-top: 0.25em; font-size: 0.8em; }
+.comment .actions { margin-top: 1em; }
+.comment .content,
+.comment .actions { margin-left: 108px; padding-left: 0.5em; }
+/*.comment .content { background: #e9eef8; }*/
+/*.comment .content { border: 1px solid #bacce8; border-top: none; }*/
+
 
 /* TEMPORARY DEBUG STUFF */
 #ads { display: none; }

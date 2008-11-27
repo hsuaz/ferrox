@@ -7,7 +7,7 @@ ${single_comment(comment, post_url)}
 </%def>
 
 <%def name="single_comment(comment, post_url)">
-<div class="comment entry" style="margin-left: ${40 * comment.indent}px;">
+<div class="comment" style="margin-left: ${40 * comment.indent}px;">
     <div class="header">
         <div class="author">
             ${lib.user_link(comment.user)}
@@ -22,7 +22,7 @@ ${single_comment(comment, post_url)}
         </div>
         <div class="date">${h.format_time(comment.time)}</div>
     </div>
-    <div class="content">
+    <div class="message">
         ${comment.content_parsed}
     </div>
     <ul class="inline actions">

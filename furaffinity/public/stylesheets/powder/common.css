@@ -6,7 +6,7 @@ a:link,
 a:visited { font-weight: bold; text-decoration: none; }
 a:link { color: #2c4387; }
 a:visited { color: #602c87; }
-a:hover { color: #2c7f87; }
+a:hover { color: #87562c; }
 a:active { color: #2c873a; }
 
 a img { vertical-align: middle; }
@@ -14,13 +14,12 @@ a img { vertical-align: middle; }
 /* Common classes */
 .small { font-size: 0.8em; }
 
-.message { text-align: justify; }
-
 /* Button-like standard links */
-a.button { padding: 0.33em 0.33em; line-height: 2; vertical-align: middle; white-space: nowrap; background: #f2f6fd; border: 1px solid #f2f6fd; -moz-border-radius: 0.67em; -webkit-border-radius: 0.67em; -moz-outline-radius: 0.67em; -webkit-outline-radius: 0.67em; }
+a.button { display: inline-block; padding: 0.33em 0.33em; line-height: 16px; vertical-align: middle; white-space: nowrap; background: #f2f6fd; border: 1px solid #f2f6fd; -moz-border-radius: 0.67em; -webkit-border-radius: 0.67em; -moz-outline-radius: 0.67em; -webkit-outline-radius: 0.67em; }
 a.button:hover { background: #cedbef; border-color: #bacce8; }
-a.button img { vertical-align: text-bottom; }
+a.button img { vertical-align: bottom; }
 a.button.admin { background: url(/images/bits/button-background.png) #f0e4d0 center center repeat; border-color: #d19875; }
+a.button.admin:hover { background-color: #e4cea9; border-color: #c47a4d; }
 
 /* Bullet-delimited inline list */
 ul.inline li { display: inline; }
@@ -44,7 +43,7 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 /* Simple box */
 .basic-box { padding: 0.5em; }
 .basic-box + .basic-box { margin-top: 2em; }
-.basic-box h2 { font-size: 1.75em; line-height: 32px; text-align: center; border: 1px solid #446bb5; background: url(/images/bits/heading-background.png) #8da2c9 center center repeat-x; vertical-align: bottom; }
+.basic-box h2 { margin-bottom: 0.28em; font-size: 1.75em; line-height: 32px; text-align: center; border: 1px solid #446bb5; background: url(/images/bits/heading-background.png) #8da2c9 center center repeat-x; vertical-align: bottom; }
 .basic-box h2 img { float: left; margin-left: 0.25em; }
 .basic-box h3 { margin: 0.33em 0; font-size: 1.5em; font-weight: bold; }
 .basic-box .timestamp { font-style: italic; }
@@ -148,7 +147,6 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 .latest-submission .description { margin: 0.33em 0; }
 .latest-submission .admin-links { float: right; }
 
-.latest-journal .message { margin: 0.5em 0; }
 .latest-journal .admin-links { float: right; }
 
 /* Single row of featured/recent submissions */
@@ -177,7 +175,11 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 
 
 /* * * Generic messages * * */
-.entry .content { padding: 0.5em; line-height: 1.33; text-align: justify; }
+.message { padding: 0.5em; line-height: 1.33; text-align: justify; }
+
+.entry .header { overflow: auto /* new float context */; padding: 0.33em; background-color: #bacce8; }
+.entry .header .avatar { float: left; margin: 0.33em; margin-right: 0.67em; }
+.entry .actions { margin-top: 1em; }
 
 /* Comments */
 /* Note that links are .micro-linkbar */
@@ -190,11 +192,8 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 .comment .header .title { font-size: 1.33em; font-weight: bold; }
 .comment .header .title .notitle { font-style: italic; font-weight: normal; }
 .comment .header .date { margin-top: 0.25em; font-size: 0.8em; }
-.comment .actions { margin-top: 1em; }
-.comment .content,
+.comment .message,
 .comment .actions { margin-left: 108px; padding-left: 0.5em; }
-/*.comment .content { background: #e9eef8; }*/
-/*.comment .content { border: 1px solid #bacce8; border-top: none; }*/
 
 
 /* TEMPORARY DEBUG STUFF */

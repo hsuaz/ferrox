@@ -1,2 +1,2 @@
-recursive-include furaffinity/public *
-recursive-include furaffinity/templates *
+recursive-include ferrox/public *
+recursive-include ferrox/templates *

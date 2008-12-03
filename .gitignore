@@ -8,7 +8,7 @@ Thumbs.db
 # Build and data stuff
 *.egg-info
 /furaffinity.db
-/.xapian
+/*.xapian
 /fakemogile
 /build
 /data

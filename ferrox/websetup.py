@@ -113,12 +113,12 @@ def setup_config(command, filename, section, vars):
     .permissions.append(permissions['user_settings.manage'])
     '''
     
-    null_role = model.Role('Null Role', 
+    null_role = model.Role('Null', 
                            'User who can\'t do anything. Literally.')
     null_role.sigil = ' '
     model.Session.save(null_role)
 
-    guest_role = model.Role('Guest Role',
+    guest_role = model.Role('Guest',
                             'Non-registered Users')
     guest_role.sigil = ' '
     guest_role.permissions.append(permissions['gallery.view'])
@@ -192,7 +192,7 @@ def setup_config(command, filename, section, vars):
     admin_role.permissions.append(permissions['user_settings.manage'])
     model.Session.save(admin_role)
 
-    sysadmin_role = model.Role('System Administrator', 'Users that have access to the underlying software.')
+    sysadmin_role = model.Role('Bastard Operator From Hell', 'Users that have access to the underlying software.')
     sysadmin_role.sigil = '^'
     sysadmin_role.permissions.append(permissions['admin.auth'])
     sysadmin_role.permissions.append(permissions['admin.ban'])

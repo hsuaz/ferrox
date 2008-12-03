@@ -31,39 +31,6 @@ else:
 
 user_relationship_type = Enum('watching_submissions', 'watching_journals', 'friend_to', 'blocking')
 
-### Dummy classes
-
-class GuestRole(object):
-    def __init__(self):
-        self.name = "Guest"
-        self.description = "Just a guest"
-        self.sigil = ""
-
-class GuestUser(object):
-    '''Dummy object for not-logged-in users'''
-    preferences = dict(
-        style_sheet='duality',
-        style_color='dark',
-    )
-
-    def __init__(self):
-        self.id = 0
-        self.username = "guest"
-        self.display_name = "guest"
-        self.role = GuestRole()
-        self.is_guest = True
-
-    def __nonzero__(self):
-        '''Guest user objects evaluate to False so we can simply test the truth
-        of c.auth_user to see if the user is logged in.'''
-        return False
-
-    def can(self, permission):
-        return False
-
-    def preference(self, pref):
-        return self.preferences[pref]
-
 ### Roles and permissions
 
 class Role(BaseTable):
@@ -101,6 +68,34 @@ class RolePermission(BaseTable):
     permission_id   = Column(types.Integer, ForeignKey('permissions.id'), primary_key=True)
 
 ### Main user tables
+
+# XXX this is gross; how better can we specify which is the guest role?
+guest_role = Role.get_by_name('Guest')
+
+class GuestUser(object):
+    '''Dummy object for not-logged-in users'''
+    preferences = dict()
+
+    def __init__(self):
+        self.id = 0
+        self.username = "guest"
+        self.display_name = "guest"
+        self.role = guest_role
+        self.is_guest = True
+
+    def __nonzero__(self):
+        '''Guest user objects evaluate to False so we can simply test the truth
+        of c.auth_user to see if the user is logged in.'''
+        return False
+
+    def can(self, permission):
+        perm_q = Session.query(Permission) \
+                        .with_parent(self.role) \
+                        .filter_by(name=permission)
+        return perm_q.count() > 0
+
+    def preference(self, pref):
+        return self.preferences[pref]
 
 class User(BaseTable):
     __tablename__   = 'users'

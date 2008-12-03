@@ -190,7 +190,7 @@
     % for submission in submissions:
     <li id="sub${submission.id}">
         <div class="popup">
-            Description: ${submission.description_parsed}<br>
+            Description: ${submission.message.content}<br>
             Date: ${h.format_time(submission.time)}
         </div>
         % if submission.thumbnail:

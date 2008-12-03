@@ -32,14 +32,14 @@
         % elif (c.submission.type == 'text'):
         ${h.link_to('Text Submission', h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key))}, Text submission<br>
         <pre>
-        ${c.submission.description_parsed}
+        ${c.submission.message.content}
         </pre>
         % else:
         unknown submission type: ${c.submission_type}<br>
         % endif
     </div>
     <div class="description">
-        ${c.submission.description_parsed}
+        ${c.submission.message.content}
     </div>
 </div>
 

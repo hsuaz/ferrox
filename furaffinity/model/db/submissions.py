@@ -2,10 +2,10 @@ from __future__ import with_statement
 
 import pylons
 
-from furaffinity.lib.image import ImageClass
-from furaffinity.lib.mimetype import get_mime_type
-from furaffinity.lib import helpers as h
-import furaffinity.lib.bbcode_for_fa as bbcode
+from ferrox.lib.image import ImageClass
+from ferrox.lib.mimetype import get_mime_type
+from ferrox.lib import helpers as h
+import ferrox.lib.bbcode_for_fa as bbcode
 
 from sqlalchemy import Column, MetaData, Table, ForeignKey, types, sql
 from sqlalchemy.orm import relation
@@ -22,16 +22,16 @@ import random
 import re
 import time
 
-from furaffinity.model.db import BaseTable, DateTime, Enum, Session
-from furaffinity.model.db.users import *
-from furaffinity.model.db.messages import *
+from ferrox.model.db import BaseTable, DateTime, Enum, Session
+from ferrox.model.db.users import *
+from ferrox.model.db.messages import *
 
 
 # -- This stuff is tied to class Submission --
 if pylons.config['mogilefs.tracker'] == 'FAKE':
-    from furaffinity.lib import fakemogilefs as mogilefs
+    from ferrox.lib import fakemogilefs as mogilefs
 else:
-    from furaffinity.lib import mogilefs
+    from ferrox.lib import mogilefs
 
 search_enabled = True
 try:

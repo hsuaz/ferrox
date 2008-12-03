@@ -13,12 +13,12 @@ from routes import request_config
 from sqlalchemy.exceptions import InvalidRequestError
 from sqlalchemy.orm import eagerload, eagerload_all
 
-from furaffinity.lib.formgen import FormGenerator
-import furaffinity.lib.helpers as h
-import furaffinity.lib.hashing as hashing
-from furaffinity.lib.querylog import QueryLog
-import furaffinity.model as model
-import furaffinity.model.form as form
+from ferrox.lib.formgen import FormGenerator
+import ferrox.lib.helpers as h
+import ferrox.lib.hashing as hashing
+from ferrox.lib.querylog import QueryLog
+import ferrox.model as model
+import ferrox.model.form as form
 
 from decorator import decorator
 from datetime import datetime

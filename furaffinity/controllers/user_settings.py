@@ -1,8 +1,8 @@
-from furaffinity.controllers.user import fetch_relationships
-from furaffinity.lib.base import *
-from furaffinity.lib.formgen import FormGenerator
-from furaffinity.lib.mimetype import get_mime_type
-from furaffinity.model import form
+from ferrox.controllers.user import fetch_relationships
+from ferrox.lib.base import *
+from ferrox.lib.formgen import FormGenerator
+from ferrox.lib.mimetype import get_mime_type
+from ferrox.model import form
 
 import pylons.config
 import logging

@@ -1,8 +1,8 @@
 from pylons.decorators.secure import *
 
-from furaffinity.controllers.gallery import find_submissions
-from furaffinity.lib.base import *
-from furaffinity.lib.formgen import FormGenerator
+from ferrox.controllers.gallery import find_submissions
+from ferrox.lib.base import *
+from ferrox.lib.formgen import FormGenerator
 
 import formencode
 import hashlib

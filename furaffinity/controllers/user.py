@@ -1,9 +1,9 @@
-from furaffinity.controllers.gallery import find_submissions
-from furaffinity.lib.base import *
-#import furaffinity.lib.paginate as paginate
-from furaffinity.lib import pagination
-from furaffinity.lib.formgen import FormGenerator
-from furaffinity.model import form
+from ferrox.controllers.gallery import find_submissions
+from ferrox.lib.base import *
+#import ferrox.lib.paginate as paginate
+from ferrox.lib import pagination
+from ferrox.lib.formgen import FormGenerator
+from ferrox.model import form
 
 import pylons.config
 import logging

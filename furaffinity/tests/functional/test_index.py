@@ -1,4 +1,4 @@
-from furaffinity.tests import *
+from ferrox.tests import *
 
 class TestIndexController(TestController):
 

@@ -2,10 +2,10 @@ from __future__ import with_statement
 
 from pylons.decorators.secure import *
 
-from furaffinity.lib import filestore, tagging, pagination
-from furaffinity.lib.base import *
-from furaffinity.lib.formgen import FormGenerator
-from furaffinity.lib.mimetype import get_mime_type
+from ferrox.lib import filestore, tagging, pagination
+from ferrox.lib.base import *
+from ferrox.lib.formgen import FormGenerator
+from ferrox.lib.mimetype import get_mime_type
 
 import formencode
 import logging
@@ -30,9 +30,9 @@ except ImportError:
 
 import pylons
 if pylons.config['mogilefs.tracker'] == 'FAKE':
-    from furaffinity.lib import fakemogilefs as mogilefs
+    from ferrox.lib import fakemogilefs as mogilefs
 else:
-    from furaffinity.lib import mogilefs
+    from ferrox.lib import mogilefs
 
 
 log = logging.getLogger(__name__)

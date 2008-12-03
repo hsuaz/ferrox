@@ -5,7 +5,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 import sys
 
-from furaffinity.model.db.types import Enum, DateTime, IP
+from ferrox.model.db.types import Enum, DateTime, IP
 
 Session = scoped_session(sessionmaker())
 metadata = MetaData()

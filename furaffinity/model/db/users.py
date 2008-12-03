@@ -2,9 +2,9 @@ from __future__ import with_statement
 
 import pylons
 
-from furaffinity.lib import helpers as h
-import furaffinity.lib.bbcode_for_fa as bbcode
-from furaffinity.lib.image import ImageClass
+from ferrox.lib import helpers as h
+import ferrox.lib.bbcode_for_fa as bbcode
+from ferrox.lib.image import ImageClass
 
 from sqlalchemy import Column, ForeignKey, types, sql
 from sqlalchemy import and_
@@ -19,13 +19,13 @@ import re
 import cStringIO
 from binascii import crc32
 
-from furaffinity.model.db import BaseTable, DateTime, Enum, IP, Session
+from ferrox.model.db import BaseTable, DateTime, Enum, IP, Session
 
 # -- This stuff is tied to class UserAvatar --
 if pylons.config['mogilefs.tracker'] == 'FAKE':
-    from furaffinity.lib import fakemogilefs as mogilefs
+    from ferrox.lib import fakemogilefs as mogilefs
 else:
-    from furaffinity.lib import mogilefs
+    from ferrox.lib import mogilefs
 
 ### Custom types
 
@@ -197,7 +197,7 @@ class User(BaseTable):
         """
 
         # Eh.  Import recursion.  Note needs User, and we need Note here.
-        from furaffinity.model.db.messages import Note
+        from ferrox.model.db.messages import Note
 
         return Session.query(Note) \
             .filter(Note.to_user_id == self.id) \
@@ -212,7 +212,7 @@ class User(BaseTable):
         """
 
         # Avoid import recursion
-        from furaffinity.model.db.messages import Message, Note
+        from ferrox.model.db.messages import Message, Note
 
         # Group-wise maximum, as inspired by the MySQL manual.  The only
         # difference between this and the example in the manual is that I add

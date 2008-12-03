@@ -1,10 +1,10 @@
-from furaffinity.lib.base import *
+from ferrox.lib.base import *
 
 import sqlalchemy.exceptions
 import os
 import mimetypes
 
-imagestore = os.getcwd() + '/furaffinity/public/data'
+imagestore = os.getcwd() + '/ferrox/public/data'
 imageurl = '/data'
 
 class ImageManagerException(Exception):

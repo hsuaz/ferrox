@@ -1,7 +1,7 @@
-from furaffinity.lib.base import *
-import furaffinity.lib.paginate as paginate
-from furaffinity.model import form
-from furaffinity.lib.formgen import FormGenerator
+from ferrox.lib.base import *
+import ferrox.lib.paginate as paginate
+from ferrox.model import form
+from ferrox.lib.formgen import FormGenerator
 
 import formencode
 import time

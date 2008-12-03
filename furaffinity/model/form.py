@@ -1,4 +1,4 @@
-import furaffinity.model as model
+import ferrox.model as model
 
 import formencode
 from formencode import validators

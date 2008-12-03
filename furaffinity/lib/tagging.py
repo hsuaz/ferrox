@@ -1,4 +1,4 @@
-from furaffinity import model
+from ferrox import model
 import sqlalchemy.exceptions
 from sqlalchemy import or_, and_, not_
 import re

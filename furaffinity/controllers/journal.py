@@ -1,10 +1,10 @@
 from pylons.decorators.secure import *
 import pylons.config
 
-from furaffinity.lib.base import *
-import furaffinity.lib.paginate as paginate
-from furaffinity.lib import pagination
-from furaffinity.lib.formgen import FormGenerator
+from ferrox.lib.base import *
+import ferrox.lib.paginate as paginate
+from ferrox.lib import pagination
+from ferrox.lib.formgen import FormGenerator
 
 import formencode
 import logging

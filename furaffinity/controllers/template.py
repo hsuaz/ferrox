@@ -1,4 +1,4 @@
-from furaffinity.lib.base import *
+from ferrox.lib.base import *
 
 class TemplateController(BaseController):
 

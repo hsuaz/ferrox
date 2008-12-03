@@ -1,7 +1,7 @@
 import paste.fileapp
 from pylons.middleware import error_document_template, media_path
 
-from furaffinity.lib.base import *
+from ferrox.lib.base import *
 
 import os.path
 

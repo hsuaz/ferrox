@@ -1,8 +1,8 @@
-from furaffinity.lib.bbcode import *
-import furaffinity.lib.helpers as h
-import furaffinity.model
+from ferrox.lib.bbcode import *
+import ferrox.lib.helpers as h
+import ferrox.model
 #from base import h
-#from furaffinity import model
+#from ferrox import model
 
 class User(TagBase):
     no_close = True
@@ -25,7 +25,7 @@ class User(TagBase):
         if name == 'icon':
             linktype = 'icon'
         
-        user_object = furaffinity.model.User.get_by_name(username)
+        user_object = ferrox.model.User.get_by_name(username)
         
         if user_object:
             if linktype == 'name':

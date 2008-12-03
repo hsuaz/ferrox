@@ -3,9 +3,9 @@ import os
 
 from pylons import config
 
-import furaffinity.lib.app_globals as app_globals
-import furaffinity.lib.helpers
-from furaffinity.config.routing import make_map
+import ferrox.lib.app_globals as app_globals
+import ferrox.lib.helpers
+from ferrox.config.routing import make_map
 
 from sqlalchemy import engine_from_config
 
@@ -21,12 +21,12 @@ def load_environment(global_conf, app_conf):
                  templates=[os.path.join(root, 'templates')])
 
     # Initialize config with the basic options
-    config.init_app(global_conf, app_conf, package='furaffinity',
+    config.init_app(global_conf, app_conf, package='ferrox',
                     template_engine='mako', paths=paths)
 
     config['routes.map'] = make_map()
     config['pylons.g'] = app_globals.Globals()
-    config['pylons.h'] = furaffinity.lib.helpers
+    config['pylons.h'] = ferrox.lib.helpers
 
     config['pylons.g'].sa_engine = engine_from_config(config, 'sqlalchemy.')
 

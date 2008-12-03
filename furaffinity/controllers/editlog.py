@@ -1,8 +1,8 @@
-from furaffinity.lib.base import *
+from ferrox.lib.base import *
 from pylons.decorators.secure import *
 
-from furaffinity.controllers.gallery import get_submission
-from furaffinity.controllers.journal import get_journal
+from ferrox.controllers.gallery import get_submission
+from ferrox.controllers.journal import get_journal
 
 class EditlogController(BaseController):
 

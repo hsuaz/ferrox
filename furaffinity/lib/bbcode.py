@@ -381,7 +381,7 @@ if __name__ == '__main__':
     print b.errors
     print b.parse('[quote]Quote[/quote] [quote=source]Quote w/ Source[/quote]')
     print b.errors
-    print b.parse('[url=http://www.furaffinity.net/]Link[/url]')
+    print b.parse('[url=http://www.google.com/]Link[/url]')
     print b.errors
     print b.parse('hit[b]he[i]r[/b]e[/i]')
     print b.errors

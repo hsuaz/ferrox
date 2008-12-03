@@ -1,7 +1,7 @@
-from furaffinity.model.db import Session, metadata
-from furaffinity.model.db.users import *
-from furaffinity.model.db.messages import *
-from furaffinity.model.db.submissions import *
+from ferrox.model.db import Session, metadata
+from ferrox.model.db.users import *
+from ferrox.model.db.messages import *
+from ferrox.model.db.submissions import *
 
 # Run through tables and set their mysql engines all to InnoDB
 for table in metadata.tables:

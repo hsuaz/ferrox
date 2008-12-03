@@ -1,21 +1,21 @@
-"""Setup the furaffinity application"""
+"""Setup the ferrox application"""
 import logging
 
 from paste.deploy import appconfig
 from pylons import config
 
-from furaffinity.config.environment import load_environment
-from furaffinity.lib import hashing
+from ferrox.config.environment import load_environment
+from ferrox.lib import hashing
 
 log = logging.getLogger(__name__)
 
 def setup_config(command, filename, section, vars):
-    """Place any commands to setup furaffinity here"""
+    """Place any commands to setup ferrox here"""
 
     conf = appconfig('config:' + filename)
     load_environment(conf.global_conf, conf.local_conf)
 
-    from furaffinity import model
+    from ferrox import model
     print "Creating tables."
     model.metadata.create_all(bind=config['pylons.g'].sa_engine)
 
@@ -251,7 +251,7 @@ def setup_config(command, filename, section, vars):
     print "    ...users"
     u = model.User('fender', 'asdf')
     u.display_name = u'Fender'
-    u.email = u'nobody@furaffinity.net'
+    u.email = u'nobody@example.net'
     u.role = admin_role
     model.Session.save(u)
 
@@ -268,13 +268,13 @@ def setup_config(command, filename, section, vars):
 
     u = model.User('net-cat', 'asdf')
     u.display_name = u'net-cat'
-    u.email = u'nobody@furaffinity.net'
+    u.email = u'nobody@example.net'
     u.role = admin_role
     model.Session.save(u)
 
     u = model.User('luser', 'asdf')
     u.display_name = u'Luser'
-    u.email = u'nobody@furaffinity.net'
+    u.email = u'nobody@example.net'
     u.role = normal_role
     model.Session.save(u)
 

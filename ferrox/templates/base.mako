@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-    <title>${self.title()} -- Fur Affinity [dot] net</title>
+    <title>${self.title()} -- ${c.site_name}</title>
     <link rel="shortcut icon" type="image/png" href="/images/icons/favicon.png"/>
     ${self.css_links()}
     ${self.javascript_includes()}
@@ -13,7 +13,7 @@
     <div id="user">
         % if c.auth_user.id == 0:
         <p>
-            Welcome to FurAffinity! Please log in or
+            Welcome to ${c.site_name}! Please log in or
             ${h.link_to('register', h.url(controller='index', action='register'))}.
         </p>
         <p>(${h.link_to("Lost your password?", h.url(controller='index', action='lost_password'))})</p>
@@ -102,7 +102,6 @@
         <li><a href="/.ferrox/design/docs/sa">Submission Agreement</a></li>
         <li><a href="/.ferrox/design/docs/aup">Acceptable Upload Policy</a></li>
     </ul>
-    <p> No portions of furaffinity.net may be used without expressed, written permission. </p>
     <p> All artwork is copyrighted to the respective owner.  All rights reserved unless otherwise specified. </p>
     <div id="stats">
 <%

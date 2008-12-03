@@ -76,6 +76,7 @@ class BaseController(WSGIController):
         c.error_msgs = []
         c.route = request_config().mapper_dict
         c.javascripts = ['jquery-1.2.1.pack', 'common']
+        c.site_name = config.get('site_name', 'Ferrox')
 
         if 'user_id' in session:
             try:

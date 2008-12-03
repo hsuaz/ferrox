@@ -18,13 +18,11 @@ class AdminController(BaseController):
 
         return render('/admin/index.mako')
 
-    @check_perm('admin.auth')
     def auth(self):
         c.form = FormGenerator()
         c.form.defaults['username'] = c.auth_user.username
         return render('/admin/login.mako')
         
-    @check_perm('admin.auth')
     def auth_verify(self):
         """User login POST target."""
         username = request.params.get('username', '')
@@ -47,7 +45,7 @@ class AdminController(BaseController):
                 else:
                     session['admin_last_used'] = 0
                 session.save()
-                h.redirect_to(request.headers.get('referer', '/'))
+                h.redirect_to(h.url_for(controller='admin', action='index'))
         else:
             c.error_msgs.append(
                 "Either there is no such account '%s', or the provided " \

@@ -16,9 +16,9 @@ def make_map():
     # We do this a lot, so be epic lazy
     require_post = dict(conditions=dict(method=['POST']))
 
-    # The ErrorController route (handles 404/500 error pages); it should
-    # likely stay at the top, ensuring it can always be resolved
-    map.connect('error/:action/:id', controller='error')
+    # Error documents (404, etc) controller.  Goes up here to prevent some
+    # other mapping from overriding it
+    map.connect('/error/document', controller='error', action='document')
 
     map.connect('/', controller='index', action='index')
     map.connect('/login', controller='index', action='login')

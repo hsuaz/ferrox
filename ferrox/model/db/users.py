@@ -69,9 +69,6 @@ class RolePermission(BaseTable):
 
 ### Main user tables
 
-# XXX this is gross; how better can we specify which is the guest role?
-guest_role = Role.get_by_name('Guest')
-
 class GuestUser(object):
     '''Dummy object for not-logged-in users'''
     preferences = dict()
@@ -80,7 +77,8 @@ class GuestUser(object):
         self.id = 0
         self.username = "guest"
         self.display_name = "guest"
-        self.role = guest_role
+        # XXX this is gross; how better can we specify which is the guest role?
+        self.role = Role.get_by_name('Guest')
         self.is_guest = True
 
     def __nonzero__(self):

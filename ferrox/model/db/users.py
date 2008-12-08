@@ -127,14 +127,14 @@ class User(BaseTable):
         algo.update(str(random.random()))
         salt = algo.hexdigest()[-10:]
         algo = hashlib.new(algo_name)
-        algo.update(salt + password)
+        algo.update(salt + password.encode('UTF-8'))
         self.password = "%s$%s$%s" % (algo_name, salt, algo.hexdigest())
 
     def check_password(self, password):
         (algo_name, salt, hashed_password) = self.password.split('$')
         algo = hashlib.new(algo_name)
         algo.update(salt)
-        algo.update(password)
+        algo.update(password.encode('UTF-8'))
         return algo.hexdigest() == hashed_password
 
     def is_online(self):

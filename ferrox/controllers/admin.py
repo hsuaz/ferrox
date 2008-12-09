@@ -108,3 +108,71 @@ class AdminController(BaseController):
         c.ip_page = paginate.Page(ip_q, page_nr=page, items_per_page=10)
         c.ip_nav = c.ip_page.navigator(link_var='page')
         return render('/admin/ip.mako')
+
+    @authed_admin()
+    @check_perm('admin.config_view')
+    def config(self):
+        action = request.params.get('action')
+        if action == 'save':
+            if c.auth_user.can('admin.config_edit'):
+                section = request.params.get('section')
+                name = request.params.get('name')
+                type = request.params.get('type')
+                pattern = request.params.get('pattern')
+                value = request.params.get('value')
+                comment = request.params.get('comment')
+                model.Config.delete(section, name)
+                model.Session.save(model.Config(section, name, type, pattern, value, comment, 0))
+                model.Session.commit()
+                return "done"
+            else:
+                return "You don't have permissions to edit configuration"
+        return render('/admin/config.mako')
+        
+    @authed_admin()
+    @check_perm('admin.config_view')
+    @jsonify
+    def config_ajax(self):
+        action = request.params.get('action')
+        if action == 'empty_list':
+            return {
+                'metadata' : [{'name' : 'x', 'title' : 'Choose section'}],
+                'data' : [],
+                'total' : 0,
+            }
+        elif action == 'get_tree':
+            list = model.Config.get_sections()
+            items = []
+            for row in list:
+                section = row.section
+                items.append({
+                    'id' : 'section:' + section,
+                    'text' : section.capitalize(),
+                    'isFolder' : 0,
+                    'section' : section,
+                })
+            return {
+                'items' : items,
+            }
+        elif action == 'get_values':
+            section = request.params.get('section')
+            start = request.params.get('start')
+            limit = request.params.get('limit')
+            data = model.Config.get_values_of(section, start, limit)
+            return {
+                'metadata' : [
+                    {'name' : 'id',       'title' : 'ID',      'hidden' : 1},
+                    {'name' : 'section',  'title' : 'Section', 'hidden' : 1},
+                    {'name' : 'type',     'title' : 'Type',    'hidden' : 1},
+                    {'name' : 'pattern',  'title' : 'Pattern', 'hidden' : 1},
+                    {'name' : 'name',     'title' : 'Name',    'renderer' : 'var_name'},
+                    {'name' : 'value',    'title' : 'Value',   'renderer' : 'var_value'},
+                    {'name' : 'comment',  'title' : 'Comment', 'renderer' : 'html'},
+                    {'name' : 'fname',    'title' : 'Name',    'hidden' : 1},
+                    {'name' : 'fvalue',   'title' : 'Value',   'hidden' : 1},
+                    {'name' : 'fcomment', 'title' : 'Comment', 'hidden' : 1},
+		],
+		'data' : data["data"],
+		'total' : data["total"],
+	    }
+        return None

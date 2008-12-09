@@ -110,6 +110,8 @@ def make_map():
     map.connect('/admin', controller='admin', action='index')
     map.connect('/admin/auth', controller='admin', action='auth')
     map.connect('/admin/auth_verify', controller='admin', action='auth_verify')
+    map.connect('/admin/config', controller='admin', action='config')
+    map.connect('/admin/config_ajax', controller='admin', action='config_ajax')
     map.connect('/admin/ip', controller='admin', action='ip')
     map.connect('/admin/show_bans', controller='admin', action='show_bans')
     map.connect('/admin/ban', controller='admin', action='ban', username=None)

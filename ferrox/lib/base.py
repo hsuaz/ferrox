@@ -16,6 +16,7 @@ from sqlalchemy.orm import eagerload, eagerload_all
 from ferrox.lib.formgen import FormGenerator
 import ferrox.lib.helpers as h
 import ferrox.lib.hashing as hashing
+from ferrox.lib.config import Config
 from ferrox.lib.querylog import QueryLog
 import ferrox.model as model
 import ferrox.model.form as form
@@ -72,10 +73,11 @@ class BaseController(WSGIController):
         c.time_elapsed = time_elapsed
         c.query_log = QueryLog()
 
+        c.config = Config().readdb(model.Config)
         c.empty_form = FormGenerator()
         c.error_msgs = []
         c.route = request_config().mapper_dict
-        c.javascripts = ['jquery-1.2.1.pack', 'common']
+        c.javascripts = ['jquery-1.2.6.pack', 'common']
         c.site_name = config.get('site_name', 'Ferrox')
 
         if 'user_id' in session:

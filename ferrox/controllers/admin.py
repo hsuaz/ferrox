@@ -115,12 +115,19 @@ class AdminController(BaseController):
         action = request.params.get('action')
         if action == 'save':
             if c.auth_user.can('admin.config_edit'):
-                section = request.params.get('section')
-                name = request.params.get('name')
-                type = request.params.get('type')
-                pattern = request.params.get('pattern')
                 value = request.params.get('value')
-                comment = request.params.get('comment')
+                if c.auth_user.can('admin.config_admin'):
+                    section = request.params.get('section')
+                    name = request.params.get('name')
+                    type = request.params.get('type')
+                    pattern = request.params.get('pattern')
+                    comment = request.params.get('comment')
+                else:
+                    section = request.params.get('old_section')
+                    name = request.params.get('old_name')
+                    type = request.params.get('old_type')
+                    pattern = request.params.get('old_pattern')
+                    comment = request.params.get('old_comment')
                 model.Config.delete(section, name)
                 model.Session.save(model.Config(section, name, type, pattern, value, comment, 0))
                 model.Session.commit()

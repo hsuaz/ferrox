@@ -1,6 +1,12 @@
 <%namespace name="lib" file="/lib.mako"/>
 <%inherit file="base.mako" />
 
+<%def name="isadmin()">
+	% if not c.auth_user.can('admin.config_admin'):
+		style="display: none;"
+	% endif
+</%def>                       
+
 <link rel="stylesheet" type="text/css" href="/stylesheets/grid_widget.css" />
 <link rel="stylesheet" type="text/css" href="/stylesheets/tree_widget.css" />
 <style type="text/css">
@@ -299,6 +305,9 @@ $(document).ready(function()
                                 action: 'save',
                                 old_section: $('#var_old_section').val(),
                                 old_name: $('#var_old_name').val(),
+				old_type: $('#var_old_type').val(),
+				old_pattern: $('#var_old_pattern').val(),
+				old_comment: $('#var_old_comment').val(),
                                 section: $('#var_section').val(),
                                 name: $('#var_name').val(),
 				type: $('#var_type').val(),
@@ -329,34 +338,35 @@ $(document).ready(function()
 				<input type="hidden" id="var_old_name" value="" />
 				<input type="hidden" id="var_old_type" value="" />
 				<input type="hidden" id="var_old_pattern" value="" />
-				<input type="checkbox" />
-				<label>Section:<br />
+				<input type="hidden" id="var_old_comment" value="" />
+				<input type="checkbox" ${self.isadmin()} />
+				<label ${self.isadmin()} >Section:<br />
 					<input type="text" id="var_section" value="" readonly="readonly" class="readonly" maxlength="32" />
-				</label><br />
-				<input type="checkbox" />
-				<label>Variable name:<br />
+				</label><br ${self.isadmin()} />
+				<input type="checkbox" ${self.isadmin()} />
+				<label ${self.isadmin()} >Variable name:<br />
 					<input type="text" id="var_name" value="" readonly="readonly" class="readonly" maxlength="32" autocomplete="off" />
-				</label><br />
-				<input type="checkbox" />
-				<label>Type:<br />
+				</label><br ${self.isadmin()} />
+				<input type="checkbox" ${self.isadmin()} />
+				<label ${self.isadmin()} >Type:<br />
 					<select id="var_type" disabled="disabled" class="readonly" value="">
 						<option value="1">Regexp</option>
 						<option value="2">List</option>
 						<option value="3">MultiList</option>
 					</select>
-				</label><br />
-				<input type="checkbox" />
-				<label>Pattern:<br />
+				</label><br ${self.isadmin()} />
+				<input type="checkbox" ${self.isadmin()} />
+				<label ${self.isadmin()} >Pattern:<br />
 					<textarea readonly="readonly" class="readonly" id="var_pattern" style="width: 98%;"></textarea>
-				</label><br />
+				</label><br ${self.isadmin()} />
 				<label>Variable value:<br />
 					<div id="value">
 					</div>
 				</label><br />
-				<input type="checkbox" />
-				<label>Comment:<br />
+				<input type="checkbox" ${self.isadmin()} />
+				<label ${self.isadmin()} >Comment:<br />
 					<textarea readonly="readonly" class="readonly" id="var_comment" style="width: 98%;"></textarea>
-				</label><br />
+				</label><br ${self.isadmin()} />
 				<input type="submit" value="Save" />
 			</form>
 		</td>

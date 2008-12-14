@@ -25,7 +25,7 @@ def setup_config(command, filename, section, vars):
 
     print "    ...config"
     config_fields = (
-        ('gallery', 'max depth', model.Config.Regexp, u'^\d*$', 10, u'Maximal depth of user gallery', False),
+        ('gallery', 'max depth', model.Config.Regexp, u'^\d*$', u'10', u'Maximal depth of user gallery', False),
     )
     for group, name, type, pattern, value, description, encrypted in config_fields:
         model.Session.save(
@@ -42,6 +42,7 @@ def setup_config(command, filename, section, vars):
         ['admin.ban', 'Can manage bans.'],
         ['admin.config_view', 'Can view config.'],
         ['admin.config_edit', 'Can edit config.'],
+        ['admin.config_admin', 'Can admin config.'],
         ['admin.ip', 'Can see user IP addresses.'],
         ['admin.roles', 'Can manage user roles. (God mode cheat.)'],
 
@@ -104,6 +105,7 @@ def setup_config(command, filename, section, vars):
     .permissions.append(permissions['admin.ban'])
     .permissions.append(permissions['admin.config_view'])
     .permissions.append(permissions['admin.config_edit'])
+    .permissions.append(permissions['admin.config_admin'])
     .permissions.append(permissions['admin.ip'])
     .permissions.append(permissions['admin.roles'])
     .permissions.append(permissions['comments.reply'])
@@ -185,6 +187,7 @@ def setup_config(command, filename, section, vars):
     admin_role.permissions.append(permissions['admin.auth'])
     admin_role.permissions.append(permissions['admin.ban'])
     admin_role.permissions.append(permissions['admin.config_view'])
+    admin_role.permissions.append(permissions['admin.config_edit'])
     admin_role.permissions.append(permissions['admin.ip'])
     admin_role.permissions.append(permissions['admin.roles'])
     admin_role.permissions.append(permissions['comments.reply'])
@@ -213,6 +216,8 @@ def setup_config(command, filename, section, vars):
     sysadmin_role.permissions.append(permissions['admin.auth'])
     sysadmin_role.permissions.append(permissions['admin.ban'])
     sysadmin_role.permissions.append(permissions['admin.config_view'])
+    sysadmin_role.permissions.append(permissions['admin.config_edit'])
+    sysadmin_role.permissions.append(permissions['admin.config_admin'])
     sysadmin_role.permissions.append(permissions['admin.ip'])
     sysadmin_role.permissions.append(permissions['admin.roles'])
     sysadmin_role.permissions.append(permissions['comments.reply'])
@@ -266,13 +271,13 @@ def setup_config(command, filename, section, vars):
     print "Creating test data..."
 
     print "    ...users"
-    u = model.User('fender', 'asdf')
+    u = model.User(u'fender', 'asdf')
     u.display_name = u'Fender'
     u.email = u'nobody@example.net'
     u.role = admin_role
     model.Session.save(u)
 
-    u = model.User('eevee', 'pretzel')
+    u = model.User(u'eevee', 'pretzel')
     u.display_name = u'Eevee'
     u.email = u'ferrox@veekun.com'
     u.role = admin_role
@@ -283,13 +288,13 @@ def setup_config(command, filename, section, vars):
     p = model.UserPreference(u, 'style_color', 'light')
     model.Session.save(p)
 
-    u = model.User('net-cat', 'asdf')
+    u = model.User(u'net-cat', 'asdf')
     u.display_name = u'net-cat'
     u.email = u'nobody@example.net'
     u.role = admin_role
     model.Session.save(u)
 
-    u = model.User('luser', 'asdf')
+    u = model.User(u'luser', 'asdf')
     u.display_name = u'Luser'
     u.email = u'nobody@example.net'
     u.role = normal_role

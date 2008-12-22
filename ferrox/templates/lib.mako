@@ -40,7 +40,7 @@
         % if entry.is_deleted:
         <li>${c.empty_form.submit('Undelete')}</li>
         % else:
-        <li>${c.empty_form.submit('Delete')}</li>
+        <li>${c.empty_form.submit("%s Delete" % h.image_tag('/images/icons/link-edit.png', ''), class_='admin')}</li>
         % endif
     </ul>
     ${c.empty_form.end()}
@@ -86,7 +86,7 @@
         % if entry.status == 'deleted':
         <li>${c.empty_form.submit('Undelete')}</li>
         % else:
-        <li>${c.empty_form.submit("%s Delete" % h.image_tag('/images/icons/link-edit.png', ''))}</li>
+        <li>${c.empty_form.submit("%s Delete" % h.image_tag('/images/icons/link-edit.png', ''), class_='admin')}</li>
         % endif
     </ul>
     ${c.empty_form.end()}

@@ -2,6 +2,7 @@ body { background: #a9bfe2; font-family: Bitstream Vera Sans, Helvetica, Verdana
 
 /* *:hover { outline: 3px solid blue; -moz-outline-radius: 3px; } */
 
+button,
 a:link,
 a:visited { font-weight: bold; text-decoration: none; }
 a:link { color: #2c4387; }
@@ -15,11 +16,15 @@ a img { vertical-align: middle; }
 .small { font-size: 0.8em; }
 
 /* Button-like standard links */
-a.button { display: inline-block; padding: 0.17em; line-height: 16px; vertical-align: middle; white-space: nowrap; background: #f2f6fd; border: 1px solid #f2f6fd; -moz-border-radius: 0.5em; -webkit-border-radius: 0.5em; -moz-outline-radius: 0.5em; -webkit-outline-radius: 0.5em; }
+button, input[type='submit'], a.button { padding: 0.17em; line-height: 16px; vertical-align: middle; white-space: nowrap; }
+a.button { display: inline-block; background: #f2f6fd; border: 1px solid #f2f6fd; -moz-border-radius: 0.5em; -webkit-border-radius: 0.5em; -moz-outline-radius: 0.5em; -webkit-outline-radius: 0.5em; }
 a.button:hover { background: #cedbef; border-color: #bacce8; }
+button img,
 a.button img { vertical-align: bottom; }
-a.button.admin { background: url(/images/bits/button-background.png) #f0e4d0 center center repeat; border-color: #d19875; }
-a.button.admin:hover { background-color: #e4cea9; border-color: #c47a4d; }
+a.button.admin,
+button.admin { background: url(/images/bits/button-background.png) #f0e4d0 center center repeat; border-color: #d19875; }
+a.button.admin:hover,
+button.admin:hover { background-color: #e4cea9; border-color: #c47a4d; }
 
 /* Bullet-delimited inline list */
 ul.inline li { display: inline; }
@@ -29,8 +34,11 @@ ul.inline li + li:before { content: ' • '; font-weight: bold; }
 form.inline, form.inline p { display: inline; }
 
 input[type='text'] { margin: 0; padding: 0.125em 0.25em; border: 1px solid #404040; background: white; -moz-border-radius: 0.5em; }
-input[type='submit'] { margin: 0; padding: 0.1em; cursor: pointer; border: 1px solid #2c4387; -moz-border-radius: 0.33em; background: url(/images/bits/button-background.png) #a1b1e1 center center repeat; }
+button,
+input[type='submit'] { margin: 0; line-height: 100%; padding: 0.17em; cursor: pointer; border: 1px solid #2c4387; -moz-border-radius: 0.33em; font-size: 1em; background: url(/images/bits/button-background.png) #a1b1e1 center center repeat; }
+button:hover,
 input[type='submit']:hover { background-color: #e1a1a1; border-color: #872c2c; }
+button:active,
 input[type='submit']:active { background-color: #a1e1ab; border-color: #2c873a; }
 
 input.search { padding-left: 24px; background-image: url(/images/icons/textbox-search.png); background-position: 0.25em center; background-repeat: no-repeat; }

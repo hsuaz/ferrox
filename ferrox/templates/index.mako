@@ -12,7 +12,7 @@
         <h2>News</h2>
         % if c.auth_user.can('admin.auth'):
         <ul class="mini-linkbar">
-            <li class="admin">${h.link_to("%s Post news" % h.image_tag('/images/icons/document-new.png', ''), h.url(controller='news', action='post'))}</li>
+<li class="admin">${h.link_to("%s Post news" % h.image_tag('/images/icons/document-new.png', ''), h.url_for(controller='news', action='post'))}</li>
         </ul>
         % endif
         % for item in c.news:

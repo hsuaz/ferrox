@@ -96,6 +96,12 @@ class UserController(BaseController):
 
         return render('user/relationships.mako')
 
+    def stats(self, username):
+        return render('/PLACEHOLDER.mako')
+
+    def commissions(self, username):
+        return render('/PLACEHOLDER.mako')
+
     def fuck(self, username=None, sub_domain=None):
         if username == c.auth_user.username:
             c.error_title = '''You have attempted to fuck yourself.'''

@@ -15,7 +15,7 @@ ${lib.user_linkbar(c.user)}
         <p class="timestamp">${h.format_time(c.recent_submissions[0].time)}</p>
         <div class="halfview">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=c.recent_submissions[0].halfview.mogile_key), c.recent_submissions[0].title), h.url(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
         <div class="description">${c.recent_submissions[0].description}</div>
-        <ul class="inline admin-links">
+        <ul class="inline admin">
             <li>${h.link_to("%s Edit" % h.image_tag('/images/icons/link-edit.png', ''), h.url_for(controller='gallery', action='edit', id=c.recent_submissions[0].id, username=c.user.username), class_='button admin')}</li>
         </ul>
         <ul class="inline links">
@@ -42,7 +42,7 @@ ${lib.user_linkbar(c.user)}
         <p class="timestamp">${h.format_time(c.recent_submissions[0].time)}</p>
         <div class="halfview">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=c.recent_submissions[0].halfview.mogile_key), c.recent_submissions[0].title), h.url(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
         <div class="description">${c.recent_submissions[0].description}</div>
-        <ul class="inline admin-links">
+        <ul class="inline admin">
             <li>${h.link_to("%s Edit" % h.image_tag('/images/icons/link-edit.png', ''), h.url_for(controller='gallery', action='edit', id=c.recent_submissions[0].id, username=c.user.username), class_='button admin')}</li>
         </ul>
         <ul class="inline links">
@@ -72,7 +72,7 @@ ${lib.user_linkbar(c.user)}
         <div class="message TODO">
             ${c.recent_journals[0].content_parsed}
         </div>
-        <ul class="inline admin-links">
+        <ul class="inline admin">
             <li>${h.link_to("%s Edit" % h.image_tag('/images/icons/link-edit.png', ''), h.url_for(controller='journal', action='edit', id=c.recent_journals[0].id, year=c.recent_journals[0].time.year, month=c.recent_journals[0].time.month, day=c.recent_journals[0].time.day, username=c.user.username), class_='button admin')}</li>
         </ul>
         <ul class="inline links">

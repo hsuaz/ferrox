@@ -65,30 +65,32 @@
 %>
 <div class="entry${extra_class}">
     <div class="header">
-        <div class="title">${h.link_to(entry.title, h.url_for(controller='journal', action='view', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id))}</div>
-        <div class="avatar">${h.image_tag(h.get_avatar_url(entry), entry.user.display_name)}</div>
-        <div class="author">By: ${user_link(entry.user)}</div>
-        <div class="date">Date: ${h.format_time(entry.time)}</div>
+        <div class="avatar FINISHME"><img src="http://a.furaffinity.net/${entry.user.username}.gif" alt="avatar"/></div>
+        <div class="author">
+            ${user_link(entry.user)}
+        </div>
+        <h3>${h.link_to(entry.title, h.url_for(controller='journal', action='view', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id))}</h3>
+        <div class="date">${h.format_time(entry.time)}</div>
+        % if c.auth_user.can('admin.auth'):
+        ${c.empty_form.start(h.url(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), method='post')}
+        <ul class="inline admin actions">
+            <li>${h.link_to("%s Edit" % h.image_tag('/images/icons/link-edit.png', ''), h.url(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), class_='button admin')}</li>
+            % if entry.status == 'deleted':
+            <li>${c.empty_form.submit('Undelete')}</li>
+            % else:
+            <li>${c.empty_form.submit('Delete')}</li>
+            % endif
+        </ul>
+        ${c.empty_form.end()}
+        % endif
     </div>
-    <div class="content">
+    <div class="message">
         % if short:
             ${entry.content_short}
         % else:
             ${entry.content_parsed}
         % endif
     </div>
-    % if c.auth_user.can('admin.auth'):
-    ${c.empty_form.start(h.url_for(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), method='post')}
-    <ul class="inline admin">
-        <li>${h.link_to("Edit", h.url_for(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id))}</li>
-        % if entry.status == 'deleted':
-        <li>${c.empty_form.submit('Undelete')}</li>
-        % else:
-        <li>${c.empty_form.submit('Delete')}</li>
-        % endif
-    </ul>
-    ${c.empty_form.end()}
-    % endif
 </div>
 </%def>
 

@@ -76,7 +76,7 @@ ${lib.user_linkbar(c.user)}
             <li>${h.link_to("%s Edit" % h.image_tag('/images/icons/link-edit.png', ''), h.url_for(controller='journal', action='edit', id=c.recent_journals[0].id, year=c.recent_journals[0].time.year, month=c.recent_journals[0].time.month, day=c.recent_journals[0].time.day, username=c.user.username), class_='button admin')}</li>
         </ul>
         <ul class="inline links">
-            <li>${h.link_to("%s XXX comments" % h.image_tag('/images/icons/link-comments.png', ''), h.url_for(controller='journal', action='view', id=c.recent_journals[0].id, year=c.recent_journals[0].time.year, month=c.recent_journals[0].time.month, day=c.recent_journals[0].time.day, username=c.user.username), class_='button TODO')}</li>
+            <li>${h.link_to("%s %d comments" % (h.image_tag('/images/icons/link-comments.png', ''), c.recent_journals[0].discussion.comment_count), h.url_for(controller='journal', action='view', id=c.recent_journals[0].id, year=c.recent_journals[0].time.year, month=c.recent_journals[0].time.month, day=c.recent_journals[0].time.day, username=c.user.username), class_='button')}</li>
         </ul>
     </div>
 

@@ -9,7 +9,6 @@
 %>
 <div class="entry${extra_class}">
     <div class="header">
-        <div class="title">${entry.title}</div>
         <div class="avatar">
             % if not entry.is_anonymous:
             ${h.image_tag(h.get_avatar_url(entry), entry.user.username)}
@@ -19,14 +18,15 @@
         </div>
         <%
             if entry.is_anonymous:
-                author_string = 'FA Staff'
+                author_string = 'Staff'
             else:
                 author_string = capture(user_link, entry.user)
         %>
-        <div class="author">By: ${author_string}</div>
-        <div class="date">Date: ${h.format_time(entry.time)}</div>
+        <div class="author">${author_string}</div>
+        <h3>${h.link_to(entry.title, h.url_for(controller='news', action='view', id=entry.id))}</h3>
+        <div class="date">${h.format_time(entry.time)}</div>
     </div>
-    <div class="content">
+    <div class="message">
         % if short:
             ${entry.content_short}
         % else:
@@ -35,21 +35,21 @@
     </div>
     % if c.auth_user.can('admin.auth'):
     ${c.empty_form.start(h.url_for(controller='news', action='edit', id=entry.id), method='post')}
-    <ul class="inline admin">
-        <li>${h.link_to('Edit', h.url_for(controller='news', action='edit', id=entry.id))}</li>
+    <ul class="inline admin actions">
+        <li>${h.link_to('%s Edit' % h.image_tag('/images/icons/link-edit.png', ''), h.url_for(controller='news', action='edit', id=entry.id), class_='button admin')}</li>
         % if entry.is_deleted:
         <li>${c.empty_form.submit('Undelete')}</li>
         % else:
-        <li>${c.empty_form.submit('Delete')}</li>
+        <li>${c.empty_form.submit("%s Delete" % h.image_tag('/images/icons/link-edit.png', ''), class_='admin')}</li>
         % endif
     </ul>
     ${c.empty_form.end()}
     % endif
 
 <% news_url = h.url_for(controller='news', action='view', id=entry.id) %>
-    <ul class="inline">
-        <li>${h.link_to('View comments', h.url_for(controller='comments', action='view', post_url=news_url))}</li>
-        <li>${h.link_to('Reply', h.url_for(controller='comments', action='reply', post_url=news_url))}</li>
+    <ul class="inline actions">
+        <li>${h.link_to('%s View comments' % h.image_tag('/images/icons/link-comments.png', ''), h.url_for(controller='comments', action='view', post_url=news_url), class_='button')}</li>
+        <li>${h.link_to('%s Reply' % h.image_tag('/images/icons/link-reply.png', ''), h.url_for(controller='comments', action='reply', post_url=news_url), class_='button')}</li>
     </ul>
 </div>
 </%def>
@@ -72,13 +72,13 @@
         <h3>${h.link_to(entry.title, h.url_for(controller='journal', action='view', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id))}</h3>
         <div class="date">${h.format_time(entry.time)}</div>
         % if c.auth_user.can('admin.auth'):
-        ${c.empty_form.start(h.url(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), method='post')}
+        ${c.empty_form.start(h.url_for(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), method='post')}
         <ul class="inline admin actions">
-            <li>${h.link_to("%s Edit" % h.image_tag('/images/icons/link-edit.png', ''), h.url(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), class_='button admin')}</li>
+            <li>${h.link_to("%s Edit" % h.image_tag('/images/icons/link-edit.png', ''), h.url_for(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), class_='button admin')}</li>
             % if entry.status == 'deleted':
             <li>${c.empty_form.submit('Undelete')}</li>
             % else:
-            <li>${c.empty_form.submit('Delete')}</li>
+            <li>${c.empty_form.submit("%s Delete" % h.image_tag('/images/icons/link-edit.png', ''), class_='admin')}</li>
             % endif
         </ul>
         ${c.empty_form.end()}
@@ -131,8 +131,7 @@
 
 <%def name="user_link(user, care_about_online=True)">
 <span class="userlink">
-    <a href="${h.url_for(controller='user', action='view', username=user.username)}"><img src="/images/foxy.gif" alt="[user]"/></a>
-    <a href="${h.url_for(controller='user', action='view', username=user.username)}" class="js-userlink-target">${user.username}</a>
+    <a href="${h.url_for(controller='user', action='view', username=user.username)}" class="js-userlink-target">${user.role.sigil}${user.username}</a>
 </span>
 </%def>
 

@@ -65,7 +65,7 @@ class Message(BaseTable):
     avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
 #    discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
-    time                = Column(DateTime, nullable=False, default=datetime.now)
+    time                = Column(DateTime, index=True, nullable=False, default=datetime.now)
     title               = Column(types.Unicode(length=160), nullable=False, default='(no subject)')
     content             = Column(types.UnicodeText, nullable=False)
     content_parsed      = Column(types.UnicodeText, nullable=False)

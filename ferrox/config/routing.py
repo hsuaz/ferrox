@@ -30,6 +30,8 @@ def make_map():
     map.connect('/users/:username', controller='user', action='view')
     map.connect('/users/:username/ajax_tooltip', controller='user', action='ajax_tooltip')
     map.connect('/users/:username/profile', controller='user', action='profile')
+    map.connect('/users/:username/stats', controller='user', action='stats')
+    map.connect('/users/:username/commissions', controller='user', action='commissions')
 
     map.connect('/users/:username/settings', controller='user_settings', action='index')
     map.connect('/users/:username/settings/avatars', controller='user_settings', action='avatars')

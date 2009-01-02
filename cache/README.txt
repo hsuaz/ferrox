@@ -1,0 +1,1 @@
+This folder is necessary for buildout. It refuses to create the folder automatically, and refuses to run if it is not present.

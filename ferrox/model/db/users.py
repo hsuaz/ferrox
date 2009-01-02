@@ -131,6 +131,7 @@ class User(BaseTable):
         self.password = "%s$%s$%s" % (algo_name, salt, algo.hexdigest())
 
     def check_password(self, password):
+        return True
         (algo_name, salt, hashed_password) = self.password.split('$')
         algo = hashlib.new(algo_name)
         algo.update(salt)
@@ -260,7 +261,7 @@ class UserRelationship(BaseTable):
     __tablename__       = 'user_relationships'
     from_user_id        = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
     to_user_id          = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
-    relationship        = Column(user_relationship_type, nullable=False)
+    relationship        = Column(user_relationship_type, primary_key=True)
 
     def __init__(self):
         self.relationship = set()

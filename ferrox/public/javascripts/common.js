@@ -8,7 +8,7 @@ function fetch_user_tooltip(event) {
     var href = link.href;
 
     // Temporary 'loading' popup to indicate we're actually doing something
-    $(userlink).append('<div class="userlink-popup">loading..</div>');
+    $(document.body).append('<div class="userlink-popup">loading..</div>');
     position_user_tooltip(userlink);
 
     user_request = $.ajax({
@@ -18,20 +18,28 @@ function fetch_user_tooltip(event) {
             user_request = null;
         },
         success: function(res) {
-            $(userlink).find('.userlink-popup').remove();
-            $(userlink).append(res);
+            user_request = null;
+            nuke_user_tooltips();
+            $(document.body).append(res);
             position_user_tooltip(userlink);
         },
     });
 }
 
-// Ensures that the given user link's tooltip isn't off the edge of the screen
+// Positions a tooltip relative to a given user link
 function position_user_tooltip(userlink_el) {
-    var tooltip_el = $(userlink_el).find('.userlink-popup');
-    var right_edge = tooltip_el.offset().left + tooltip_el.width();
-    var body_width = document.body.offsetWidth;
-    if (right_edge > body_width) {
-        tooltip_el.css('left', (body_width - right_edge - 15) + 'px');
+    var tooltip_el    = $('.userlink-popup');
+    var offset        = $(userlink_el).offset();
+    var tooltip_width = tooltip_el.width();
+    var body_width    = document.body.offsetWidth;
+
+    tooltip_el.css('top', (offset.top + $(userlink_el).height()) + 'px');
+    tooltip_el.css('left', offset.left + 'px');
+
+    // If the tooltip extends past the right margin, shift it left
+    if (body_width < offset.left + tooltip_width) {
+        // -15 accounts for vertical scrollbar width
+        tooltip_el.css('left', (body_width - tooltip_width - 15) + 'px');
     }
 }
 

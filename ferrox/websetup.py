@@ -269,7 +269,7 @@ def setup_config(command, filename, section, vars):
 
     print "Done."
     model.Session.commit()
-    return
+    
     print "Creating test data..."
 
     print "    ...users"

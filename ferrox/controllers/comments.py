@@ -1,6 +1,5 @@
 from ferrox.lib.base import *
 from ferrox.lib.formgen import FormGenerator
-import ferrox.lib.paginate as paginate
 from ferrox.model import form
 from pylons import config
 

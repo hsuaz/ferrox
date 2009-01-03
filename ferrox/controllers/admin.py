@@ -1,7 +1,8 @@
 from ferrox.lib.base import *
-import ferrox.lib.paginate as paginate
 from ferrox.model import form
 from ferrox.lib.formgen import FormGenerator
+import ferrox.lib.pagination as pagination
+import pylons.config
 
 import formencode
 import time
@@ -102,11 +103,21 @@ class AdminController(BaseController):
     def ip(self):
         """Shows a list of recently-used IPs."""
 
-        page = request.params.get('page', 0)
-        ip_q = model.Session.query(model.IPLogEntry)
-        ip_q = ip_q.order_by(model.IPLogEntry.end_time.desc())
-        c.ip_page = paginate.Page(ip_q, page_nr=page, items_per_page=10)
-        c.ip_nav = c.ip_page.navigator(link_var='page')
+        page = int(request.params.get('page', 0))
+        c.ips = model.Session.query(model.IPLogEntry)
+        c.ips = c.ips.order_by(model.IPLogEntry.end_time.desc())
+        number_of_ips = c.ips.count()
+        pageno = int(request.params.get('page', 1)) - 1
+        perpage = int(request.params.get('perpage', None) or \
+                      pylons.config.get('admin.ip_default_perpage', 12))
+        c.paging_links = pagination.populate_paging_links(
+            pageno = pageno,
+            num_pages = int((number_of_ips + 0.5) // perpage),
+            perpage = perpage,
+            radius = int(pylons.config.get('paging.radius', 3))
+        )
+        c.ips = c.ips.limit(perpage).offset(perpage * page)
+        
         return render('/admin/ip.mako')
 
     @authed_admin()

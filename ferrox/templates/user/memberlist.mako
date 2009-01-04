@@ -4,7 +4,7 @@
 <div class="basic-box">
     <h2>${title()}
     % if c.paging_links:
-        ${c.empty_form.start(h.url(), method='post')}
+        ${c.empty_form.start(h.implicit_url_for(), method='post')}
         ${c.empty_form.hidden_field('perpage')}
         % for link in c.paging_links:
             % if link[0] == '...':

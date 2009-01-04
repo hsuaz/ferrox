@@ -5,9 +5,9 @@
     <h2>Post Journal</h2>
 
     % if c.is_edit:
-    ${c.form.start(h.url(controller='journal', action='edit_commit', username=c.route['username'], id=c.route['id'], year=c.route['year'], month=c.route['month'], day=c.route['day']), method='post')}
+    ${c.form.start(h.url_for(controller='journal', action='edit_commit', username=c.route['username'], id=c.route['id'], year=c.route['year'], month=c.route['month'], day=c.route['day']), method='post')}
     % else:
-    ${c.form.start(h.url(controller='journal', action='post_commit', username=c.route['username']), method='post')}
+    ${c.form.start(h.url_for(controller='journal', action='post_commit', username=c.route['username']), method='post')}
     % endif
     <dl class="standard-form">
         <dt>Title</dt>

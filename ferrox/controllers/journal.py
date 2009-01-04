@@ -279,7 +279,7 @@ class JournalController(BaseController):
         self.is_my_journal(journal_entry, True)
         c.text = "Are you sure you want to delete the journal \"%s\"?" % \
             journal_entry.title
-        c.url = h.url(action="delete_commit", id=id)
+        c.url = h.implicit_url_for(action="delete_commit", id=id)
         c.fields = {}
         return render('/confirm.mako')
 

@@ -32,6 +32,8 @@ def make_map():
     map.connect('/users/:username/profile', controller='user', action='profile')
     map.connect('/users/:username/stats', controller='user', action='stats')
     map.connect('/users/:username/commissions', controller='user', action='commissions')
+    # TODO
+    map.connect('/users/:username/relationships/edit', controller='user', action='relationships_edit')
 
     map.connect('/users/:username/settings', controller='user_settings', action='index')
     map.connect('/users/:username/settings/avatars', controller='user_settings', action='avatars')

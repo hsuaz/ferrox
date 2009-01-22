@@ -3,9 +3,9 @@
 
 <div class="basic-box">
     <h2>News Archive</h2>
-    % if c.auth_user.can("administrate"):
+    % if c.auth_user.can("news.manage"):
     <ul class="inline admin">
-        <li>${h.link_to('Post news', h.url(controller='news', action='post'))}</li>
+        <li>${h.link_to('Post news', h.url_for(controller='news', action='post'))}</li>
     </ul>
     % endif
     % for item in c.newsitems:

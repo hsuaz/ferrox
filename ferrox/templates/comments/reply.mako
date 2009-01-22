@@ -14,9 +14,9 @@ ${comments.comment_tree([c.comment], c.post_url)}
     <h2>Reply</h2>
 
     % if 'id' in c.route:
-    ${c.form.start(h.url(controller='comments', action='reply_commit', post_url=c.post_url, id=c.route['id']), method='post')}
+    ${c.form.start(h.url_for(controller='comments', action='reply_commit', post_url=c.post_url, id=c.route['id']), method='post')}
     % else:
-    ${c.form.start(h.url(controller='comments', action='reply_commit', post_url=c.post_url), method='post')}
+    ${c.form.start(h.url_for(controller='comments', action='reply_commit', post_url=c.post_url), method='post')}
     % endif
     <dl class="standard-form">
         <dt>Subject</dt>

@@ -4,17 +4,17 @@
 <div class="basic-box">
     <h2>Send note</h2>
 
-    ${c.form.start(h.url(controller='notes', action='write_send', username=c.route['username']), method='post')}
+    ${c.form.start(h.url_for(controller='notes', action='write_send', username=c.route['username']), method='post')}
     % if c.route['action'] == 'reply':
     <p>
         ${'Replying to' if c.note.recipient == c.auth_user else 'Continuing'}
-        ${h.link_to(c.note.base_subject(), h.url(controller='notes', action='view', username=c.route['username'], id=c.route['id']))}
+        ${h.link_to(c.note.base_subject(), h.url_for(controller='notes', action='view', username=c.route['username'], id=c.route['id']))}
         ${c.form.hidden_field('reply_to_note')}
     </p>
     % elif c.route['action'] == 'forward':
     <p>
         Forwarding
-        ${h.link_to(c.note.base_subject(), h.url(controller='notes', action='view', username=c.route['username'], id=c.route['id']))}
+        ${h.link_to(c.note.base_subject(), h.url_for(controller='notes', action='view', username=c.route['username'], id=c.route['id']))}
     </p>
     % endif
     <dl class="standard-form">

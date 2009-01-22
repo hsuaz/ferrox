@@ -7,7 +7,7 @@
     (With tags: ${h.escape_once(c.search_terms['query_tags'])})
     % endif
     % if c.paging_links:
-        ${c.form.start(h.url(tags=None, commit=None), method='post')}
+        ${c.form.start(h.implicit_url_for(tags=None, commit=None), method='post')}
         % if c.page_owner == 'search':
             ${c.form.hidden_field('query_main')}
             ${c.form.hidden_field('search_title')}
@@ -33,7 +33,7 @@
     </h2>
     % if c.page_owner != 'search':
     <h2>
-        ${c.form.start(h.url(tags=None, commit=None), method='post')}
+        ${c.form.start(h.implicit_url_for(tags=None, commit=None), method='post')}
         Return ${c.form.text_field('perpage', size=5)} results per page.<br>
         Filter: ${c.form.text_field('tags')}${c.form.submit('Filter')}
         ${c.form.end()}
@@ -41,7 +41,7 @@
     % endif
 
     % if c.is_mine:
-    <p class="admin"> ${h.link_to('Submit Art', h.url(controller='gallery', action='submit', username=c.auth_user.username))} </p>
+    <p class="admin"> ${h.link_to('Submit Art', h.url_for(controller='gallery', action='submit', username=c.auth_user.username))} </p>
     % endif
 
     ${lib.thumbnail_grid(c.submissions)}

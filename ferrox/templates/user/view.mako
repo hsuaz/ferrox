@@ -13,7 +13,7 @@ ${lib.user_linkbar(c.user)}
     <div class="latest-submission">
         <h3>${c.recent_submissions[0].title}</h3>
         <p class="timestamp">${h.format_time(c.recent_submissions[0].time)}</p>
-        <div class="halfview">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=c.recent_submissions[0].halfview.mogile_key), c.recent_submissions[0].title), h.url(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
+        <div class="halfview">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=c.recent_submissions[0].halfview.mogile_key), c.recent_submissions[0].title), h.url_for(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
         <div class="description">${c.recent_submissions[0].description}</div>
         <ul class="inline admin">
             <li>${h.link_to("%s Edit" % h.image_tag('/images/icons/link-edit.png', ''), h.url_for(controller='gallery', action='edit', id=c.recent_submissions[0].id, username=c.user.username), class_='button admin')}</li>
@@ -25,7 +25,7 @@ ${lib.user_linkbar(c.user)}
 
     <ul class="thumbnail-row">
         % for submission in c.recent_submissions[1:]:
-        <li>${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=submission.thumbnail.mogile_key), submission.title), h.url(controller='gallery', action='view', id=submission.id, username=c.user.username))}</li>
+        <li>${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=submission.thumbnail.mogile_key), submission.title), h.url_for(controller='gallery', action='view', id=submission.id, username=c.user.username))}</li>
         % endfor
     </ul>
     ${h.link_to('Browse featured works', h.url_for(controller='gallery', action='index', username=c.user.username), class_='button TODO')}
@@ -40,7 +40,7 @@ ${lib.user_linkbar(c.user)}
     <div class="latest-submission">
         <h3>${c.recent_submissions[0].title}</h3>
         <p class="timestamp">${h.format_time(c.recent_submissions[0].time)}</p>
-        <div class="halfview">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=c.recent_submissions[0].halfview.mogile_key), c.recent_submissions[0].title), h.url(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
+        <div class="halfview">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=c.recent_submissions[0].halfview.mogile_key), c.recent_submissions[0].title), h.url_for(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
         <div class="description">${c.recent_submissions[0].description}</div>
         <ul class="inline admin">
             <li>${h.link_to("%s Edit" % h.image_tag('/images/icons/link-edit.png', ''), h.url_for(controller='gallery', action='edit', id=c.recent_submissions[0].id, username=c.user.username), class_='button admin')}</li>
@@ -52,7 +52,7 @@ ${lib.user_linkbar(c.user)}
 
     <ul class="thumbnail-row">
         % for submission in c.recent_submissions[1:]:
-        <li>${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=submission.thumbnail.mogile_key), submission.title), h.url(controller='gallery', action='view', id=submission.id, username=c.user.username))}</li>
+        <li>${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=submission.thumbnail.mogile_key), submission.title), h.url_for(controller='gallery', action='view', id=submission.id, username=c.user.username))}</li>
         % endfor
     </ul>
     ${h.link_to('Browse gallery', h.url_for(controller='gallery', action='index', username=c.user.username), class_='button')}

@@ -5,7 +5,7 @@ available to Controllers. This module is available to both as 'h'.
 """
 from webhelpers.rails.wrapped import *
 from webhelpers.rails import asset_tag
-from routes import url_for, redirect_to
+from routes import url_for, redirect_to, request_config
 import pylons.config
 
 import os
@@ -176,4 +176,20 @@ def objects_to_option_tags(objects, default=None, id_attr='id', name_attr='name'
                 ' selected="selected"' if default==getattr(o, id_attr) else '', getattr(o, name_attr))
 
     return output
-    
+
+def implicit_url_for(**kwargs):
+    config = request_config()
+    environ = getattr(config, 'environ', {})
+    controller = None
+    action = None
+    if 'pylons.routes_dict' in environ:
+        controller = environ['pylons.routes_dict']['controller']
+        action = environ['pylons.routes_dict']['action']
+    if not kwargs.has_key('controller'):
+        kwargs['controller'] = controller
+    if not kwargs.has_key('action'):
+        kwargs['action'] = action
+    if kwargs['controller'] == None or kwargs['action'] == None:
+        raise RuntimeError("Try create url without 'controller' or 'action'")
+    return url_for(**kwargs)
+

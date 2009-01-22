@@ -61,7 +61,7 @@ class NewsController(BaseController):
         """Form for editing news."""
         c.form = FormGenerator()
         c.item = model.Session.query(model.News).get(c.id)
-        c.form.defaults = h.to_dict(c.item)
+        c.form.defaults = h.to_dict(c.item.message)
         return render('news/edit.mako')
 
     @check_perm('news.manage')

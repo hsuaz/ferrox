@@ -4,7 +4,7 @@
 <div class="basic-box">
     <h2>Current Avatars</h2>
 
-    ${c.empty_form.start(h.url(controller='user_settings', action='avatars_update', username=c.user.username))}
+    ${c.empty_form.start(h.url_for(controller='user_settings', action='avatars_update', username=c.user.username))}
     % if c.user.default_avatar:
         <p>Default Avatar: ${c.user.default_avatar.title}</p>
     % endif
@@ -29,7 +29,7 @@
 <div class="basic-box">
     <h2>Upload New Avatar</h2>
 
-    ${c.empty_form.start(h.url(controller='user_settings', action='avatars_upload', username=c.user.username), multipart=True)}
+    ${c.empty_form.start(h.url_for(controller='user_settings', action='avatars_upload', username=c.user.username), multipart=True)}
     <dl class="standard-form">
         <dt>Avatar</dt>
         <dd>${c.empty_form.file_field('avatar')}</dd>

@@ -1,7 +1,7 @@
 <%namespace name="lib" file="/lib.mako"/>
 <%inherit file="base.mako"/>
 
-${c.form.start(h.url(controller='user_settings', action='relationships_commit', username=c.user.username))}
+${c.form.start(h.url_for(controller='user_settings', action='relationships_commit', username=c.user.username))}
 <table class="standard-table relationships">
 <thead>
 <tr>

@@ -3,7 +3,7 @@
 <div class="basic-box">
     <h2>Post Journal</h2>
 
-    ${c.form.start(h.url(controller='search', action='do'), method='post')}
+    ${c.form.start(h.url_for(controller='search', action='do'), method='post')}
     <dl class="standard-form">
         <dt>Query</dt>
         <dd>${c.form.text_field('query_main')}</dd>

@@ -1,7 +1,7 @@
 <%namespace name="lib" file="/lib.mako"/>
 <%inherit file="base.mako" />
 
-${c.form.start(h.url(controller='admin', action='ban_commit'), method='post')}
+${c.form.start(h.url_for(controller='admin', action='ban_commit'), method='post')}
 <dl class="standard-form">
     <dt><label for="username">Username</label></dt>
     <dd>${c.form.text_field('username')}</dd>

@@ -57,12 +57,11 @@ class NotesController(BaseController):
 
         note_q = model.Session.query(model.Note)
         c.all_notes = note_q.filter_by(original_note_id=note_thread_id) \
-            .join('message') \
             .filter(sql.or_(
-                model.Message.user_id == c.page_owner.id,
+                model.Note.from_user_id == c.page_owner.id,
                 model.Note.to_user_id == c.page_owner.id
                 )) \
-            .order_by(model.Message.time.asc())
+            .order_by(model.Note.time.asc())
 
         c.latest_note = c.note.latest_note(c.page_owner)
 

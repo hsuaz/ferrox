@@ -342,7 +342,7 @@ class GalleryController(BaseController):
         c.edit = True
         c.form = FormGenerator()
         c.form.defaults['title'] = submission.title
-        c.form.defaults['description'] = submission.message.content
+        c.form.defaults['description'] = submission.content
         #tag_list = tagging.TagList()
         #tag_list.parse_tag_object_array(submission.tags, negative=False)
         c.form.defaults['tags'] = tagging.make_tag_string(submission.tags)
@@ -371,8 +371,8 @@ class GalleryController(BaseController):
             'user_submissions',
             'user_submissions.user',
             'derived_submission',
-            'message.editlog',
-            'message.editlog.entries'
+            'editlog',
+            'editlog.entries'
         ])
         self.is_my_submission(submission,True)
 
@@ -388,23 +388,23 @@ class GalleryController(BaseController):
             return render('/gallery/submit.mako')
 
 
-        if not submission.message.editlog:
+        if not submission.editlog:
             editlog = model.EditLog(c.auth_user)
             model.Session.save(editlog)
-            submission.message.editlog = editlog
+            submission.editlog = editlog
 
         editlog_entry = model.EditLogEntry(
             user = c.auth_user,
             reason = 'still no reason to the madness',
             previous_title = submission.title,
-            previous_text = submission.message.content,
+            previous_text = submission.content,
         )
         model.Session.save(editlog_entry)
-        submission.message.editlog.update(editlog_entry)
+        submission.editlog.update(editlog_entry)
 
         #form_data['description'] = h.escape_once(form_data['description'])
         submission.title = h.escape_once(form_data['title'])
-        submission.message.update_content(form_data['description'])
+        submission.content = form_data['description']
         if form_data['fullfile']:
             submission.set_file(form_data['fullfile'])
             submission.generate_halfview()

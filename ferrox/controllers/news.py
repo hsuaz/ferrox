@@ -15,8 +15,7 @@ class NewsController(BaseController):
         page_link_var = 'p'
         page = request.params.get(page_link_var, 0)
         c.newsitems = model.Session.query(model.News) \
-                           .join('message') \
-                           .order_by(model.Message.time.desc())
+                           .order_by(model.News.time.desc())
         #c.newspage = paginate.Page(news_q, page_nr=page, items_per_page=10)
         #c.newsnav = c.newspage.navigator(link_var=page_link_var)
         return render('news/index.mako')
@@ -64,7 +63,7 @@ class NewsController(BaseController):
         """Form for editing news."""
         c.form = FormGenerator()
         c.item = model.Session.query(model.News).get(c.id)
-        c.form.defaults = h.to_dict(c.item.message)
+        c.form.defaults = h.to_dict(c.item)
         return render('news/edit.mako')
 
     @check_perm('news.manage')

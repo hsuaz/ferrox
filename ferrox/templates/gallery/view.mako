@@ -5,8 +5,6 @@
 ${lib.user_linkbar(c.submission.primary_artist)}
 
 <div class="basic-box">
-    <h2>${c.submission.title}</h2>
-
     <div class="submission-content submission-content-${c.submission.type}">
         % if (c.submission.type == 'video'):
         ${h.embed_flash(h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key, id=None))}
@@ -17,7 +15,7 @@ ${lib.user_linkbar(c.submission.primary_artist)}
         % elif (c.submission.type == 'text'):
         ${h.link_to('Text Submission', h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key))}, Text submission
         <pre>
-        ${c.submission.message.content}
+        TODO?
         </pre>
         % else:
         unknown submission type: ${c.submission_type}
@@ -40,12 +38,17 @@ ${lib.user_linkbar(c.submission.primary_artist)}
         % endfor
         </div>
     </div>
+    % for user_submission in c.submission.user_submissions:
     <div class="description">
-    <h3> durp durp </h3>
-        ${c.submission.message.content}
+    <h3> ${lib.user_link(user_submission.user)} </h3>
+        ${user_submission.content}
     </div>
+    % endfor
 </div>
 
-${comments.comment_tree(c.submission.discussion.comments, h.url_for(**c.route))}
+<div class="basic-box">
+    <h2>${h.image_tag('/images/icons/h2-comments.png', '')} Comments</h2>
+    ${comments.comment_tree(c.submission.discussion.comments, h.url_for(**c.route))}
+</div>
 
 <%def name="title()">${c.submission.title} by ${c.submission.primary_artist.display_name}</%def>

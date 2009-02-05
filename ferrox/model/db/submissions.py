@@ -51,13 +51,13 @@ user_submission_review_status_type = Enum('normal', 'under_review', 'removed_by_
 user_submission_relationship_type = Enum('artist', 'commissioner', 'gifted', 'isin')
 
 
-class Submission(BaseTable, MessageDelegator):
+class Submission(BaseTable):
     __tablename__       = 'submissions'
     id                  = Column(types.Integer, primary_key=True)
-    message_id          = Column(types.Integer, ForeignKey('messages.id'))
     discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
     type                = Column(submission_type_type, nullable=False)
     time                = Column(DateTime, nullable=False, default=datetime.now)
+    title               = Column(types.Unicode(length=160), nullable=False, default='(no subject)')
     status              = Column(submission_status_type, index=True, nullable=False)
     mogile_key          = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
@@ -70,7 +70,7 @@ class Submission(BaseTable, MessageDelegator):
         self.mogile_key = None
         self.message = Message(title=title, content=description, user=uploader)
         if avatar and avatar.user == uploader:
-            self.message.avatar = avatar
+            self.avatar = avatar
         self.discussion = Discussion()
 
         user_submission = UserSubmission(
@@ -118,7 +118,7 @@ class Submission(BaseTable, MessageDelegator):
             # description
             words = []
             # FIX ME: needs bbcode parser. should be plain text representation.
-            for word in self.message.content.lower().split(' '):
+            for word in self.content.lower().split(' '):
                 words.append(rmex.sub('', word[0:20]))
             words = set(words)
             for word in words:
@@ -392,12 +392,19 @@ class HistoricSubmission(BaseTable):
 class UserSubmission(BaseTable):
     __tablename__       = 'user_submissions'
     id                  = Column(types.Integer, primary_key=True)
-    user_id             = Column(types.Integer, ForeignKey('users.id'))
     submission_id       = Column(types.Integer, ForeignKey('submissions.id'))
     relationship        = Column(user_submission_relationship_type, nullable=False)
     ownership_status    = Column(user_submission_ownership_status_type, nullable=False)
     review_status       = Column(user_submission_review_status_type, nullable=False)
+
+    # Message columns
+    user_id             = Column(types.Integer, ForeignKey('users.id'))
     avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    time                = Column(DateTime, index=True, nullable=False, default=datetime.now)
+    content             = Column(types.UnicodeText, nullable=False)
+    avatar              = relation(UserAvatar)
+    editlog             = relation(EditLog)
 
     def __init__(self, user, relationship, ownership_status, review_status):
         self.user = user
@@ -476,7 +483,6 @@ HistoricSubmission.submission   = relation(Submission, backref='historic_submiss
 Submission.tags                 = relation(Tag, backref='submissions', secondary=SubmissionTag.__table__)
 Submission.discussion           = relation(Discussion, backref='submission')
 Submission.favorited_by         = relation(User, secondary=FavoriteSubmission.__table__, backref='favorite_submissions')
-Submission.message              = relation(Message, lazy=False)
 
 Submission.halfview             = relation(DerivedSubmission,
     primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,

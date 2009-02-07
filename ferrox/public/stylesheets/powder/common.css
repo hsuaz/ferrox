@@ -55,8 +55,8 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 /* Simple box */
 .basic-box { padding: 0.5em; overflow: hidden /* contain floats; new float context */; }
 .basic-box + .basic-box { margin-top: 2em; }
-.basic-box h2 { margin-bottom: 0.28em; font-size: 1.75em; line-height: 32px; text-align: center; border: 1px solid #446bb5; background: url(/images/bits/heading-background.png) #8da2c9 center center repeat-x; vertical-align: bottom; }
-.basic-box h2 img { float: left; margin-left: 0.25em; }
+.basic-box h2 { margin-bottom: 0.28em; font-size: 1.25em; line-height: 24px; border: 1px solid #446bb5; background: url(/images/bits/heading-background.png) #8da2c9 center center repeat-x; vertical-align: bottom; }
+.basic-box h2 img { margin-left: 0.25em; vertical-align: middle; }
 .basic-box h3 { margin: 0.33em 0; font-size: 1.5em; font-weight: bold; }
 .basic-box .timestamp { font-style: italic; }
 .basic-box h3 + .timestamp { margin-top: -0.5em; }
@@ -66,9 +66,8 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 .tab-bar { overflow: auto /* float wrapping */; }
 .tab-bar li { float: left; }
 .tab-bar li a { display: block; padding: 0.25em 0.5em; margin: 0 0.25em; line-height: 16px /* icons */; background: bottom center repeat-x; border: solid 1px transparent; -moz-border-radius-topleft: 0.5em; -moz-border-radius-topright: 0.5em; -webkit-border-top-left-radius: 0.5em; -webkit-border-top-right-radius: 0.5em; }
-.tab-bar li a.you-are-here,
-.tab-bar li a:hover { border-color: #446bb5; background-color: #c0d2ed; }
-.tab-bar li a.you-are-here { border-bottom-color: #c0d2ed; background-image: url(/images/bits/tab-highlight.png); }
+.tab-bar li a:hover { border-color: #809ccf; border-bottom-color: #446bb5; }
+.tab-bar li a.you-are-here { border-color: #446bb5; border-bottom-color: #c0d2ed; background-image: url(/images/bits/tab-highlight.png); background-color: #c0d2ed; }
 .tab-bar li img { vertical-align: bottom; }
 
 .sub-bar-thing { position: relative; z-index: 0; padding: 0.5em; margin-left: 100px; margin-top: -1px; border-top: 1px solid #446bb5; background: url(/images/bits/tabbar-below.png) top center repeat-x; }

@@ -105,6 +105,8 @@
         <li><a href="/.ferrox/design/docs/aup">Acceptable Upload Policy</a></li>
     </ul>
     <p> All artwork is copyrighted to the respective owner.  All rights reserved unless otherwise specified. </p>
+    <p> Icons belong to <a href="http://www.pinvoke.com/">Yusuke Kamiyamane</a>
+        and are licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC-A 3.0</a>. </p>
     <div id="stats">
 <%
     total_time = c.time_elapsed()

@@ -151,8 +151,8 @@
         % endif
     </div>
     <ul class="tab-bar">
-        % for title, image, route in ('Profile',         'profile',     dict(controller='user', action='profile')), \
-                                     ('Recent Activity', 'recent',      dict(controller='user', action='view')), \
+        % for title, image, route in ('Dash',            'recent',      dict(controller='user', action='view')), \
+                                     ('Profile',         'profile',     dict(controller='user', action='profile')), \
                                      ('Commissions',     'commissions', dict(controller='user', action='commissions')), \
                                      ('Journal',         'journal',     dict(controller='journal', action='index')), \
                                      ('Gallery',         'gallery',     dict(controller='gallery', action='index')):
@@ -162,7 +162,7 @@
                c.route['action'] == route['action']:
                 class_ = 'you-are-here'
             elif c.route['controller'] == route['controller'] and \
-                 c.route['controller'] == 'gallery':
+                 c.route['controller'] in ('gallery', 'journal'):
                 class_ = 'you-are-here'
             else:
                 class_ = ''

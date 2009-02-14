@@ -90,9 +90,8 @@ class JournalController(BaseController):
         
         journal_q = model.Session.query(model.JournalEntry) \
                          .filter_by(status = 'normal') \
-                         .join('message') \
-                         .filter(model.Message.time >= earliest) \
-                         .filter(model.Message.time < latest)
+                         .filter(model.JournalEntry.time >= earliest) \
+                         .filter(model.JournalEntry.time < latest)
         if c.page_owner and not watchstream:
             journal_q = journal_q.filter_by(user_id = c.page_owner.id)
 
@@ -112,7 +111,7 @@ class JournalController(BaseController):
                 c.error_title = "No journals found. User '%s' isn't watching anyone."%c.page_owner.display_name
                 return render('/error.mako')
 
-        journal_q = journal_q.order_by(model.Message.time.desc())
+        journal_q = journal_q.order_by(model.JournalEntry.time.desc())
         c.journals = journal_q.limit(max_per_page).offset(pageno * max_per_page).all()
         num_journals = journal_q.count()
         
@@ -191,14 +190,13 @@ class JournalController(BaseController):
         journal_entry = model.JournalEntry(
             user=c.auth_user,
             title=form_data['title'],
-            content=''
+            content=form_data['content']
         )
         if form_data['avatar_id']:
             av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()
             journal_entry.avatar = av
         else:
             journal_entry.avatar = None
-        journal_entry.update_content(form_data['content'])
         model.Session.save(journal_entry)
         model.Session.commit()
 

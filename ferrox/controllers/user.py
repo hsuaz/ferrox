@@ -72,9 +72,8 @@ class UserController(BaseController):
 
         c.recent_journals = model.Session.query(model.JournalEntry) \
                             .filter_by(status='normal') \
-                            .join('message') \
                             .filter_by(user_id=c.user.id) \
-                            .order_by(model.Message.time.desc()) \
+                            .order_by(model.JournalEntry.time.desc()) \
                             .limit(10) \
                             .all()
         return render('user/view.mako')

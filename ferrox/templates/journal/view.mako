@@ -2,9 +2,9 @@
 <%namespace name="comments" file="/comments/lib.mako"/>
 <%inherit file="/base.mako" />
 
-<p>${h.link_to("&laquo; All of %s's entries" % c.journal_entry.user.display_name, h.url_for(controller='journal', action='index', username=c.journal_entry.user.username))}</p>
+${lib.user_linkbar(c.journal_entry.user)}
+
 <div class="basic-box">
-    <h2> ${h.image_tag('/images/icons/h2-journal.png', '')} ${c.journal_entry.user.display_name}'s Journal </h2>
     ${lib.journal_entry(c.journal_entry, False)}
 
     ${c.misc}

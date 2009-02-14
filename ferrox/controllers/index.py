@@ -15,8 +15,7 @@ class IndexController(BaseController):
         """Main site index page."""
         c.news = model.Session.query(model.News) \
                       .filter_by(is_deleted=False) \
-                      .join('message') \
-                      .order_by(model.Message.time.desc()) \
+                      .order_by(model.News.time.desc()) \
                       .limit(5)
 
         c.recent_submissions = find_submissions(page_size=12)[0]

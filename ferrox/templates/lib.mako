@@ -150,29 +150,27 @@
         ${h.link_to("%s Send note" % h.image_tag('/images/icons/link-user-note.png', ''), h.url_for(controller='notes', action='write', username=c.auth_user.username, recipient=user.username), class_='button')}
         % endif
     </div>
-    <div id="user-header-status">${user.role.name} since <span class="TODO">Aug 15, 2006</span></div>
-    <div id="user-header-stats">
-        <dl class="reversed TODO">
-            <dt>pageviews</dt>
-            <dd>unknown</dd>
-            <dt>submissions</dt>
-            <dd>dunno</dd>
-            <dt>journals</dt>
-            <dd>shrug</dd>
-        </dl>
-        ${h.link_to('More stats...', h.url_for(controller='user', action='stats', username=user.username), class_='TODO')}
-    </div>
-    <div id="user-header-blurb" class="TODO">Short user status blurb; "taking commissions" or "on vacation" or whatever, plain text only</div>
-    <div id="user-header-admin" class="TODO">Admin note, I suppose</div>
     <ul class="tab-bar">
-        % for title, image, route in ('Profile',         'profile',     dict(controller='user', action='profile')), \
-                                     ('Recent Activity', 'recent',      dict(controller='user', action='view')), \
+        % for title, image, route in ('Dash',            'recent',      dict(controller='user', action='view')), \
+                                     ('Profile',         'profile',     dict(controller='user', action='profile')), \
                                      ('Commissions',     'commissions', dict(controller='user', action='commissions')), \
                                      ('Journal',         'journal',     dict(controller='journal', action='index')), \
                                      ('Gallery',         'gallery',     dict(controller='gallery', action='index')):
-        <li>${h.link_to("%s %s" % (h.image_tag('/images/icons/link-user-%s.png' % image, ''), title), h.url_for(username=user.username, **route))}</li>
+        <%
+            # XXX this might be too magical
+            if c.route['controller'] == route['controller'] and \
+               c.route['action'] == route['action']:
+                class_ = 'you-are-here'
+            elif c.route['controller'] == route['controller'] and \
+                 c.route['controller'] in ('gallery', 'journal'):
+                class_ = 'you-are-here'
+            else:
+                class_ = ''
+        %>
+        <li>${h.link_to("%s %s" % (h.image_tag('/images/icons/link-user-%s.png' % image, ''), title), h.url_for(username=user.username, **route), class_=class_)}</li>
         % endfor
     </ul>
+    <div class="sub-bar-thing"> more stuff here yeah</div>
 </div>
 </%def>
 
@@ -188,19 +186,18 @@
 <%def name="thumbnail_grid(submissions)">
 % if submissions:
 <ul class="thumbnail-grid">
+<!-- comment to remove intervening whitespace
     % for submission in submissions:
-    <li id="sub${submission.id}">
-        <div class="popup">
-            Description: ${submission.message.content}<br>
-            Date: ${h.format_time(submission.time)}
-        </div>
+    --><li id="sub${submission.id}">
+        <a href="${h.url_for(controller='gallery', action='view', id=submission.id, username=submission.primary_artist.username)}">
         % if submission.thumbnail:
-        <div class="thumbnail">${h.link_to(h.image_tag(h.url_for(controller='gallery', action='file', filename=submission.thumbnail.mogile_key), submission.title), h.url_for(controller='gallery', action='view', id=submission.id, username=submission.primary_artist.username ))}</div>
+        <span class="thumbnail">${h.image_tag(h.url_for(controller='gallery', action='file', filename=submission.thumbnail.mogile_key), submission.title)}</span>
         % endif
-        <div class="title">${h.link_to(submission.title, h.url_for(controller='gallery', action='view', id=submission.id, username=submission.primary_artist.username))}</div>
-        by ${h.link_to(submission.primary_artist.display_name, h.url_for(controller='gallery', action='index', username=submission.primary_artist.username))}
-    </li>
+        <span class="title">${submission.title}</span>
+        </a>
+    </li><!--
     % endfor
+-->
 </ul>
 % else:
 <p> No submissions to list. </p>

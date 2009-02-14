@@ -11,6 +11,12 @@ Session = scoped_session(sessionmaker())
 metadata = MetaData()
 BaseTable = declarative_base(metadata=metadata)
 
+# XXX stopgap until bbcode is actually implemented and all use of these can be
+# changed
+BaseTable.content_short = property(lambda self: self.content)
+BaseTable.content_parsed = property(lambda self: self.content)
+BaseTable.content_plain = property(lambda self: self.content)
+
 def connect(engine):
     Session.configure(autoflush=True, autocommit=False, bind=engine)
 

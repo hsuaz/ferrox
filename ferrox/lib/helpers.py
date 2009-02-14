@@ -3,7 +3,6 @@
 Consists of functions to typically be used within templates, but also
 available to Controllers. This module is available to both as 'h'.
 """
-#from webhelpers.rails.wrapped import *
 from webhelpers.util import html_escape
 from webhelpers.html import *
 from routes import url_for, redirect_to, request_config
@@ -21,10 +20,11 @@ def javascript_include_tag(src):
     return HTML.tag('script', src=src, type="text/javascript")
     
 def link_to(text, url, **kwargs):
-    print "h.link_to() is depricated. Use h.HTML.a() instead."
-    print "Syntax: h.HTML.a(herf='url://example.com/', *content, **attrs)"
-    print "*content can be strings and/or h.HTML.tag()s. Strings will be escaped."
-    return '[[[h.link_to() depricated]]]'
+    raise RuntimeError("""
+h.link_to() is depricated. Use h.HTML.a() instead.
+Syntax: h.HTML.a(herf='url://example.com/', *content, **attrs)
+*content can be strings and/or h.HTML.tag()s. Strings will be escaped.
+""")
 
 def normalize_newlines(string):
     """Adjust all line endings to be the Linux line break, \\x0a."""

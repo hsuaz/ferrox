@@ -21,7 +21,7 @@
 <p>
     % for link in c.paging_links:
         % if link[0] == 'submit':
-            ${h.link_to(link[1], h.url_for(controller='admin', action='ip', page=link[1]))}
+            ${h.HTML.a(link[1], href=h.url_for(controller='admin', action='ip', page=link[1]))}
         % else:
             ${link[1]}
         % endif

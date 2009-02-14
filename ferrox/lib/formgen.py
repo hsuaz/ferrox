@@ -6,9 +6,16 @@ Originally stolen and stripped down from the Pylons webhelpers module.
 
 import formencode
 import re
-from webhelpers.rails.urls import confirm_javascript_function
-from webhelpers.rails.tags import *
+#from webhelpers.rails.urls import confirm_javascript_function
+#from webhelpers.rails.tags import *
+from webhelpers.html import *
 from webhelpers.util import html_escape
+
+def content_tag(tag, c, *args, **kwargs):
+    return HTML.tag(tag, c=c, *args, **kwargs)
+    
+def tag(tag, *args, **kwargs):
+    return HTML.tag(tag, *args, **kwargs)
 
 # TODO: groups, i.e. checkboxen, radio buttons, and selects
 # TODO: defaults for radio buttons and selects
@@ -52,17 +59,13 @@ class FormGenerator(object):
             with name _method is added to simulate the verb over POST.
 
         """
-        if multipart:
-            options["enctype"] = "multipart/form-data"
 
         if callable(url):
             url = url()
         else:
             url = html_escape(url)
 
-        options['method'] = method
-        options["action"] = url
-        return tag("form", True, **options)
+        return tags.form(url, method, multipart, **options)
 
     def end(self):
         """
@@ -227,7 +230,8 @@ class FormGenerator(object):
             onclick = options.get('onclick', '')
             if onclick.strip() and not onclick.rstrip().endswith(';'):
                 onclick += ';'
-            options['onclick'] = "%sreturn %s;" % (onclick, confirm_javascript_function(confirm))
+            #options['onclick'] = "%sreturn %s;" % (onclick, confirm_javascript_function(confirm))
+            options['onclick'] = onclick
 
         if name:
             options['name_'] = name
@@ -237,7 +241,9 @@ class FormGenerator(object):
 
         o = {'type': 'submit'}
         o.update(options)
-        return content_tag('button', value, **o)
+        #return content_tag('button', value, **o)
+        return HTML.input(value=value, **o)
+        
         
 
 __all__ = ['FormGenerator']

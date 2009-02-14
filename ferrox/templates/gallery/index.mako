@@ -41,7 +41,7 @@
     % endif
 
     % if c.is_mine:
-    <p class="admin"> ${h.link_to('Submit Art', h.url_for(controller='gallery', action='submit', username=c.auth_user.username))} </p>
+    <p class="admin"> ${h.HTML.a('Submit Art', href=h.url_for(controller='gallery', action='submit', username=c.auth_user.username))} </p>
     % endif
 
     ${lib.thumbnail_grid(c.submissions)}

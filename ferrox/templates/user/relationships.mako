@@ -4,7 +4,7 @@
 ${lib.user_linkbar(c.user)}
 
 <ul class="inline admin">
-    <li>${h.link_to('Add or remove relationships', h.url_for(controller='user_settings', action='relationships', username=c.user.username))}</li>
+    <li>${h.HTML.a('Add or remove relationships', href=h.url_for(controller='user_settings', action='relationships', username=c.user.username))}</li>
 </ul>
 
 <table class="standard-table relationships">

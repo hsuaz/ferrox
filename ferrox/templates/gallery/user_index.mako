@@ -9,13 +9,13 @@
     % endif
 
     % if c.is_mine:
-    <p class="admin"> ${h.link_to('Submit Art', h.url_for(controller='gallery', action='submit', username=c.page_owner.username))} </p>
+    <p class="admin"> ${h.HTML.a('Submit Art', href=h.url_for(controller='gallery', action='submit', username=c.page_owner.username))} </p>
     % endif
     % if c.submissions:
         % for item in c.submissions:
         <div class="submission">
             <div class="submission_header">
-                <div class="submission_title">${h.link_to(item['title'], h.url_for(controller='gallery', action='view', id=item['id'], username=item['username']))}</div>
+                <div class="submission_title">${h.HTML.a(item['title'], href=h.url_for(controller='gallery', action='view', id=item['id'], username=item['username']))}</div>
                 <div class="submission_date">Date: ${h.format_time(item['date'])}</div>
             </div>
             <div class="submission_info">

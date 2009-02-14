@@ -6,7 +6,7 @@
     <h2>News Archive</h2>
     % if c.auth_user.can('news.manage'):
     <ul class="mini-linkbar">
-        <li class="admin">${h.link_to("%s Post News" % h.image_tag('/images/icons/document-new.png', ''), h.url_for(controller='news', action='post'))}</li>
+        <li class="admin">${h.HTML.a(h.image_tag('/images/icons/document-new.png', ''), ' Post news', href=h.url_for(controller='news', action='post'))}</li>
     </ul>
     % endif
     ${lib.news_entry(c.news, False)}

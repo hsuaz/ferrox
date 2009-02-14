@@ -20,7 +20,7 @@ ${single_comment(comment, post_url)}
     else:
         comment_title = '<span class="notitle">(no subject)</span>'
 %>
-            ${h.link_to(comment_title, h.url_for(controller='comments', action='view', post_url=post_url, id=comment.id))}</li>
+            ${h.HTML.a(comment_title, href=h.url_for(controller='comments', action='view', post_url=post_url, id=comment.id))}</li>
         </div>
         <div class="date">${h.format_time(comment.time)}</div>
     </div>
@@ -28,9 +28,9 @@ ${single_comment(comment, post_url)}
         ${comment.content_parsed}
     </div>
     <ul class="inline actions">
-        <li>${h.link_to("%s Reply" % h.image_tag('/images/icons/link-reply.png', ''), h.url_for(controller='comments', action='reply', post_url=post_url, id=comment.id), class_='button')}</li>
+        <li>${h.HTML.a(h.image_tag('/images/icons/link-reply.png', ''), ' Reply', href=h.url_for(controller='comments', action='reply', post_url=post_url, id=comment.id), class_='button')}</li>
         % if comment.get_parent():
-        <li>${h.link_to("%s Parent" % h.image_tag('/images/icons/link-parent.png', ''), h.url_for(controller='comments', action='view', post_url=post_url, id=comment.get_parent().id), class_='button')}</li>
+        <li>${h.HTML.a(h.image_tag('/images/icons/link-parent.png', ''), ' Parent', h.url_for(controller='comments', action='view', post_url=post_url, id=comment.get_parent().id), class_='button')}</li>
         % endif
     </ul>
 </div>

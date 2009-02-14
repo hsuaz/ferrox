@@ -7,7 +7,7 @@ Originally stolen and stripped down from the Pylons webhelpers module.
 import formencode
 import re
 from webhelpers.rails.urls import confirm_javascript_function
-from webhelpers.railsz.tags import *
+from webhelpers.rails.tags import *
 from webhelpers.util import html_escape
 
 # TODO: groups, i.e. checkboxen, radio buttons, and selects

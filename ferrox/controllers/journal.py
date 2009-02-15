@@ -60,7 +60,7 @@ class JournalController(BaseController):
             try:
                 c.page_owner = user_q.filter_by(username = username).one()
             except sqlalchemy.exceptions.InvalidRequestError:
-                c.error_text = "User %s not found." % h.escape_once(username)
+                c.error_text = "User %s not found." % h.html_escape(username)
                 c.error_title = 'User not found'
                 abort(404)
         else:
@@ -240,7 +240,7 @@ class JournalController(BaseController):
         journal_entry = get_journal(id)
         self.is_my_journal(journal_entry, True)
 
-        #form_data['content'] = h.escape_once(form_data['content'])
+        #form_data['content'] = h.html_escape(form_data['content'])
         # -- update journal in database --
         if journal_entry.title != form_data['title'] or \
            journal_entry.content != form_data['content']:

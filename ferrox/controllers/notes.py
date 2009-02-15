@@ -149,8 +149,8 @@ class NotesController(BaseController):
         note = model.Note(
             sender = c.auth_user,
             recipient = recipient,
-            title = h.escape_once(form_data['subject']),
-            content = h.escape_once(form_data['content']),
+            title = h.html_escape(form_data['subject']),
+            content = h.html_escape(form_data['content']),
             original_note_id = original_note_id,
         )
         model.Session.save(note)

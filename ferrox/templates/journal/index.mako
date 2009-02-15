@@ -69,7 +69,7 @@
 
 <%def name="title()">
     % if c.page_owner == 'search':
-    Search Results for &quot;${h.escape_once(c.search_terms['query_main'])}&quot;
+    Search Results for &quot;${h.html_escape(c.search_terms['query_main'])}&quot;
     % elif not c.page_owner:
     Site-wide Journals
     % else:

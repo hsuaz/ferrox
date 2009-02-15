@@ -402,8 +402,8 @@ class GalleryController(BaseController):
         model.Session.save(editlog_entry)
         submission.editlog.update(editlog_entry)
 
-        #form_data['description'] = h.escape_once(form_data['description'])
-        submission.title = h.escape_once(form_data['title'])
+        #form_data['description'] = h.html_escape(form_data['description'])
+        submission.title = h.html_escape(form_data['title'])
         submission.content = form_data['description']
         if form_data['fullfile']:
             submission.set_file(form_data['fullfile'])

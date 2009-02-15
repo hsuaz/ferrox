@@ -39,26 +39,26 @@ class User(TagBase):
         return ''
         
         
-parser = BBcodeParser(sanitizer=h.escape_once)
+parser = BBcodeParser(sanitizer=h.html_escape)
 parser.tag_handlers['b'] = Bold()
 parser.tag_handlers['i'] = Italic()
 parser.tag_handlers['u'] = Underline()
 parser.tag_handlers['s'] = Strike()
 parser.tag_handlers['quote'] = Quote()
-parser.tag_handlers['url'] = URL(h.escape_once)
+parser.tag_handlers['url'] = URL(h.html_escape)
 parser.tag_handlers['code'] = Code()
 parser.tag_handlers['user'] = User()
 parser.tag_handlers['icon'] = parser.tag_handlers['user']
 
-parser_long = BBcodeParser(sanitizer=h.escape_once) # for use with [cut] tags
+parser_long = BBcodeParser(sanitizer=h.html_escape) # for use with [cut] tags
 parser_long.tag_handlers.update(parser.tag_handlers)
 parser_long.tag_handlers['cut'] = Cut()
 
-parser_short = BBcodeParser(sanitizer=h.escape_once) # for use with [cut] tags
+parser_short = BBcodeParser(sanitizer=h.html_escape) # for use with [cut] tags
 parser_short.tag_handlers.update(parser.tag_handlers)
 parser_short.tag_handlers['cut'] = Cut(False)
 
-parser_plaintext = BBcodeParser(sanitizer=h.escape_once)
+parser_plaintext = BBcodeParser(sanitizer=h.html_escape)
 parser_plaintext.tag_handlers['b'] = \
     parser_plaintext.tag_handlers['i'] = \
     parser_plaintext.tag_handlers['u'] = \

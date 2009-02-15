@@ -35,7 +35,7 @@ class AdminController(BaseController):
                 c.error_msgs.append(
                     "This account (%s) still needs to be verified. " \
                     "Please check the email address provided for the " \
-                    "verification code." % h.escape_once(username)
+                    "verification code." % h.html_escape(username)
                     )
                 c.form.defaults['username'] = username
                 return render('/login.mako')
@@ -50,7 +50,7 @@ class AdminController(BaseController):
         else:
             c.error_msgs.append(
                 "Either there is no such account '%s', or the provided " \
-                "password was incorrect." % h.escape_once(username)
+                "password was incorrect." % h.html_escape(username)
                 )
             c.form.defaults['username'] = username
             return render('/login.mako')

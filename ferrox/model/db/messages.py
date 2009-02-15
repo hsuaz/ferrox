@@ -185,7 +185,7 @@ class JournalEntry(BaseTable):
         return "Journal entry titled %s" % self.title
     
     def update_content (self, content):
-        self.content = h.escape_once(content)
+        self.content = h.html_escape(content)
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
         self.content_plain = bbcode.parser_plaintext.parse(content)

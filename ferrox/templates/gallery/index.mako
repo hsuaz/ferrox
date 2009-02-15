@@ -4,7 +4,7 @@
 <div class="basic-box FINISHME">
     <h2>${title()}
     % if c.page_owner == 'search' and c.search_terms['query_tags'] != None:
-    (With tags: ${h.escape_once(c.search_terms['query_tags'])})
+    (With tags: ${h.html_escape(c.search_terms['query_tags'])})
     % endif
     % if c.paging_links:
         ${c.form.start(h.implicit_url_for(tags=None, commit=None), method='post')}
@@ -51,7 +51,7 @@
 % if c.page_owner == None:
 Browse Artwork
 % elif c.page_owner == 'search':
-Search Results for &quot;${h.escape_once(c.search_terms['query_main'])}&quot;
+Search Results for &quot;${h.html_escape(c.search_terms['query_main'])}&quot;
 % else:
 Browsing Gallery for ${c.page_owner.display_name}
 % endif

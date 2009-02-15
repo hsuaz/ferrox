@@ -43,8 +43,8 @@ class NewsController(BaseController):
             c.form.errors = error.error_dict
             return render('news/post.mako')
 
-        title = h.escape_once(form_data['title'])
-        #content = h.escape_once(form_data['content'])
+        title = h.html_escape(form_data['title'])
+        #content = h.html_escape(form_data['content'])
         content = form_data['content']
         news = model.News(title, content, c.auth_user)
         news.is_anonymous = form_data['is_anonymous']
@@ -74,8 +74,8 @@ class NewsController(BaseController):
             c.form = FormGenerator(form_error=error)
             return render('news/edit.mako')
 
-        title = h.escape_once(form_data['title'])
-        #content = h.escape_once(form_data['content'])
+        title = h.html_escape(form_data['title'])
+        #content = h.html_escape(form_data['content'])
         content = form_data['content']
         if c.item.title != title or c.item.content != content:
             if c.item.editlog == None:

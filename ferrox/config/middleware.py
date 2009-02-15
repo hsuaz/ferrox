@@ -5,9 +5,7 @@ from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool
 
 from pylons import config
-from pylons.error import error_template
-from pylons.middleware import error_mapper, ErrorDocuments, ErrorHandler, \
-    StaticJavascripts
+from pylons.middleware import error_mapper, ErrorDocuments, ErrorHandler
 from pylons.wsgiapp import PylonsApp
 
 from ferrox.config.environment import load_environment
@@ -49,8 +47,7 @@ def make_app(global_conf, full_stack=True, **app_conf):
 
     if asbool(full_stack):
         # Handle Python exceptions
-        app = ErrorHandler(app, global_conf, error_template=error_template,
-                           **config['pylons.errorware'])
+        app = ErrorHandler(app, global_conf, **config['pylons.errorware'])
 
         # Display error documents for 401, 403, 404 status codes (and
         # 500 when debug is disabled)
@@ -60,7 +57,6 @@ def make_app(global_conf, full_stack=True, **app_conf):
     app = RegistryManager(app)
 
     # Static files
-    javascripts_app = StaticJavascripts()
     static_app = StaticURLParser(config['pylons.paths']['static_files'])
-    app = Cascade([static_app, javascripts_app, app])
+    app = Cascade([static_app, app])
     return app

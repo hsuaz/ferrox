@@ -23,7 +23,7 @@
                 author_string = capture(user_link, entry.user)
         %>
         <div class="author">${author_string}</div>
-        <h3>${h.link_to(entry.title, h.url_for(controller='news', action='view', id=entry.id))}</h3>
+        <h3>${h.HTML.a(entry.title, href=h.url_for(controller='news', action='view', id=entry.id))}</h3>
         <div class="date">${h.format_time(entry.time)}</div>
     </div>
     <div class="message">
@@ -36,7 +36,7 @@
     % if c.auth_user.can('admin.auth'):
     ${c.empty_form.start(h.url_for(controller='news', action='edit', id=entry.id), method='post')}
     <ul class="inline admin actions">
-        <li>${h.link_to('%s Edit' % h.image_tag('/images/icons/link-edit.png', ''), h.url_for(controller='news', action='edit', id=entry.id), class_='button admin')}</li>
+        <li>${h.HTML.a(h.image_tag('/images/icons/link-edit.png', ''), ' Edit', href=h.url_for(controller='news', action='edit', id=entry.id), class_='button admin')}</li>
         % if entry.is_deleted:
         <li>${c.empty_form.submit('Undelete')}</li>
         % else:
@@ -48,8 +48,8 @@
 
 <% news_url = h.url_for(controller='news', action='view', id=entry.id) %>
     <ul class="inline actions">
-        <li>${h.link_to('%s View comments' % h.image_tag('/images/icons/link-comments.png', ''), h.url_for(controller='comments', action='view', post_url=news_url), class_='button')}</li>
-        <li>${h.link_to('%s Reply' % h.image_tag('/images/icons/link-reply.png', ''), h.url_for(controller='comments', action='reply', post_url=news_url), class_='button')}</li>
+        <li>${h.HTML.a(h.image_tag('/images/icons/link-comments.png', ''), ' View comments', href=h.url_for(controller='comments', action='view', post_url=news_url), class_='button')}</li>
+        <li>${h.HTML.a(h.image_tag('/images/icons/link-reply.png', ''), ' Reply', href=h.url_for(controller='comments', action='reply', post_url=news_url), class_='button')}</li>
     </ul>
 </div>
 </%def>
@@ -69,12 +69,12 @@
         <div class="author">
             ${user_link(entry.user)}
         </div>
-        <h3>${h.link_to(entry.title, h.url_for(controller='journal', action='view', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id))}</h3>
+        <h3>${h.HTML.a(entry.title, href=h.url_for(controller='journal', action='view', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id))}</h3>
         <div class="date">${h.format_time(entry.time)}</div>
         % if c.auth_user.can('admin.auth'):
         ${c.empty_form.start(h.url_for(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), method='post')}
         <ul class="inline admin actions">
-            <li>${h.link_to("%s Edit" % h.image_tag('/images/icons/link-edit.png', ''), h.url_for(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), class_='button admin')}</li>
+            <li>${h.HTML.a(h.image_tag('/images/icons/link-edit.png', ''), ' Edit', href=h.url_for(controller='journal', action='edit', username=entry.user.username, year=entry.time.year, month=entry.time.month, day=entry.time.day, id=entry.id), class_='button admin')}</li>
             % if entry.status == 'deleted':
             <li>${c.empty_form.submit('Undelete')}</li>
             % else:
@@ -112,8 +112,8 @@
         <div class="date">Date: ${h.format_time(note.time)}</div>
     </div>
     <ul class="micro-linkbar">
-        <li>${h.link_to("%s Reply" % h.image_tag('/images/icons/mail-reply-sender.png', ''), h.url_for(controller='notes', action='reply', username=c.route['username'], id=note.id))}</li>
-        <li>${h.link_to("%s Forward" % h.image_tag('/images/icons/mail-forward.png', ''), h.url_for(controller='notes', action='forward', username=c.route['username'], id=note.id))}</li>
+        <li>${h.HTML.a(h.image_tag('/images/icons/mail-reply-sender.png', ''), ' Reply', href=h.url_for(controller='notes', action='reply', username=c.route['username'], id=note.id))}</li>
+        <li>${h.HTML.a(h.image_tag('/images/icons/mail-forward.png', ''), ' Forward', href=h.url_for(controller='notes', action='forward', username=c.route['username'], id=note.id))}</li>
     </ul>
     <div class="content">
         ${note.content_parsed}
@@ -124,7 +124,7 @@
 <%def name="note_collapsed_entry(note, owner)">
 <div class="entry collapsed">
     <div class="header">
-        <div class="title">${h.link_to(note.title, h.url_for(controller='notes', action='view', username=owner.username, id=note.id), class_='js-expand-note')}</div>
+        <div class="title">${h.HTML.a(note.title, href=h.url_for(controller='notes', action='view', username=owner.username, id=note.id), class_='js-expand-note')}</div>
     </div>
 </div>
 </%def>
@@ -142,12 +142,13 @@
         <span id="user-header-name-handle">${user.role.sigil}${user.display_name}</span>
         <span id="user-header-name-alias" class="TODO">aka..  Eevee?</span>
         % if c.auth_user:
-        ${h.link_to("%s %s %s" % ( \
+        ${h.HTML.a(\
             h.image_tag('/images/icons/rel-friend-off.png', 'Not a friend'), \
             h.image_tag('/images/icons/rel-watching-off.png', 'Not watched'), \
             h.image_tag('/images/icons/rel-blocked-off.png', 'Not blocked'), \
-        ), h.url_for(controller='user', action='relationships_edit', username=c.auth_user.username, other_user=user.username), class_='TODO button')}
-        ${h.link_to("%s Send note" % h.image_tag('/images/icons/link-user-note.png', ''), h.url_for(controller='notes', action='write', username=c.auth_user.username, recipient=user.username), class_='button')}
+            href=h.url_for(controller='user', action='relationships_edit', username=c.auth_user.username, other_user=user.username), \
+            class_='TODO button')}
+        ${h.HTML.a(h.image_tag('/images/icons/link-user-note.png', ''), 'Send note', href=h.url_for(controller='notes', action='write', username=c.auth_user.username, recipient=user.username), class_='button')}
         % endif
     </div>
     <ul class="tab-bar">
@@ -167,7 +168,7 @@
             else:
                 class_ = ''
         %>
-        <li>${h.link_to("%s %s" % (h.image_tag('/images/icons/link-user-%s.png' % image, ''), title), h.url_for(username=user.username, **route), class_=class_)}</li>
+        <li>${h.HTML.a(h.image_tag('/images/icons/link-user-%s.png' % image, ''), title, href=h.url_for(username=user.username, **route), class_=class_)}</li>
         % endfor
     </ul>
     <div class="sub-bar-thing"> more stuff here yeah</div>

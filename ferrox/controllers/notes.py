@@ -1,6 +1,5 @@
 from ferrox.lib.base import *
 from ferrox.lib.formgen import FormGenerator
-import ferrox.lib.paginate as paginate
 from ferrox.model import form
 import webhelpers
 
@@ -43,8 +42,8 @@ class NotesController(BaseController):
 
         page = request.params.get('page', 0)
         note_q = c.page_owner.recent_notes()
-        c.notes_page = paginate.Page(note_q, page_nr=page, items_per_page=20)
-        c.notes_nav = c.notes_page.navigator(link_var='page')
+        c.notes_page = note_q
+        c.notes_nav = "XXX Nav goes here"
         return render('notes/index.mako')
 
     @check_perm('notes.view')

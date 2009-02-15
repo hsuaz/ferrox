@@ -8,7 +8,7 @@ ${lib.user_linkbar(c.user)}
     <h2> Profile </h2>
     <dl class="two-column-list">
         <dt>User</dt>
-        <dd>${h.link_to(c.user.display_name, h.url_for(controller='user', action='view', username=c.user.username))} (${c.user.id})</dd>
+        <dd>${h.HTML.a(c.user.display_name, href=h.url_for(controller='user', action='view', username=c.user.username))} (${c.user.id})</dd>
         % for datum in [u'artist_type', u'bio', u'location', u'interests', \
                         u'occupation', u'age', u'nerd_shell', u'nerd_os', \
                         u'nerd_browser']:

@@ -3,14 +3,28 @@
 Consists of functions to typically be used within templates, but also
 available to Controllers. This module is available to both as 'h'.
 """
-from webhelpers.rails.wrapped import *
-from webhelpers.rails import asset_tag
+from webhelpers.util import html_escape
+from webhelpers.html import *
 from routes import url_for, redirect_to, request_config
 import pylons.config
 
 import os
 import re
 import time
+
+def escape_once(data):
+    print "DEPRICATION WARNING: Replace h.escape_once with h.html_escape"
+    return html_escape(data)
+
+def javascript_include_tag(src):
+    return HTML.tag('script', src=src, type="text/javascript")
+    
+def link_to(text, url, **kwargs):
+    raise RuntimeError("""
+h.link_to() is depricated. Use h.HTML.a() instead.
+Syntax: h.HTML.a(herf='url://example.com/', *content, **attrs)
+*content can be strings and/or h.HTML.tag()s. Strings will be escaped.
+""")
 
 def normalize_newlines(string):
     """Adjust all line endings to be the Linux line break, \\x0a."""
@@ -85,7 +99,8 @@ def image_tag(source, alt=None, size=None, **options):
     Also copies alt into title, if one isn't specified.
     """
 
-    options['src'] = asset_tag.compute_public_path(source, 'images')
+    #options['src'] = asset_tag.compute_public_path(source, 'images')
+    options['src'] = source
 
     if alt == None:
         alt = os.path.splitext(os.path.basename(source))[0].title()
@@ -101,7 +116,7 @@ def image_tag(source, alt=None, size=None, **options):
         if height:
             options['height'] = height
 
-    return tag('img', **options)
+    return HTML.tag('img', **options)
 
 def form(*args, **kwargs):
     raise RuntimeError("Do not use the built-in webhelpers form tags "

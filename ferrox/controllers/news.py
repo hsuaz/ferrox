@@ -1,5 +1,4 @@
 from ferrox.lib.base import *
-import ferrox.lib.paginate as paginate
 from ferrox.lib.formgen import FormGenerator
 from ferrox.model import form
 
@@ -16,8 +15,6 @@ class NewsController(BaseController):
         page = request.params.get(page_link_var, 0)
         c.newsitems = model.Session.query(model.News) \
                            .order_by(model.News.time.desc())
-        #c.newspage = paginate.Page(news_q, page_nr=page, items_per_page=10)
-        #c.newsnav = c.newspage.navigator(link_var=page_link_var)
         return render('news/index.mako')
 
     def view(self, id):

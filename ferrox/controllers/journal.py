@@ -2,7 +2,6 @@ from pylons.decorators.secure import *
 import pylons.config
 
 from ferrox.lib.base import *
-import ferrox.lib.paginate as paginate
 from ferrox.lib import pagination
 from ferrox.lib.formgen import FormGenerator
 

@@ -23,39 +23,39 @@
     
     Year:
     % for x in xrange(2005,c.today.year+1):
-        ${h.link_to(x, h.url_for(year=x, **c.by_date_base))}
+        ${h.HTML.a(x, href=h.url_for(year=x, **c.by_date_base))}
     % endfor
     <br>
     
     % if c.month:
-        Month: ${h.link_to('Last Month',h.url_for(**c.last_month))} 
-        ${h.link_to('Next Month',h.url_for(**c.next_month))} <br>
+        Month: ${h.HTML.a('Last Month', href=h.url_for(**c.last_month))} 
+        ${h.HTML.a('Next Month', href=h.url_for(**c.next_month))} <br>
     % elif c.year:
         Month:
         % for x in xrange(1,13):
-            ${h.link_to(x, h.url_for(year=c.year, month=x, **c.by_date_base))}
+            ${h.HTML.a(x, href=h.url_for(year=c.year, month=x, **c.by_date_base))}
         % endfor
         <br>
     % endif
     
     % if c.day:
-    Day: ${h.link_to('Yesterday',h.url_for(**c.yesterday))} 
-    ${h.link_to('Tomorrow',h.url_for(**c.tomorrow))} <br>
+    Day: ${h.HTML.a('Yesterday', href=h.url_for(**c.yesterday))} 
+    ${h.HTML.a('Tomorrow', href=h.url_for(**c.tomorrow))} <br>
     % elif c.month:
         Day:
         % for x in xrange(1,c.days_this_month+1):
-            ${h.link_to(x, h.url_for(year=c.year, month=c.month, day=x, **c.by_date_base))}
+            ${h.HTML.a(x, href=h.url_for(year=c.year, month=c.month, day=x, **c.by_date_base))}
         % endfor
         <br>
     % endif
     
     % if c.is_mine:
-    <p class="admin">${h.link_to('Post new journal', h.url_for(controller='journal', action='post', username=c.page_owner.username))}</p>
+    <p class="admin">${h.HTML.a('Post new journal', href=h.url_for(controller='journal', action='post', username=c.page_owner.username))}</p>
     % endif
     % if c.journals:
     % for entry in c.journals:
     % if c.title_only:
-    ${h.link_to(entry.title, h.url_for(controller='journal', action='view', year=entry.time.year, month=entry.time.month, day=entry.time.month, id=entry.id, username=entry.user.username))}<br>
+    ${h.HTML.a(entry.title, href=h.url_for(controller='journal', action='view', year=entry.time.year, month=entry.time.month, day=entry.time.month, id=entry.id, username=entry.user.username))}<br>
     % else:
     ${lib.journal_entry(entry, True)}
     % endif

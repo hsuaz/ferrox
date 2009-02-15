@@ -2,7 +2,7 @@
 <%inherit file="base.mako" />
 
 <ul class="mini-linkbar">
-    <li>${h.link_to("%s Write" % h.image_tag('/images/icons/mail-message-new.png', ''), h.url_for(controller='notes', action='write', username=c.route['username']))}</li>
+    <li>${h.HTML.a(h.image_tag('/images/icons/mail-message-new.png', ''), ' Write', href=h.url_for(controller='notes', action='write', username=c.route['username']))}</li>
 </ul>
 
 <div class="basic-box">
@@ -22,7 +22,7 @@
         % endif
         <td> ${h.format_time(note.time)} </td>
         <td> ${lib.user_link(note.sender)} </td>
-        <td> ${h.link_to(note.title, h.url_for(controller='notes', action='view', username=c.page_owner.username, id=note.id))} </td>
+        <td> ${h.HTML.a(note.title, href=h.url_for(controller='notes', action='view', username=c.page_owner.username, id=note.id))} </td>
     </tr>
     % endfor
     </table>

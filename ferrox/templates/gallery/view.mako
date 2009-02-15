@@ -13,7 +13,7 @@ ${lib.user_linkbar(c.submission.primary_artist)}
         % elif (c.submission.type == 'audio'):
         ${h.embed_mp3(h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key, id=None))} (Music Submission)
         % elif (c.submission.type == 'text'):
-        ${h.link_to('Text Submission', h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key))}, Text submission
+        ${h.HTML.a('Text Submission', href=h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key))}, Text submission
         <pre>
         TODO?
         </pre>
@@ -26,9 +26,9 @@ ${lib.user_linkbar(c.submission.primary_artist)}
         <div class="buttons">
         % if c.auth_user:
             % if c.submission in c.auth_user.favorite_submissions:
-                ${h.link_to('Remove from favorites', h.url_for(controller='gallery', action='favorite', id=c.submission.id, username=c.submission.primary_artist.username))}
+                ${h.HTML.a('Remove from favorites', href=h.url_for(controller='gallery', action='favorite', id=c.submission.id, username=c.submission.primary_artist.username))}
             % else:
-                ${h.link_to('Add to favorites', h.url_for(controller='gallery', action='favorite', id=c.submission.id, username=c.submission.primary_artist.username))}
+                ${h.HTML.a('Add to favorites', href=h.url_for(controller='gallery', action='favorite', id=c.submission.id, username=c.submission.primary_artist.username))}
             % endif
         % endif
         </div>

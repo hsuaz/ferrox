@@ -6,9 +6,16 @@ Originally stolen and stripped down from the Pylons webhelpers module.
 
 import formencode
 import re
-from webhelpers.rails.urls import confirm_javascript_function
-from webhelpers.rails.tags import *
+#from webhelpers.rails.urls import confirm_javascript_function
+#from webhelpers.rails.tags import *
+from webhelpers.html import *
 from webhelpers.util import html_escape
+
+def content_tag(tag, c, *args, **kwargs):
+    raise RuntimeError("content_tag() depricated in favor of h.HTML.tag()")
+    
+def tag(tag, *args, **kwargs):
+    raise RuntimeError("tag() depricated in favor of h.HTML.tag()")
 
 # TODO: groups, i.e. checkboxen, radio buttons, and selects
 # TODO: defaults for radio buttons and selects
@@ -27,7 +34,7 @@ class FormGenerator(object):
             self.defaults = dict()
 
     def error(self, text):
-        return content_tag('span', text, class_=self.error_class)
+        return HTML.span(text, class_=self.error_class)
 
     def get_error(self, name):
         if not name in self.errors:
@@ -52,17 +59,13 @@ class FormGenerator(object):
             with name _method is added to simulate the verb over POST.
 
         """
-        if multipart:
-            options["enctype"] = "multipart/form-data"
 
         if callable(url):
             url = url()
         else:
             url = html_escape(url)
 
-        options['method'] = method
-        options["action"] = url
-        return tag("form", True, **options)
+        return tags.form(url, method, multipart, **options)
 
     def end(self):
         """
@@ -87,7 +90,7 @@ class FormGenerator(object):
         o = {'name_': name}
         o.update(options)
 
-        ret = content_tag("select", option_tags, **o)
+        ret = HTML.select(option_tags, **o)
         if show_errors:
             ret += self.get_error(name)
         return ret
@@ -112,7 +115,7 @@ class FormGenerator(object):
         if o['value'] == None and name in self.defaults:
             o['value'] = self.defaults[name]
 
-        ret = tag("input", **o)
+        ret = HTML.input(**o)
         if show_errors:
             ret += self.get_error(name)
         return ret
@@ -171,7 +174,7 @@ class FormGenerator(object):
             else:
                 content = ''
 
-        ret = content_tag("textarea", content, **o)
+        ret = HTML.textarea(content, **o)
         if show_errors:
             ret += self.get_error(name)
         return ret
@@ -189,7 +192,7 @@ class FormGenerator(object):
         if checked:
             o['checked'] = 'checked'
 
-        ret = tag("input", **o)
+        ret = HTML.input(**o)
         if label:
             ret += ' ' + label
         if show_errors:
@@ -209,7 +212,7 @@ class FormGenerator(object):
         if checked:
             html_options["checked"] = "checked"
 
-        ret = tag("input", **html_options)
+        ret = HTML.input(**html_options)
         if show_errors:
             self.get_error(name)
         return ret
@@ -227,7 +230,8 @@ class FormGenerator(object):
             onclick = options.get('onclick', '')
             if onclick.strip() and not onclick.rstrip().endswith(';'):
                 onclick += ';'
-            options['onclick'] = "%sreturn %s;" % (onclick, confirm_javascript_function(confirm))
+            #options['onclick'] = "%sreturn %s;" % (onclick, confirm_javascript_function(confirm))
+            options['onclick'] = onclick
 
         if name:
             options['name_'] = name
@@ -237,7 +241,8 @@ class FormGenerator(object):
 
         o = {'type': 'submit'}
         o.update(options)
-        return content_tag('button', value, **o)
+        return HTML.input(value=value, **o)
+        
         
 
 __all__ = ['FormGenerator']

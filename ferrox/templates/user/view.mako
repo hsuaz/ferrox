@@ -14,7 +14,7 @@ ${lib.user_linkbar(c.user)}
         <h3>${c.recent_submissions[0].title}</h3>
         <p class="timestamp">${h.format_time(c.recent_submissions[0].time)}</p>
         <div class="halfview">${h.HTML.a(h.image_tag(h.url_for(controller='gallery', action='file', filename=c.recent_submissions[0].halfview.mogile_key), c.recent_submissions[0].title), href=h.url_for(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
-        <div class="description">${c.recent_submissions[0].content}</div>
+        <div class="description">${c.recent_submissions[0].get_user_submission(c.user).content}</div>
         <ul class="inline admin">
             <li>${h.HTML.a(h.image_tag('/images/icons/link-edit.png', ''), ' Edit', href=h.url_for(controller='gallery', action='edit', id=c.recent_submissions[0].id, username=c.user.username), class_='button admin')}</li>
         </ul>
@@ -41,7 +41,7 @@ ${lib.user_linkbar(c.user)}
         <h3>${c.recent_submissions[0].title}</h3>
         <p class="timestamp">${h.format_time(c.recent_submissions[0].time)}</p>
         <div class="halfview">${h.HTML.a(h.image_tag(h.url_for(controller='gallery', action='file', filename=c.recent_submissions[0].halfview.mogile_key), c.recent_submissions[0].title), href=h.url_for(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
-        <div class="description">${c.recent_submissions[0].content}</div>
+        <div class="description">${c.recent_submissions[0].get_user_submission(c.user).content}</div>
         <ul class="inline admin">
             <li>${h.HTML.a(h.image_tag('/images/icons/link-edit.png', ''), ' Edit', href=h.url_for(controller='gallery', action='edit', id=c.recent_submissions[0].id, username=c.user.username), class_='button admin')}</li>
         </ul>

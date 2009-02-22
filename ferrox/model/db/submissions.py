@@ -82,18 +82,26 @@ class Submission(BaseTable):
         self.user_submissions.append(user_submission)
 
 
-    def get_derived_by_type (self, type):
+    def get_derived_by_type(self, type):
         for ds in self.derived_submission:
             if ds.derivetype == type:
                 return ds
         return None
 
-    def get_users_by_relationship (self, relationship):
+    def get_users_by_relationship(self, relationship):
         users = []
         for user_submission in self.user_submissions:
             if user_submission.relationship == relationship:
                 users.append(user_submission)
         return users
+
+    def get_user_submission(self, user):
+        """Returns the UserSubmission object belonging to a specific user."""
+        for us in self.user_submissions:
+            print us.user, user
+            if us.user == user:
+                return us
+        return None
 
     def to_xapian(self):
         if search_enabled:

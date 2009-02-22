@@ -68,9 +68,7 @@ class Submission(BaseTable):
         self.file_blob = None
         self.old_mogile_key = None
         self.mogile_key = None
-        self.message = Message(title=title, content=description, user=uploader)
-        if avatar and avatar.user == uploader:
-            self.avatar = avatar
+        self.title = title
         self.discussion = Discussion()
 
         user_submission = UserSubmission(
@@ -78,7 +76,10 @@ class Submission(BaseTable):
             relationship='artist',
             ownership_status='primary',
             review_status='normal',
+            content=description,
         )
+        if avatar and avatar.user == uploader:
+            user_submission.avatar = avatar
         self.user_submissions.append(user_submission)
 
 
@@ -126,8 +127,9 @@ class Submission(BaseTable):
             # description
             words = []
             # FIX ME: needs bbcode parser. should be plain text representation.
-            for word in self.content.lower().split(' '):
-                words.append(rmex.sub('', word[0:20]))
+            for us in self.user_submissions:
+                for word in us.content.lower().split(' '):
+                    words.append(rmex.sub('', word[0:20]))
             words = set(words)
             for word in words:
                 xapian_document.add_term("P%s" % word)
@@ -413,13 +415,6 @@ class UserSubmission(BaseTable):
     content             = Column(types.UnicodeText, nullable=False)
     avatar              = relation(UserAvatar)
     editlog             = relation(EditLog)
-
-    def __init__(self, user, relationship, ownership_status, review_status):
-        self.user = user
-        self.relationship = relationship
-        self.ownership_status = ownership_status
-        self.review_status = review_status
-        self.avatar_id = None
 
 class Tag(BaseTable):
     __tablename__       = 'tags'

@@ -206,7 +206,7 @@ class User(BaseTable):
         """
 
         # Avoid import recursion
-        from ferrox.model.db.messages import Message, Note
+        from ferrox.model.db.messages import Note
 
         # Group-wise maximum, as inspired by the MySQL manual.  The only
         # difference between this and the example in the manual is that I add
@@ -218,23 +218,19 @@ class User(BaseTable):
         # my name on it.                                             -- Eevee
 
         older_note_a = Note.__table__.alias()
-        older_message_a = Message.__table__.alias()
 
-        newer_note_join = Note.__table__.join(Message.__table__)
-        older_note_join = older_note_a.join(older_message_a)
-
-        note_q = Session.query(Note).select_from(newer_note_join
-            .outerjoin(older_note_join,
+        note_q = Session.query(Note).select_from(Note.__table__
+            .outerjoin(older_note_a,
                 sql.and_(
                     Note.original_note_id == older_note_a.c.original_note_id,
                     Note.to_user_id == older_note_a.c.to_user_id,
-                    Message.time < older_message_a.c.time
+                    Note.time < older_note_a.c.time
                     )
                 )
             ) \
             .filter(older_note_a.c.id == None) \
             .filter(Note.to_user_id == self.id) \
-            .order_by(Message.time.desc())
+            .order_by(Note.time.desc())
 
         return note_q
 

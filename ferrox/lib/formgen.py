@@ -7,8 +7,7 @@ Originally stolen and stripped down from the Pylons webhelpers module.
 import formencode
 import re
 #from webhelpers.rails.urls import confirm_javascript_function
-#from webhelpers.rails.tags import *
-from webhelpers.html import *
+from webhelpers.html import tags, HTML
 from webhelpers.util import html_escape
 
 def content_tag(tag, c, *args, **kwargs):

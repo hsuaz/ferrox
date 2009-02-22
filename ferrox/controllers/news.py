@@ -44,9 +44,8 @@ class NewsController(BaseController):
             return render('news/post.mako')
 
         title = h.html_escape(form_data['title'])
-        #content = h.html_escape(form_data['content'])
         content = form_data['content']
-        news = model.News(title, content, c.auth_user)
+        news = model.News(title=title, content=content, user=c.auth_user)
         news.is_anonymous = form_data['is_anonymous']
         if form_data['avatar_id']:
             av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()

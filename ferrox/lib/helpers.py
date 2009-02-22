@@ -98,7 +98,6 @@ def image_tag(source, alt=None, size=None, **options):
     Also copies alt into title, if one isn't specified.
     """
 
-    #options['src'] = asset_tag.compute_public_path(source, 'images')
     options['src'] = source
 
     if alt == None:

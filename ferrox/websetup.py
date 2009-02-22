@@ -310,9 +310,4 @@ def setup_config(command, filename, section, vars):
     except ImportError:
         print 'WARNING: mimetypes will be detected by filename instead of magic. In FreeBSD, install "devel/py-magic" from ports.'
 
-    try:
-        import xapian
-        xapian.WritableDatabase('submission.xapian', xapian.DB_CREATE_OR_OVERWRITE)
-        xapian.WritableDatabase('journal.xapian', xapian.DB_CREATE_OR_OVERWRITE)
-    except ImportError:
-        print 'WARNING: Unable to load Xapian bindings. Search disabled.'
+

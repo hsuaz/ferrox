@@ -20,12 +20,6 @@ import time, random
 import math
 import calendar
 
-search_enabled = True
-try:
-    import xapian
-except ImportError:
-    search_enabled = False
-
 log = logging.getLogger(__name__)
 
 # This tag is only valid or useful for journals and news.
@@ -200,11 +194,6 @@ class JournalController(BaseController):
         model.Session.save(journal_entry)
         model.Session.commit()
 
-        if search_enabled:
-            xapian_database = xapian.WritableDatabase('journal.xapian', xapian.DB_OPEN)
-            xapian_document = journal_entry.to_xapian()
-            xapian_database.add_document(xapian_document)
-
         h.redirect_to(h.url_for(controller='journal', action='view',
                                 username=c.auth_user.username,
                                 id=journal_entry.id,
@@ -261,12 +250,6 @@ class JournalController(BaseController):
            
         model.Session.commit()
 
-        if search_enabled and hasattr(journal_entry, 'content_plain'):
-            xapian_database = xapian.WritableDatabase('journal.xapian', xapian.DB_OPEN)
-            xapian_document = journal_entry.to_xapian()
-            xapian_database.replace_document("I%d" % journal_entry.id, xapian_document)
-
-        #h.redirect_to(h.url_for(controller='journal', action='view', id=journal_entry.id, username=journal_entry.user.display_name))
         h.redirect_to(h.url_for(controller='journal', action='view', username=c.route['username'], id=c.route['id'], year=c.route['year'], month=c.route['month'], day=c.route['day']))
 
     @check_perm('journal.post')
@@ -299,10 +282,6 @@ class JournalController(BaseController):
             # -- update journal in database --
             journal_entry.status = 'deleted'
             model.Session.commit()
-
-            if search_enabled:
-                xapian_database = WritableDatabase('journal.xapian', DB_OPEN)
-                xapian_database.delete_document("I%d" % journal_entry.id)
 
             h.redirect_to(h.url_for(controller='journal', action='index',
                                     username=journal_entry.user.username))

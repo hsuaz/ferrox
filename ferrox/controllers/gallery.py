@@ -20,14 +20,6 @@ from tempfile import TemporaryFile
 import time
 import math
 
-search_enabled = True
-try:
-    import xapian
-    if xapian.major_version() < 1:
-        search_enabled = False
-except ImportError:
-    search_enabled = False
-
 import pylons
 if pylons.config['mogilefs.tracker'] == 'FAKE':
     from ferrox.lib import fakemogilefs as mogilefs
@@ -455,11 +447,6 @@ class GalleryController(BaseController):
         model.Session.commit()
         submission.commit_mogile()
 
-        if search_enabled:
-            xapian_database = xapian.WritableDatabase('submission.xapian', xapian.DB_OPEN)
-            xapian_document = submission.to_xapian()
-            xapian_database.replace_document("I%d"%submission.id,xapian_document)
-
         h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id, username=submission.primary_artist.username))
 
 
@@ -486,9 +473,6 @@ class GalleryController(BaseController):
                 user_submission.review_status = 'deleted'
             model.Session.commit()
 
-            if search_enabled:
-                xapian_database = xapian.WritableDatabase('submission.xapian',xapian.DB_OPEN)
-                xapian_database.delete_document("I%d"%submission.id)
             h.redirect_to(h.url_for(controller='gallery', action='index', username=redirect_username, id=None))
         else:
             h.redirect_to(h.url_for(controller='gallery', action='view', id=submission.id, username=redirect_username))
@@ -528,12 +512,6 @@ class GalleryController(BaseController):
 
         model.Session.commit()
         submission.commit_mogile()
-
-        # update xapian
-        if search_enabled:
-            xapian_database = xapian.WritableDatabase('submission.xapian', xapian.DB_OPEN)
-            xapian_document = submission.to_xapian()
-            xapian_database.add_document(xapian_document)
 
         h.redirect_to(h.url_for(controller='gallery', action='view',
                                 id=submission.id,

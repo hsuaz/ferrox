@@ -4,14 +4,6 @@ from ferrox.model.db.users import *
 from sqlalchemy.orm import object_mapper, relation
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
-search_enabled = True
-try:
-    import xapian
-    if xapian.major_version() < 1:
-        search_enabled = False
-except ImportError:
-    search_enabled = False
-
 
 class EditLog(BaseTable):
     __tablename__       = 'editlog'
@@ -189,33 +181,6 @@ class JournalEntry(BaseTable):
         self.content_parsed = bbcode.parser_long.parse(content)
         self.content_short = bbcode.parser_short.parse(content)
         self.content_plain = bbcode.parser_plaintext.parse(content)
-
-    def to_xapian(self):
-        if not search_enabled:
-            return None
-
-        xapian_document = xapian.Document()
-        xapian_document.add_term("I%d" % self.id)
-        xapian_document.add_value(0, "I%d" % self.id)
-        xapian_document.add_term("A%s" % self.user.id)
-
-        # Title
-        words = []
-        rmex = re.compile(r'[^a-z0-9-]')
-        for word in self.title.lower().split(' '):
-            words.append(rmex.sub('', word[0:20]))
-        for word in set(words):
-            xapian_document.add_term("T%s" % word)
-
-        # Description
-        words = []
-        # FIX ME: needs bbcode parser. should be plain text representation.
-        for word in self.content_plain.lower().split(' '):
-            words.append(rmex.sub('', word[0:20]))
-        for word in set(words):
-            xapian_document.add_term("P%s" % word)
-
-        return xapian_document
 
 class Note(BaseTable):
     __tablename__       = 'notes'

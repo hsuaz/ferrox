@@ -33,14 +33,6 @@ if pylons.config['mogilefs.tracker'] == 'FAKE':
 else:
     from ferrox.lib import mogilefs
 
-search_enabled = True
-try:
-    import xapian
-    if xapian.major_version() < 1:
-        search_enabled = False
-except ImportError:
-    search_enabled = False
-
 
 # Database specific types
 submission_type_type = Enum('image', 'video', 'audio', 'text')
@@ -103,40 +95,6 @@ class Submission(BaseTable):
             if us.user == user:
                 return us
         return None
-
-    def to_xapian(self):
-        if search_enabled:
-            xapian_document = xapian.Document()
-            xapian_document.add_term("I%s" % self.id)
-            xapian_document.add_value(0, "I%s" % self.id)
-            xapian_document.add_term("A%s" % self.primary_artist.id)
-
-            # tags
-            for tag in self.tags:
-                xapian_document.add_term("G%s" % tag.text)
-
-            # title
-            words = []
-            rmex = re.compile(r'[^a-z0-9-]')
-            for word in self.title.lower().split(' '):
-                words.append(rmex.sub('', word[0:20]))
-            words = set(words)
-            for word in words:
-                xapian_document.add_term("T%s" % word)
-
-            # description
-            words = []
-            # FIX ME: needs bbcode parser. should be plain text representation.
-            for us in self.user_submissions:
-                for word in us.content.lower().split(' '):
-                    words.append(rmex.sub('', word[0:20]))
-            words = set(words)
-            for word in words:
-                xapian_document.add_term("P%s" % word)
-
-            return xapian_document
-        else:
-            return None
 
     def hash(self, s):
         """Returns the MD5 hash of a single string."""

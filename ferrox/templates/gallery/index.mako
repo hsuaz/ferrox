@@ -1,8 +1,9 @@
 <%namespace name="lib" file="/lib.mako"/>
-<%inherit file="base.mako" />
+<%inherit file="base.mako"/>
 
 <div class="basic-box FINISHME">
-    <h2>${title()}
+    <h2>${h.image_tag('/images/icons/h2-gallery.png', '')} Gallery</h2>
+
     % if c.page_owner == 'search' and c.search_terms['query_tags'] != None:
     (With tags: ${h.html_escape(c.search_terms['query_tags'])})
     % endif
@@ -30,14 +31,11 @@
         % endfor
         ${c.form.end()}
     % endif
-    </h2>
     % if c.page_owner != 'search':
-    <h2>
         ${c.form.start(h.implicit_url_for(tags=None, commit=None), method='post')}
         Return ${c.form.text_field('perpage', size=5)} results per page.<br>
-        Filter: ${c.form.text_field('tags')}${c.form.submit('Filter')}
+        Filter: ${c.form.text_field('tags', class_='tag-filter')}${c.form.submit('Filter')}
         ${c.form.end()}
-    </h2>
     % endif
 
     % if c.is_mine:

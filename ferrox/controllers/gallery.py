@@ -160,7 +160,7 @@ def find_submissions(joined_tables=None,
 
 class GalleryController(BaseController):
 
-    def _generic_gallery(self,joined_tables=model.Submission.__table__,
+    def _generic_gallery(self, joined_tables=None,
                          where_clauses=[]):
         """Generic backend for viewing a gallery.
         
@@ -169,6 +169,11 @@ class GalleryController(BaseController):
         
         Pass a pre-joined `joined_tables` sqla.sql object to filter further
         before this method does its mucking around."""
+
+        # Some defaults
+        if not joined_tables:
+            joined_tables = model.Submission.__table__ \
+                            .join(model.UserSubmission.__table__)
 
         # Form validation
         validator = model.form.TagFilterForm()

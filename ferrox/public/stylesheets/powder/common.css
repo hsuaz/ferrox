@@ -33,9 +33,9 @@ ul.inline li + li:before { content: ' • '; font-weight: bold; }
 /* Forms */
 form.inline, form.inline p { display: inline; }
 
-input[type='text'] { margin: 0; padding: 0.125em 0.25em; border: 1px solid #404040; background: white; -moz-border-radius: 0.5em; }
+input[type='text'] { margin: 0; padding: 0.125em 0.25em; border: 1px solid #446bb5; background: white; -moz-border-radius: 0.33em; }
 button,
-input[type='submit'] { margin: 0; line-height: 100%; padding: 0.17em; cursor: pointer; border: 1px solid #2c4387; -moz-border-radius: 0.33em; font-size: 1em; background: url(/images/bits/button-background.png) #a1b1e1 center center repeat; }
+input[type='submit'] { margin: 0; line-height: 100%; padding: 0.17em; cursor: pointer; border: 1px solid #446bb5; -moz-border-radius: 0.33em; font-size: 1em; background: url(/images/bits/button-background.png) #a1b1e1 center center repeat; }
 button:hover,
 input[type='submit']:hover { background-color: #e1a1a1; border-color: #872c2c; }
 button:active,
@@ -155,6 +155,7 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 
 
 /* * * Gallery * * */
+input.tag-filter { padding-left: 24px; background-image: url(/images/icons/textbox-tags.png); background-position: 0.25em center; background-repeat: no-repeat; }
 
 /* Single row of featured/recent submissions */
 /* CONFIG: gallery.thumbnail_size */

@@ -96,7 +96,7 @@ class CommentsController(BaseController):
             discussion = post.discussion,
             parent = c.parent,
         )
-        model.Session.save(comment)
+        model.Session.add(comment)
         model.Session.commit()
 
         h.redirect_to(h.url_for(controller='comments', action='view',

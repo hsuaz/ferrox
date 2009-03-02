@@ -20,6 +20,7 @@ import cStringIO
 from binascii import crc32
 
 from ferrox.model.db import BaseTable, DateTime, Enum, IP, Session
+from ferrox.model.db.discussions import *
 
 # -- This stuff is tied to class UserAvatar --
 if pylons.config['mogilefs.tracker'] == 'FAKE':
@@ -103,6 +104,8 @@ class User(BaseTable):
     password        = Column(types.String(256), nullable=False)
     display_name    = Column(types.Unicode(32), nullable=False, unique=True)
     role_id         = Column(types.Integer, ForeignKey('roles.id'), default=1)
+    # Used for shouts
+    discussion_id   = Column(types.Integer, ForeignKey('discussions.id'), nullable=False)
 
     @classmethod
     def get_by_name(cls, username, eagerloads=[]):
@@ -120,6 +123,7 @@ class User(BaseTable):
         self.set_password(password)
         self.display_name = username
         self.role = Role.get_by_name('Unverified')
+        self.discussion = Discussion()
 
     def set_password(self, password):
         algo_name = 'sha256'
@@ -359,6 +363,7 @@ User.active_bans        = relation(UserBan, primaryjoin=and_(User.id == UserBan.
 User.avatars            = relation(UserAvatar, backref='user')
 User.bans               = relation(UserBan, backref='user', primaryjoin=(User.id == UserBan.user_id))
 User.default_avatar     = relation(UserAvatar, primaryjoin=and_(User.id == UserAvatar.user_id, UserAvatar.default == True), uselist=False, lazy=False)
+User.discussion         = relation(Discussion, backref='user')
 #User.journals           = relation(JournalEntry, backref='user')
 User.role               = relation(Role)
 #User.submissions        = relation(UserSubmission, backref='user')

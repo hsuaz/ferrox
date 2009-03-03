@@ -6,24 +6,24 @@ except ImportError:
     from setuptools import setup, find_packages
 
 setup(
-    name='furaffinity',
+    name='ferrox',
     version="",
     #description='',
     #author='',
     #author_email='',
     #url='',
-    install_requires=["Pylons>=0.9.6", "SQLAlchemy>=0.4.5", 'chardet'],
+    install_requires=["Pylons>=0.9.7rc4", "SQLAlchemy>=0.5,>=0.5.0rc4", 'chardet'],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
     test_suite='nose.collector',
-    package_data={'furaffinity': ['i18n/*/LC_MESSAGES/*.mo']},
-    #message_extractors = {'furaffinity': [
+    package_data={'ferrox': ['i18n/*/LC_MESSAGES/*.mo']},
+    #message_extractors = {'ferrox': [
     #        ('**.py', 'python', None),
     #        ('templates/**.mako', 'mako', None),
     #        ('public/**', 'ignore', None)]},
     entry_points="""
     [paste.app_factory]
-    main = furaffinity.config.middleware:make_app
+    main = ferrox.config.middleware:make_app
 
     [paste.app_install]
     main = pylons.util:PylonsInstaller

@@ -1,15 +1,31 @@
 # Usual temp garbage
-*.pyc
+*.py[oc]
 *~
 .*.swp
 my*.ini
 Thumbs.db
+.DS_Store
 
 # Build and data stuff
-*.egg-info
-/furaffinity*.db
+*.egg-info/
+/*.db
 /*.xapian
 /fakemogile
 /build
 /data
 /dist
+
+# Virtualenv
+/.[Pp]ython
+/bin/
+/lib/
+/include/
+
+# Buildout
+/.installed.cfg
+/cache/
+/develop-eggs/
+/eggs/
+/parts/
+# Mysql runtime (under buildout)
+/var/

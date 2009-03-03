@@ -1,0 +1,98 @@
+div.tree-widget-node
+{
+	clear: both;
+	margin: 0;
+	-moz-user-focus: normal;
+	user-focus: normal;
+}
+
+div.tree-widget-item-state
+{
+	float: left;
+	width: 16px;
+	height: 18px;
+	margin: 0;
+	-moz-user-select: none;
+	user-select: normal;
+}
+
+div.tree-widget-item-state a, div.tree-widget-item-state a:hover
+{
+	display: block;
+	width: 16px;
+	height: 18px;
+	cursor: default;
+	text-decoration: none;
+}
+
+div.tree-widget-item-state a.collapsed
+{
+	background: url('/images/tree_widget/arrows.gif') 0 0 no-repeat;
+}
+
+div.tree-widget-item-state a.collapsed:hover
+{
+	background: url('/images/tree_widget/arrows.gif') -32px 0 no-repeat;
+}
+
+div.tree-widget-item-state a.expanded
+{
+	background: url('/images/tree_widget/arrows.gif') -16px 0 no-repeat;
+}
+
+div.tree-widget-item-state a.expanded:hover
+{
+	background: url('/images/tree_widget/arrows.gif') -48px 0 no-repeat;
+}
+
+div.tree-widget-item-icon
+{
+	float: left;
+	width: 16px;
+	height: 18px;
+	margin: 0;
+	-moz-user-select: none;
+	user-select: normal;
+}
+
+div.tree-widget-item-icon.loading
+{
+	background: url('/images/tree_widget/loading.gif') left top no-repeat;
+}
+
+div.icon-collapsed
+{
+	background: url('/images/tree_widget/folder.gif') left top no-repeat;
+}
+
+div.icon-expanded
+{
+	background: url('/images/tree_widget/folder-open.gif') left top no-repeat;
+}
+
+div.tree-widget-leaf
+{
+	background: url('/images/tree_widget/leaf.gif') left top no-repeat;
+}
+
+div.tree-widget-text
+{
+	float: left;
+	clear: right;
+	padding: 2px;
+	margin: 0;
+	cursor: pointer;
+}
+
+div.tree-widget-node-children
+{
+	clear: both;
+	margin: 0;
+	padding-left: 16px;
+	background: transparent;
+}
+
+div.tree-widget-selected
+{
+	background: #eef;
+}

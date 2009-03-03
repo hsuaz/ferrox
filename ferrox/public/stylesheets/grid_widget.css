@@ -1,0 +1,189 @@
+div.data-grid-view
+{
+	position: relative;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border: 1px outset #aaa;
+	border-bottom: 1px solid #eee;
+}
+
+div.data-grid-view table
+{
+	padding: 0;
+	width: 100%;
+	background-color: #fefefe;
+	border-collapse: collapse;
+}
+
+div.data-grid-view table tr
+{
+	border: 0px none transparent;
+	padding: 0;
+	background-color: inherit;
+}
+
+div.data-grid-view table tr.hilite
+{
+	background-color: #fff4f4;
+}
+
+div.data-grid-view table th
+{
+	background-color: #f5f5f5;
+	cursor: pointer;
+}
+
+div.data-grid-view table th.asc
+{
+	background: #f5f5f5 url(/images/grid_widget/sort_asc.gif) right bottom no-repeat;
+}
+
+div.data-grid-view table th.desc
+{
+	background: #f5f5f5 url(/images/grid_widget/sort_desc.gif) right bottom no-repeat;
+}
+
+
+
+div.data-grid-view table td, div.data-grid-view table th
+{
+	border: 1px solid #eee;
+	padding: 1px;
+}
+
+div.data-grid-pager
+{
+	position: relative;
+	vertical-align: middle;
+	white-space: nowrap;
+	background-color: #f5f5f5;
+	font-size: 9px;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border: 1px outset #aaa;
+	border-top: 0 none transparent;
+}
+
+div.data-grid-pager span
+{
+	height: 16px;
+	background-color: #f5f5f5;
+	padding: 0;
+}
+
+div.data-grid-pager input
+{
+	vertical-align: middle;
+	height: 16px;
+	padding: 0;
+	margin: 1px;
+}
+
+div.data-grid-pager div.page-link
+{
+	display: inline;
+	background-color: #f5f5f5;
+	margin: 2px;
+	border: 0px none transparent;
+	padding: 0;
+	width: 16px;
+	height: 16px;
+}
+
+div.data-grid-pager div.hot-page-link
+{
+	margin: 1px;
+	border: 1px outset #eee;
+	width: 18px;
+	height: 18px;
+}
+
+div.data-grid-pager div.page-link button
+{
+	margin: 0px;
+	border: 0px none transparent;
+	padding: 0;
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+}
+
+div.data-grid-pager div.page-link button.page-first
+{
+	background: url(/images/grid_widget/page-first.gif) no-repeat;
+}
+
+div.data-grid-pager div.page-link button.page-first-disabled
+{
+	background: url(/images/grid_widget/page-first-disabled.gif) no-repeat;
+}
+
+
+div.data-grid-pager div.page-link button.page-last
+{
+	background: url(/images/grid_widget/page-last.gif) no-repeat;
+}
+
+div.data-grid-pager div.page-link button.page-last-disabled
+{
+	background: url(/images/grid_widget/page-last-disabled.gif) no-repeat;
+}
+
+div.data-grid-pager div.page-link button.page-prev
+{
+	background: url(/images/grid_widget/page-prev.gif) no-repeat;
+}
+
+div.data-grid-pager div.page-link button.page-prev-disabled
+{
+	background: url(/images/grid_widget/page-prev-disabled.gif) no-repeat;
+}
+
+div.data-grid-pager div.page-link button.page-next
+{
+	background: url(/images/grid_widget/page-next.gif) no-repeat;
+}
+
+div.data-grid-pager div.page-link button.page-next-disabled
+{
+	background: url(/images/grid_widget/page-next-disabled.gif) no-repeat;
+}
+
+div.data-grid-pager div.page-link button.data-grid-refresh
+{
+	background: url(/images/grid_widget/refresh.gif) no-repeat;
+}
+
+div.data-grid-pager div.page-link button.data-grid-refresh-disabled
+{
+	background: url(/images/grid_widget/grid-loading.gif) no-repeat;
+}
+
+
+div.data-grid-pager div.page-text-link
+{
+	display: inline;
+	background-color: #f5f5f5;
+	margin: 2px;
+	border: 0px none transparent;
+	padding: 0;
+	height: 16px;
+}
+
+div.data-grid-pager div.hot-page-text-link
+{
+	margin: 1px;
+	border: 1px outset #eee;
+	height: 18px;
+}
+
+div.data-grid-pager div.page-text-link button
+{
+	margin: 0px;
+	border: 0px none transparent;
+	padding: 0;
+	height: 16px;
+	cursor: pointer;
+}

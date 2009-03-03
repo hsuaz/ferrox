@@ -20,12 +20,12 @@ BaseTable.content_plain = property(lambda self: self.content)
 def connect(engine):
     Session.configure(autoflush=True, autocommit=False, bind=engine)
 
-    # MySQL has a real enum type
     if engine.url.drivername == 'mysql':
+        # MySQL has a real enum type.
+        # However, it sucks and requires us to quote everything even though
+        # every enum value has to be a string.  So let's fix that:
         global Enum
         Enum = MSEnum
-        # However, it sucks and requires us to quote everything even though
-        # every enum value has to be a string.  So let's fix that
 
         old_init = Enum.__init__
         def new_init(self, *enums, **kwargs):

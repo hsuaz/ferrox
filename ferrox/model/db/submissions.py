@@ -440,7 +440,7 @@ class Tag(BaseTable):
                 if create:
                     # Need to create tag
                     tag = Tag(text=text)
-                    Session.save(tag)
+                    Session.add(tag)
                 else:
                     return None
             Tag.cache_by_text[text] = tag

@@ -252,7 +252,7 @@ class User(BaseTable):
         rel.target = other_user
         rel.relationship = relationship
         try:
-            Session.save(rel)
+            Session.add(rel)
         except IntegrityError:
             pass
         return

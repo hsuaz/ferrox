@@ -28,7 +28,7 @@ def setup_config(command, filename, section, vars):
         ('gallery', 'max depth', model.Config.Regexp, u'^\d*$', u'10', u'Maximal depth of user gallery', False),
     )
     for group, name, type, pattern, value, description, encrypted in config_fields:
-        model.Session.save(
+        model.Session.add(
             model.Config(group, name, type, pattern, value, description, encrypted)
             )
                                                             
@@ -98,7 +98,7 @@ def setup_config(command, filename, section, vars):
     permissions = {}
     for p in avalable_permissions:
         permissions[p[0]] = model.Permission(*p)
-        model.Session.save(permissions[p[0]])
+        model.Session.add(permissions[p[0]])
 
     '''
     .permissions.append(permissions['admin.auth'])
@@ -133,7 +133,7 @@ def setup_config(command, filename, section, vars):
     null_role = model.Role('Null', 
                            'User who can\'t do anything. Literally.')
     null_role.sigil = ' '
-    model.Session.save(null_role)
+    model.Session.add(null_role)
 
     guest_role = model.Role('Guest',
                             'Non-registered Users')
@@ -142,7 +142,7 @@ def setup_config(command, filename, section, vars):
     guest_role.permissions.append(permissions['index.register'])
     guest_role.permissions.append(permissions['journal.view'])
     guest_role.permissions.append(permissions['search.do'])
-    model.Session.save(guest_role)
+    model.Session.add(guest_role)
     
 
     unverified_role = model.Role('Unverified',
@@ -153,7 +153,7 @@ def setup_config(command, filename, section, vars):
     unverified_role.permissions.append(permissions['notes.view'])
     unverified_role.permissions.append(permissions['notes.write'])
     unverified_role.permissions.append(permissions['search.do'])
-    model.Session.save(unverified_role)
+    model.Session.add(unverified_role)
 
     banned_role = model.Role('Banned', 'User who has been banned.')
     banned_role.sigil = '-'
@@ -163,7 +163,7 @@ def setup_config(command, filename, section, vars):
     banned_role.permissions.append(permissions['journal.view'])
     banned_role.permissions.append(permissions['notes.view'])
     banned_role.permissions.append(permissions['search.do'])
-    model.Session.save(banned_role)
+    model.Session.add(banned_role)
 
     normal_role = model.Role('Member', 'Regular user')
     normal_role.sigil = '~'
@@ -180,7 +180,7 @@ def setup_config(command, filename, section, vars):
     normal_role.permissions.append(permissions['user_settings.avatars'])
     normal_role.permissions.append(permissions['user_settings.relationships'])
     normal_role.permissions.append(permissions['user_settings.manage'])
-    model.Session.save(normal_role)
+    model.Session.add(normal_role)
 
     admin_role = model.Role('Administrator', 'Site Administrator')
     admin_role.sigil = '@'
@@ -209,7 +209,7 @@ def setup_config(command, filename, section, vars):
     admin_role.permissions.append(permissions['user_settings.avatars'])
     admin_role.permissions.append(permissions['user_settings.relationships'])
     admin_role.permissions.append(permissions['user_settings.manage'])
-    model.Session.save(admin_role)
+    model.Session.add(admin_role)
 
     sysadmin_role = model.Role('Bastard Operator From Hell', 'Users that have access to the underlying software.')
     sysadmin_role.sigil = '^'
@@ -240,7 +240,7 @@ def setup_config(command, filename, section, vars):
     sysadmin_role.permissions.append(permissions['user_settings.avatars'])
     sysadmin_role.permissions.append(permissions['user_settings.relationships'])
     sysadmin_role.permissions.append(permissions['user_settings.manage'])
-    model.Session.save(sysadmin_role)
+    model.Session.add(sysadmin_role)
 
     print "    ...user metadata"
     metadata_fields = (
@@ -263,7 +263,7 @@ def setup_config(command, filename, section, vars):
         (u'fav_food',       u'Favorite food'),
     )
     for key, description in metadata_fields:
-        model.Session.save(
+        model.Session.add(
             model.UserMetadataField(key=key, description=description)
             )
 
@@ -277,30 +277,30 @@ def setup_config(command, filename, section, vars):
     u.display_name = u'Fender'
     u.email = u'nobody@example.net'
     u.role = admin_role
-    model.Session.save(u)
+    model.Session.add(u)
 
     u = model.User(u'eevee', 'pretzel')
     u.display_name = u'Eevee'
     u.email = u'ferrox@veekun.com'
     u.role = admin_role
-    model.Session.save(u)
+    model.Session.add(u)
 
     p = model.UserPreference(u, 'style_sheet', 'sufficiently-advanced')
-    model.Session.save(p)
+    model.Session.add(p)
     p = model.UserPreference(u, 'style_color', 'light')
-    model.Session.save(p)
+    model.Session.add(p)
 
     u = model.User(u'net-cat', 'asdf')
     u.display_name = u'net-cat'
     u.email = u'nobody@example.net'
     u.role = admin_role
-    model.Session.save(u)
+    model.Session.add(u)
 
     u = model.User(u'luser', 'asdf')
     u.display_name = u'Luser'
     u.email = u'nobody@example.net'
     u.role = normal_role
-    model.Session.save(u)
+    model.Session.add(u)
 
     print "Done."
     model.Session.commit()

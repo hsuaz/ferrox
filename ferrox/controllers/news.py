@@ -51,7 +51,7 @@ class NewsController(BaseController):
         if form_data['avatar_id']:
             av = model.Session.query(model.UserAvatar).filter_by(id = form_data['avatar_id']).filter_by(user_id = c.auth_user.id).one()
             news.avatar = av
-        model.Session.save(news)
+        model.Session.add(news)
         model.Session.commit()
         h.redirect_to('/news')
 
@@ -102,7 +102,7 @@ class NewsController(BaseController):
         news_q = model.Session.query(model.News)
         item = news_q.filter_by(id=c.id).one()
         item.is_deleted = True
-        model.Session.save(item)
+        model.Session.add(item)
         model.Session.commit()
         h.redirect_to('/news')
 
@@ -112,6 +112,6 @@ class NewsController(BaseController):
         news_q = model.Session.query(model.News)
         item = news_q.filter_by(id=c.id).one()
         item.is_deleted = False
-        model.Session.save(item)
+        model.Session.add(item)
         model.Session.commit()
         h.redirect_to('/news')

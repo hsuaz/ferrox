@@ -197,7 +197,7 @@ class JournalController(BaseController):
             journal_entry.avatar = av
         else:
             journal_entry.avatar = None
-        model.Session.save(journal_entry)
+        model.Session.add(journal_entry)
         model.Session.commit()
 
         if search_enabled:

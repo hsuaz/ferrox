@@ -89,7 +89,7 @@ class AdminController(BaseController):
         user_ban.reason = form_data['reason']
         user_ban.admin_message = form_data['notes']
         user_ban.expired = False
-        model.Session.save(user_ban)
+        model.Session.add(user_ban)
 
         form_data['username'].bans.append(user_ban)
         form_data['username'].role = form_data['role_id']
@@ -140,7 +140,7 @@ class AdminController(BaseController):
                     pattern = request.params.get('old_pattern')
                     comment = request.params.get('old_comment')
                 model.Config.delete(section, name)
-                model.Session.save(model.Config(section, name, type, pattern, value, comment, 0))
+                model.Session.add(model.Config(section, name, type, pattern, value, comment, 0))
                 model.Session.commit()
                 return "done"
             else:

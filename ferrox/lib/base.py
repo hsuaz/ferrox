@@ -103,7 +103,7 @@ class BaseController(WSGIController):
             if last_ip_record and last_ip_record.ip == ip:
                 last_ip_record.end_time = datetime.now()
             else:
-                model.Session.save(model.IPLogEntry(user_id, ip))
+                model.Session.add(model.IPLogEntry(user_id, ip))
 
             # Check to see if there are any active bans to expire
             if c.auth_user.active_bans:

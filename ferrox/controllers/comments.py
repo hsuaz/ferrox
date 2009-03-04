@@ -91,8 +91,8 @@ class CommentsController(BaseController):
 
         comment = model.Comment(
             user = c.auth_user,
-            title = h.html_escape(form_data['title']),
-            content = h.html_escape(form_data['content']),
+            title = form_data['title'],
+            content = form_data['content'],
             discussion = post.discussion,
             parent = c.parent,
         )

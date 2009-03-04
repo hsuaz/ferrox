@@ -153,7 +153,7 @@ class NotesController(BaseController):
             content = h.html_escape(form_data['content']),
             original_note_id = original_note_id,
         )
-        model.Session.save(note)
+        model.Session.add(note)
         model.Session.commit()
         if note.original_note_id == None:
             note.original_note_id = note.id  # TODO perf

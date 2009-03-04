@@ -387,7 +387,7 @@ class GalleryController(BaseController):
 
         if not submission.editlog:
             editlog = model.EditLog(c.auth_user)
-            model.Session.save(editlog)
+            model.Session.add(editlog)
             submission.editlog = editlog
 
         editlog_entry = model.EditLogEntry(
@@ -396,7 +396,7 @@ class GalleryController(BaseController):
             previous_title = submission.title,
             previous_text = submission.content,
         )
-        model.Session.save(editlog_entry)
+        model.Session.add(editlog_entry)
         submission.editlog.update(editlog_entry)
 
         #form_data['description'] = h.html_escape(form_data['description'])
@@ -441,7 +441,7 @@ class GalleryController(BaseController):
         for tag in form_data['tags']:
             tag_object = tagging.get_by_text(tag, True)
             submission.tags.append(tag_object)
-        #model.Session.save(submission)
+        #model.Session.add(submission)
         '''
 
         model.Session.commit()

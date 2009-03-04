@@ -191,7 +191,7 @@ class JournalController(BaseController):
             journal_entry.avatar = av
         else:
             journal_entry.avatar = None
-        model.Session.save(journal_entry)
+        model.Session.add(journal_entry)
         model.Session.commit()
 
         h.redirect_to(h.url_for(controller='journal', action='view',

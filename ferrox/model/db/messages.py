@@ -1,5 +1,6 @@
 from ferrox.model.db import BaseTable, DateTime, Enum, IP, Session
 from ferrox.model.db.users import *
+from ferrox.model.db.discussions import *
 
 from sqlalchemy.orm import object_mapper, relation
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -40,19 +41,6 @@ class EditLogEntry(BaseTable):
         self.previous_title = previous_title
         self.previous_text = previous_text
         self.previous_text_parsed = previous_text_parsed
-
-class Discussion(BaseTable):
-    __tablename__       = 'discussions'
-    id                  = Column(types.Integer, primary_key=True)
-    comment_count       = Column(types.Integer, nullable=False, default=0)
-
-    def get_parent_post(self):
-        """Returns this discussion's associated news/journal/submission."""
-        if not hasattr(self, '_parent_post'):
-            self._parent_post = (self.news
-                            or self.journal_entry
-                            or self.submission)[0]
-        return self._parent_post
 
 class Comment(BaseTable):
     __tablename__       = 'comments'

@@ -1,4 +1,5 @@
 <%namespace name="lib" file="/lib.mako"/>
+<%namespace name="comments" file="/comments/lib.mako"/>
 <%inherit file="base.mako"/>
 
 ${lib.user_linkbar(c.user)}
@@ -93,6 +94,7 @@ ${lib.user_linkbar(c.user)}
 <div class="basic-box TODO">
     <h2>${h.image_tag('/images/icons/h2-shouts.png', '')} Shouts</h2>
 
+    ${comments.comment_tree(c.user.discussion.comments, h.url_for(**c.route))}
     <ul class="shoutbox">
         <li>
             <div class="avatar">${h.image_tag(h.get_avatar_url(), '')}</div>

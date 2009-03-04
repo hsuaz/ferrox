@@ -18,7 +18,7 @@ ${single_comment(comment, post_url)}
     if comment.title:
         comment_title = comment.title
     else:
-        comment_title = '<span class="notitle">(no subject)</span>'
+        comment_title = h.literal('<span class="notitle">(no subject)</span>')
 %>
             ${h.HTML.a(comment_title, href=h.url_for(controller='comments', action='view', post_url=post_url, id=comment.id))}</li>
         </div>
@@ -30,7 +30,7 @@ ${single_comment(comment, post_url)}
     <ul class="inline actions">
         <li>${h.HTML.a(h.image_tag('/images/icons/link-reply.png', ''), ' Reply', href=h.url_for(controller='comments', action='reply', post_url=post_url, id=comment.id), class_='button')}</li>
         % if comment.get_parent():
-        <li>${h.HTML.a(h.image_tag('/images/icons/link-parent.png', ''), ' Parent', h.url_for(controller='comments', action='view', post_url=post_url, id=comment.get_parent().id), class_='button')}</li>
+        <li>${h.HTML.a(h.image_tag('/images/icons/link-parent.png', ''), ' Parent', href=h.url_for(controller='comments', action='view', post_url=post_url, id=comment.get_parent().id), class_='button')}</li>
         % endif
     </ul>
 </div>

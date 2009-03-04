@@ -7,6 +7,7 @@ from webhelpers.util import html_escape
 from webhelpers.html import *
 from routes import url_for, redirect_to, request_config
 import pylons.config
+from pylons import tmpl_context as c
 
 import os
 import re
@@ -18,7 +19,7 @@ def javascript_include_tag(src):
 def link_to(text, url, **kwargs):
     raise RuntimeError("""
 h.link_to() is depricated. Use h.HTML.a() instead.
-Syntax: h.HTML.a(herf='url://example.com/', *content, **attrs)
+Syntax: h.HTML.a(href='url://example.com/', *content, **attrs)
 *content can be strings and/or h.HTML.tag()s. Strings will be escaped.
 """)
 
@@ -191,18 +192,9 @@ def objects_to_option_tags(objects, default=None, id_attr='id', name_attr='name'
     return output
 
 def implicit_url_for(**kwargs):
-    config = request_config()
-    environ = getattr(config, 'environ', {})
-    controller = None
-    action = None
-    if 'pylons.routes_dict' in environ:
-        controller = environ['pylons.routes_dict']['controller']
-        action = environ['pylons.routes_dict']['action']
-    if not kwargs.has_key('controller'):
-        kwargs['controller'] = controller
-    if not kwargs.has_key('action'):
-        kwargs['action'] = action
-    if kwargs['controller'] == None or kwargs['action'] == None:
-        raise RuntimeError("Try create url without 'controller' or 'action'")
-    return url_for(**kwargs)
+    new_route = c.route.copy()
+    new_route.update(kwargs)
 
+    if new_route['controller'] == None or new_route['action'] == None:
+        raise RuntimeError("Try create url without 'controller' or 'action'")
+    return url_for(**new_route)

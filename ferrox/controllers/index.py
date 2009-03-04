@@ -47,7 +47,7 @@ class IndexController(BaseController):
         password = form_data['password']
         user = model.User(username, password)
         user.email = email
-        model.Session.save(user)
+        model.Session.add(user)
         model.Session.commit()
         hasher = hashlib.md5()
         hasher.update(user.username)

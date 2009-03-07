@@ -141,13 +141,28 @@
     <div id="user-header-name">
         <span id="user-header-name-handle">${user.role.sigil}${user.display_name}</span>
         <span id="user-header-name-alias" class="TODO">aka..  Eevee?</span>
+    </div>
+    <div id="user-header-actions">
         % if c.auth_user:
-        ${h.HTML.a(\
-            h.image_tag('/images/icons/rel-friend-off.png', 'Not a friend'), \
-            h.image_tag('/images/icons/rel-watching-off.png', 'Not watched'), \
-            h.image_tag('/images/icons/rel-blocked-off.png', 'Not blocked'), \
-            href=h.url_for(controller='user', action='relationships_edit', username=c.auth_user.username, other_user=user.username), \
-            class_='TODO button')}
+        <%
+            # Add one icon per relationship to the link
+            relationship_images = []
+            for rel in ('friend', 'watching_submissions', 'watching_journals',
+                        'blocked'):
+                if c.auth_user.get_relationship(user, rel):
+                    img = h.image_tag('/images/icons/rel-%s.png' % rel, rel)
+                else:
+                    img = h.image_tag('/images/icons/rel-%s-off.png' % rel,
+                                      'not %s' % rel)
+                relationship_images.append(img)
+
+            # Lastly, text label
+            relationship_images.append('Relationships')
+        %>
+        ${h.HTML.a(
+            href=h.url_for(controller='user_settings', action='relationships', username=c.auth_user.username, other_user=user.username), \
+            class_='TODO button',
+            *relationship_images)}
         ${h.HTML.a(h.image_tag('/images/icons/link-user-note.png', ''), 'Send note', href=h.url_for(controller='notes', action='write', username=c.auth_user.username, recipient=user.username), class_='button')}
         % endif
     </div>

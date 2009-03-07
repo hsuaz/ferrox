@@ -10,7 +10,7 @@ a:visited { color: #424e71; }
 a:hover { color: black; }
 a:active { color: #2c873a; }
 
-a img { vertical-align: middle; }
+a img { vertical-align: middle; margin-right: 0.25em; }
 
 /* Common classes */
 .small { font-size: 0.8em; }
@@ -61,6 +61,18 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 .basic-box .timestamp { font-style: italic; }
 .basic-box h3 + .timestamp { margin-top: -0.5em; }
 .basic-box > p { margin: 0.5em 0; }
+
+/* Standard tables */
+table.bare-table,
+table.standard-table { width: 100%; }
+table.bare-table th,
+table.bare-table td,
+table.standard-table th,
+table.standard-table td { padding: 0.1em 0.33em; vertical-align: middle; }
+col.status-icon { width: 16px; }
+col.time { width: 12em; }
+col.user { width: 12em; }
+col.subject { width: auto; }
 
 /* Row of tabs */
 .tab-bar { overflow: auto /* float wrapping */; }
@@ -141,16 +153,8 @@ input.search { padding-left: 24px; background-image: url(/images/icons/textbox-s
 #user-header #user-header-name { margin: 0.22em; }
 #user-header #user-header-name #user-header-name-handle { font-size: 1.5em; font-weight: bold; }
 #user-header #user-header-name .button { margin-left: 1em; vertical-align: bottom; }
-#user-header #user-header-status { margin: 0.33em; font-style: italic; }
-#user-header #user-header-actions { float: right; clear: right; outline: 1px solid black; }
-#user-header #user-header-actions li { float: left; }
-#user-header #user-header-blurb { margin: 0.33em; color: #446bb5; }
-#user-header #user-header-admin { margin: 0.33em; color: #b5446b; }
+#user-header #user-header-actions { float: right; }
 #user-header .tab-bar { position: relative; z-index: 1; padding-left: 0.5em; margin-left: -100px; margin-top: 0.75em; }
-#user-header-stats { position: absolute; top: 0; right: 0; text-align: right; }
-#user-header-stats dl { width: 12em; margin-bottom: 0.5em; }
-#user-header-stats dl dt { float: right; clear: right; width: 6em; margin-left: 0.25em; text-align: left; }
-#user-header-stats dl dd { text-align: right; }
 
 
 
@@ -171,6 +175,15 @@ input.tag-filter { padding-left: 24px; background-image: url(/images/icons/textb
 .submission-content { margin: 1em 0; text-align: center; }
 
 .basic-box .metadata { float: right; width: 30%; padding: 1em; background: #c0d2ed; -moz-border-radius: 1em; }
+
+
+/* * * User settings * * */
+
+/* User relationship table */
+table.relationships { width: auto; }
+table.relationships thead th { width: 8em; vertical-align: bottom; text-align: center; font-weight: bold; }
+table.relationships tbody td { font-size: 1.2em; line-height: 1em; text-align: center; }
+table.relationships tr.addition { background-color: #c2d2eb; }
 
 
 /* * * User pages * * */

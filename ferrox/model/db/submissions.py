@@ -91,7 +91,6 @@ class Submission(BaseTable):
     def get_user_submission(self, user):
         """Returns the UserSubmission object belonging to a specific user."""
         for us in self.user_submissions:
-            print us.user, user
             if us.user == user:
                 return us
         return None

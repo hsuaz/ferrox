@@ -125,16 +125,17 @@ class UserSettingsController(BaseController):
             c.other_user = model.User.get_by_name(
                 request.params['other_user']
                 )
+        # other_user indicates we are trying to add somebody
         if c.other_user:
             if c.other_user in c.relationship_order:
                 c.relationship_order.remove(c.other_user)
             c.relationship_order.insert(0, c.other_user)
 
-            c.relationships[c.other_user] = []
+            # If they asked for a relationship, make sure it defaults to on
             if 'relationship' in request.params:
-                c.relationships[c.other_user].append(
-                    request.params['relationship']
-                    )
+                rel = request.params['relationship']
+                if rel not in c.relationships[c.other_user]:
+                    c.relationships[c.other_user].append(rel)
 
         return render('user/settings/relationships.mako')
 

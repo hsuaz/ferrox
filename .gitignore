@@ -11,7 +11,7 @@ Thumbs.db
 /*.db
 /*.xapian
 /fakemogile
-/storage
+/storage*
 /build
 /data
 /dist

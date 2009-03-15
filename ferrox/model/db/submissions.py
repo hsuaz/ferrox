@@ -42,8 +42,8 @@ class Submission(BaseTable):
     time                = Column(DateTime, nullable=False, default=datetime.now)
     title               = Column(types.Unicode(length=160), nullable=False, default='(no subject)')
     status              = Column(submission_status_type, index=True, nullable=False)
-    storage_key         = Column(types.String(150), nullable=False)
-    mimetype            = Column(types.String(35), nullable=False)
+    main_storage_id     = Column(types.Integer, ForeignKey('submissions_storage.id'))
+    thumbnail_storage_id= Column(types.Integer, ForeignKey('submissions_storage.id'))
 
     def __init__(self, title, description, uploader, avatar=None):
         self.status = 'normal'
@@ -92,7 +92,7 @@ class Submission(BaseTable):
         """
 
         if not mime_type:
-            mime_type = self.mimetype
+            mime_type = self.main_storage.mimetype
 
         (major, minor) = mime_type.split('/')
         if major == 'image':
@@ -113,21 +113,50 @@ class Submission(BaseTable):
             return 'unknown'
     type = property(lambda self: self.get_submission_type())
 
+    def get_derived_key(self, derivetype):
+        # This function depends on Pylons, but that's the only place 
+        # it should be needed.
+        if derivetype == 'thumbnail':
+            # This presents an odd issue...
+            #if self.thumbnail_storage:
+            #    return self.thumbnail_storage.storage_key
+            if self.thumbnail_storage:
+                return "%d/t/%d/%d%s" % (
+                    self.id, 
+                    int(pylons.config['gallery.thumbnail_size']), 
+                    self.time.toordinal(), 
+                    mimetypes.guess_extension(self.thumbnail_storage.mimetype)
+                )
+            if self.type == 'image':
+                return "%d/t/%d/%d%s" % (
+                    self.id, 
+                    int(pylons.config['gallery.thumbnail_size']), 
+                    self.time.toordinal(), 
+                    mimetypes.guess_extension(self.main_storage.mimetype)
+                )
+            else:
+                return pylons.config['gallery.default_thumbnail_key']
+        elif derivetype == 'halfview':
+            if self.type == 'image':
+                return "%d/m/%d/%d%s" % (
+                    self.id,
+                    int(pylons.config['gallery.halfview_size']),
+                    self.time.toordinal(),
+                    mimetypes.guess_extension(self.main_storage.mimetype)
+                )
+            else:
+                return self.get_derived_key('thumbnail')
+
 class FavoriteSubmission(BaseTable):
     __tablename__       = 'favorite_submissions'
     user_id             = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
     submission_id       = Column(types.Integer, ForeignKey('submissions.id'), primary_key=True)
 
-class DerivedSubmission(BaseTable):
-    __tablename__       = 'derived_submissions'
+class SubmissionStorage(BaseTable):
+    __tablename__       = 'submissions_storage'
     id                  = Column(types.Integer, primary_key=True)
-    submission_id       = Column(types.Integer, ForeignKey('submissions.id'), nullable=False)
-    derivetype          = Column(derived_submission_derivetype_type, nullable=False)
     storage_key         = Column(types.String(150), nullable=False)
     mimetype            = Column(types.String(35), nullable=False)
-
-    def __init__(self, derivetype):
-        self.derivetype = derivetype
 
 class DefaultThumbnail(object):
     def __init__(self, type='image'):
@@ -233,8 +262,6 @@ class SubmissionTag(BaseTable):
     def __init__(self, tag):
         self.tag = tag
 
-DerivedSubmission.submission    = relation(Submission, backref='derived_submission', lazy=False)
-
 HistoricSubmission.edited_by    = relation(User)
 HistoricSubmission.submission   = relation(Submission, backref='historic_submission')
 
@@ -242,16 +269,14 @@ Submission.tags                 = relation(Tag, backref='submissions', secondary
 Submission.discussion           = relation(Discussion, backref='submission')
 Submission.favorited_by         = relation(User, secondary=FavoriteSubmission.__table__, backref='favorite_submissions')
 
-Submission.halfview             = relation(DerivedSubmission,
-    primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,
-                     DerivedSubmission.derivetype == 'halfview'),
-    uselist=False)
-Submission.thumbnail            = relation(DerivedSubmission,
-    primaryjoin=and_(Submission.id == DerivedSubmission.submission_id,
-                     DerivedSubmission.derivetype == 'thumb'),
-    uselist=False)
-Submission.thumbnail_or_default = property(lambda self: self.thumbnail if self.thumbnail else DefaultThumbnail(self.type))
-
+Submission.main_storage         = relation(SubmissionStorage, 
+    primaryjoin=Submission.main_storage_id == SubmissionStorage.id,
+    lazy=False
+    )
+Submission.thumbnail_storage    = relation(SubmissionStorage,
+    primaryjoin=Submission.thumbnail_storage_id == SubmissionStorage.id,
+    lazy=False
+    )
 
 Submission.artists              = relation(User, secondary=UserSubmission.__table__,
     primaryjoin=and_(Submission.id == UserSubmission.submission_id,
@@ -268,3 +293,5 @@ Submission.primary_artist       = relation(User, secondary=UserSubmission.__tabl
 UserSubmission.avatar           = relation(UserAvatar, uselist=False, lazy=False)
 UserSubmission.submission       = relation(Submission, backref='user_submissions')
 UserSubmission.user             = relation(User, backref='user_submissions')
+
+

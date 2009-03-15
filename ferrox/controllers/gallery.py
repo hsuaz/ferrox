@@ -23,8 +23,8 @@ import math
 import pylons
 
 from ferrox.model import storage
-data_store = storage.get_instance(pylons.config['storage.url'])
-
+storage_submission = storage.get_instance(pylons.config['storage.submission.url'])
+storage_derived = storage.get_instance(pylons.config['storage.derived.url'])
 
 log = logging.getLogger(__name__)
 
@@ -142,7 +142,7 @@ def find_submissions(joined_tables=None,
     submissions = model.Session.query(model.Submission) \
                     .filter(model.Submission.id.in_(submission_ids)) \
                     .order_by(model.Submission.time.desc()) \
-                    .options(eagerload('thumbnail'),
+                    .options(
                              eagerload('primary_artist'),
                              ) \
                     .all()
@@ -399,7 +399,7 @@ class GalleryController(BaseController):
         model.Session.add(editlog_entry)
         submission.editlog.update(editlog_entry)
 
-        #form_data['description'] = h.html_escape(form_data['description'])
+        #form_data['description'] = h.html_escape(257402.akkateerel_bondaged_wolf.png?id=Noneform_data['description'])
         submission.title = h.html_escape(form_data['title'])
         submission.content = form_data['description']
         if form_data['fullfile']:
@@ -532,7 +532,7 @@ class GalleryController(BaseController):
         This should be mod_rewitten to a static content server in production.
         """
 
-        data = data_store[filename]
+        data = storage_submission[filename]
         
         if not data:
             abort(404)
@@ -540,6 +540,47 @@ class GalleryController(BaseController):
         response.headers['Content-Type'] = mimetypes.guess_type(filename)
         response.headers['Content-Length'] = len(data)
         return data
+
+    def derived_file(self, filename=None):
+        """Checks for given derived key. If it doesn't exist, create it.
+        If the source file doesn't exist, abort(404)
+
+        This should be rewritten to a static content server, but it should also
+        be set up to handle 404 errors from that server."""
+
+        data = None
+        try:
+            data = storage_derived[filename]
+        except KeyError:
+            k_id, k_type, k_size, k_time = filename.split('/', 3)
+            k_time = int(k_time.split('.')[0])
+            k_size = int(k_size)
+
+            submission = get_submission(int(k_id))
+            if submission.time.toordinal() != k_time: abort(404)
+            if k_type not in ('m', 't'): abort(404)
+            if k_type == 't' and k_size != int(pylons.config['gallery.thumbnail_size']): abort(404)
+            if k_type == 'm' and k_size != int(pylons.config['gallery.halfview_size']): abort(404)
+            if k_type == 't' and not submission.thumbnail_storage: k_type = 'm'
+
+            with ImageClass() as t:
+                if k_type == 'm':
+                    t.set_data(storage_submission[submission.main_storage.storage_key])
+                elif k_type == 't':
+                    t.set_data(storage_submission[submission.thumbnail_storage.storage_key])
+
+                derived = t.get_resized(k_size)
+                if derived:
+                    data = derived.get_data()
+                    storage_derived[filename] = data
+                else:
+                    data = t.get_data()
+                    storage_derived[filename] = data
+
+        response.headers['Content-Type'] = mimetypes.guess_type(filename)
+        response.headers['Content-Length'] = len(data)
+        return data
+
 
     def is_my_submission(self, submission, should_abort=False):
         """Returns false (or aborts, if should_abort=True) if the provided
@@ -559,68 +600,57 @@ class GalleryController(BaseController):
 
     def _process_form_data_files(self, submission, form_data):    
         # Image Processing...
-        submission.mimetype = mimetype.get_mime_type(form_data['fullfile'])
-        fullview_blob = None
-        halfview_blob = None
-        thumbnail_blob = None
-        thumbnail_mimetype = None
+        main = model.SubmissionStorage()
+        thumbnail = None
+
+        main.mimetype = mimetype.get_mime_type(form_data['fullfile'])
+        main.blob = None
         
         # ... for thumbnail
         if form_data['thumbfile']:
             proposed_mimetype = mimetype.get_mime_type(form_data['thumbfile'])
-            if submission.get_mime_type(proposed_mimetype) == 'image':
-                thumbnail_mimetype = proposed_mimetype
+            if submission.get_submission_type(proposed_mimetype) == 'image':
+                thumbnail = model.SubmissionStorage()
+                thumbnail.mimetype = proposed_mimetype
                 with ImageClass() as t:
                     t.set_data(form_data['thumbfile']['content'])
-                    thumbnail = t.get_resized(int(pylons.config['gallery.thumbnail_size']))
-                    if thumbnail: 
-                        thumbnail_blob = thumbnail.get_data()
+                    t_prime = t.get_resized(int(pylons.config['gallery.thumbnail_size']))
+                    if t_prime: 
+                        thumbnail.blob = t_prime.get_data()
                     else:
-                        thumbnail_blob = form_data['thumbfile']['content']
+                        thumbnail.blob = form_data['thumbfile']['content']
         
         # ... for main submission
-        if submission.get_submission_type() == 'image':
+        if submission.get_submission_type(main.mimetype) == 'image':
             with ImageClass() as t:
                 t.set_data(form_data['fullfile']['content'])
                 
                 toobig = t.get_resized(int(pylons.config['gallery.fullfile_size']))
                 if toobig:
-                    fullview_blob = toobig.get_data()
+                    main.blob = toobig.get_data()
                 else:
-                    fullview_blob = form_data['fullfile']['content']
-
-                halfview = t.get_resized(int(pylons.config['gallery.halfview_size']))
-                if halfview: halfview_blob = halfview.get_data()
-                
-                if not thumbnail_blob:
-                    thumbnail = t.get_resized(int(pylons.config['gallery.thumbnail_size']))
-                    if thumbnail: thumbnail_blob = thumbnail.get_data()
-                    thumbnail_mimetype = submission.mimetype
+                    main.blob = form_data['fullfile']['content']
+        else:
+            main_blob = form_data['fullfile']['content']
                 
         # Commit main submission to storage.
-        key = '/'.join([c.auth_user.username, mimetype.mangle_filename(form_data['fullfile']['filename'], submission.mimetype)])
-        submission.storage_key = key
+        key = '/'.join([c.auth_user.username, mimetype.mangle_filename(form_data['fullfile']['filename'], main.mimetype)])
+        main.storage_key = key
         ct = 0
-        while submission.storage_key in data_store:
-            submission.storage_key = data_store.mangle_key(key)
+        while main.storage_key in storage_submission:
+            main.storage_key = storage_submission.mangle_key(key)
             # this is very unlikely, but we still don't want to get into an infinite loop.
             ct += 1
             if ct >= 5: abort(500)
 
-        data_store[submission.storage_key] = form_data['fullfile']['content']
-        
-        # Commit Halfview to storage and make DerivedSubmission for it.
-        if halfview_blob:
-            halfview = model.DerivedSubmission('halfview')
-            halfview.mimetype = submission.mimetype
-            halfview.storage_key = '/h/'.join(submission.storage_key.rsplit('/', 1))
-            data_store[halfview.storage_key] = halfview_blob
-            submission.derived_submission.append(halfview)
+        storage_submission[main.storage_key] = main.blob
+        del(main.blob)
+        submission.main_storage = main
         
         # Commit Thumbnail to storage and make DerivedSubmission for it.
-        if thumbnail_blob:
-            thumbnail = model.DerivedSubmission('thumb')
-            thumbnail.mimetype = thumbnail_mimetype
-            thumbnail.storage_key = '/t/'.join(submission.storage_key.rsplit('/', 1))
-            data_store[thumbnail.storage_key] = thumbnail_blob
-            submission.derived_submission.append(thumbnail)
+        if thumbnail:
+            thumbnail.storage_key = '/t/'.join(main.storage_key.rsplit('/', 1))
+            storage_submission[thumbnail.storage_key] = thumbnail.blob
+            del(thumbnail.blob)
+            submission.thumbnail_storage = thumbnail
+

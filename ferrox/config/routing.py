@@ -88,6 +88,7 @@ def make_map():
 
     map.connect('/gallery', controller='gallery', action='index')
     map.connect('/download/*filename', controller='gallery', action='file')
+    map.connect('/derived/*filename', controller='gallery', action='derived_file')
 
     map.connect('/users/:username/journals/watchstream', controller='journal', action='index', watchstream=True)
     map.connect('/users/:username/journals', controller='journal', action='index')

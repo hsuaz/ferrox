@@ -14,7 +14,7 @@ ${lib.user_linkbar(c.user)}
     <div class="latest-submission">
         <h3>${c.recent_submissions[0].title}</h3>
         <p class="timestamp">${h.format_time(c.recent_submissions[0].time)}</p>
-        <div class="halfview">${h.HTML.a(h.image_tag(h.url_for(controller='gallery', action='file', filename=c.recent_submissions[0].halfview.storage_key), c.recent_submissions[0].title), href=h.url_for(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
+        <div class="halfview">${h.HTML.a(h.image_tag(h.url_for(controller='gallery', action='derived_file', filename=c.recent_submissions[0].get_derived_key('halfview')), c.recent_submissions[0].title), href=h.url_for(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
         <div class="description">${c.recent_submissions[0].get_user_submission(c.user).content}</div>
         <ul class="inline admin">
             <li>${h.HTML.a(h.image_tag('/images/icons/link-edit.png', ''), ' Edit', href=h.url_for(controller='gallery', action='edit', id=c.recent_submissions[0].id, username=c.user.username), class_='button admin')}</li>
@@ -26,7 +26,7 @@ ${lib.user_linkbar(c.user)}
 
     <ul class="thumbnail-row">
         % for submission in c.recent_submissions[1:]:
-        <li>${h.HTML.a(h.image_tag(h.url_for(controller='gallery', action='file', filename=submission.thumbnail_or_default.storage_key), submission.title), href=h.url_for(controller='gallery', action='view', id=submission.id, username=c.user.username))}</li>
+        <li>${h.HTML.a(h.image_tag(h.url_for(controller='gallery', action='derived_file', filename=submission.get_derived_key('thumbnail')), submission.title), href=h.url_for(controller='gallery', action='view', id=submission.id, username=c.user.username))}</li>
         % endfor
     </ul>
     ${h.HTML.a('Browse featured works', href=h.url_for(controller='gallery', action='index', username=c.user.username), class_='button TODO')}
@@ -41,7 +41,7 @@ ${lib.user_linkbar(c.user)}
     <div class="latest-submission">
         <h3>${c.recent_submissions[0].title}</h3>
         <p class="timestamp">${h.format_time(c.recent_submissions[0].time)}</p>
-        <div class="halfview">${h.HTML.a(h.image_tag(h.url_for(controller='gallery', action='file', filename=c.recent_submissions[0].halfview.storage_key), c.recent_submissions[0].title), href=h.url_for(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
+        <div class="halfview">${h.HTML.a(h.image_tag(h.url_for(controller='gallery', action='derived_file', filename=c.recent_submissions[0].get_derived_key('halfview')), c.recent_submissions[0].title), href=h.url_for(controller='gallery', action='view', id=c.recent_submissions[0].id, username=c.user.username))}</div>
         <div class="description">${c.recent_submissions[0].get_user_submission(c.user).content}</div>
         <ul class="inline admin">
             <li>${h.HTML.a(h.image_tag('/images/icons/link-edit.png', ''), ' Edit', href=h.url_for(controller='gallery', action='edit', id=c.recent_submissions[0].id, username=c.user.username), class_='button admin')}</li>
@@ -53,7 +53,7 @@ ${lib.user_linkbar(c.user)}
 
     <ul class="thumbnail-row">
         % for submission in c.recent_submissions[1:]:
-        <li>${h.HTML.a(h.image_tag(h.url_for(controller='gallery', action='file', filename=submission.thumbnail_or_default.storage_key), submission.title), href=h.url_for(controller='gallery', action='view', id=submission.id, username=c.user.username))}</li>
+        <li>${h.HTML.a(h.image_tag(h.url_for(controller='gallery', action='derived_file', filename=submission.get_derived_key('thumbnail')), submission.title), href=h.url_for(controller='gallery', action='view', id=submission.id, username=c.user.username))}</li>
         % endfor
     </ul>
     ${h.HTML.a('Browse gallery', href=h.url_for(controller='gallery', action='index', username=c.user.username), class_='button')}

@@ -7,13 +7,13 @@ ${lib.user_linkbar(c.submission.primary_artist)}
 <div class="basic-box">
     <div class="submission-content submission-content-${c.submission.type}">
         % if (c.submission.type == 'video'):
-        ${h.embed_flash(h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key, id=None))}
+        ${h.embed_flash(h.url_for(controller='gallery', action='file', filename=c.submission.storage_key, id=None))}
         % elif (c.submission.type == 'image'):
-        ${h.image_tag(h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key, id=None), c.submission.title)}
+        ${h.image_tag(h.url_for(controller='gallery', action='file', filename=c.submission.storage_key, id=None), c.submission.title)}
         % elif (c.submission.type == 'audio'):
-        ${h.embed_mp3(h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key, id=None))} (Music Submission)
+        ${h.embed_mp3(h.url_for(controller='gallery', action='file', filename=c.submission.storage_key, id=None))} (Music Submission)
         % elif (c.submission.type == 'text'):
-        ${h.HTML.a('Text Submission', href=h.url_for(controller='gallery', action='file', filename=c.submission.mogile_key))}, Text submission
+        ${h.HTML.a('Text Submission', href=h.url_for(controller='gallery', action='file', filename=c.submission.storage_key))}, Text submission
         <pre>
         TODO?
         </pre>

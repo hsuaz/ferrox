@@ -87,7 +87,7 @@ def make_map():
     map.connect('/users/:username/gallery/:id/favorite', controller='gallery', action='favorite')
 
     map.connect('/gallery', controller='gallery', action='index')
-    map.connect('/download/:filename', controller='gallery', action='file')
+    map.connect('/download/*filename', controller='gallery', action='file')
 
     map.connect('/users/:username/journals/watchstream', controller='journal', action='index', watchstream=True)
     map.connect('/users/:username/journals', controller='journal', action='index')

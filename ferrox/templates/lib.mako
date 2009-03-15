@@ -206,9 +206,7 @@
     % for submission in submissions:
     --><li id="sub${submission.id}">
         <a href="${h.url_for(controller='gallery', action='view', id=submission.id, username=submission.primary_artist.username)}">
-        % if submission.thumbnail:
-        <span class="thumbnail">${h.image_tag(h.url_for(controller='gallery', action='file', filename=submission.thumbnail.mogile_key), submission.title)}</span>
-        % endif
+        <span class="thumbnail">${h.image_tag(h.url_for(controller='gallery', action='file', filename=submission.thumbnail_or_default.storage_key), submission.title)}</span>
         <span class="title">${submission.title}</span>
         </a>
     </li><!--

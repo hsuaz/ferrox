@@ -2,10 +2,11 @@ from __future__ import with_statement
 
 from pylons.decorators.secure import *
 
-from ferrox.lib import filestore, tagging, pagination
+from ferrox.lib import filestore, tagging, pagination, mimetype
 from ferrox.lib.base import *
 from ferrox.lib.formgen import FormGenerator
-from ferrox.lib.mimetype import get_mime_type
+from ferrox.lib import mimetype
+from ferrox.lib.image import ImageClass
 
 import formencode
 import logging
@@ -19,12 +20,10 @@ from sqlalchemy.orm import eagerload, eagerload_all
 from tempfile import TemporaryFile
 import time
 import math
-
 import pylons
-if pylons.config['mogilefs.tracker'] == 'FAKE':
-    from ferrox.lib import fakemogilefs as mogilefs
-else:
-    from ferrox.lib import mogilefs
+
+from ferrox.model import storage
+data_store = storage.get_instance(pylons.config['storage.url'])
 
 
 log = logging.getLogger(__name__)
@@ -149,6 +148,7 @@ def find_submissions(joined_tables=None,
                     .all()
 
     return submissions, submission_ct
+
 
 class GalleryController(BaseController):
 
@@ -496,22 +496,22 @@ class GalleryController(BaseController):
                                   .filter_by(id=form_data['avatar_id']) \
                                   .one()
 
+        # Create new submission
         submission = model.Submission(
             title=form_data['title'],
             description=form_data['description'],
             uploader=c.auth_user,
             avatar=avatar,
         )
+        
+        # Image Processing
+        self._process_form_data_files(submission, form_data)
 
-        submission.set_file(form_data['fullfile'])
-        submission.generate_thumbnail(form_data['thumbfile'])
-        submission.generate_halfview()
-
+        # do tags
         for tag_text in tagging.break_apart_tag_string(form_data['tags']):
             submission.tags.append(model.Tag.get_by_text(tag_text, create=True))
 
         model.Session.commit()
-        submission.commit_mogile()
 
         h.redirect_to(h.url_for(controller='gallery', action='view',
                                 id=submission.id,
@@ -529,12 +529,11 @@ class GalleryController(BaseController):
         """Sets up headers for downloading the requested file and returns its
         contents.
 
-        This should be mod_rewitten to reference mogilefs directly in production.
+        This should be mod_rewitten to a static content server in production.
         """
 
-        store = mogilefs.Client(pylons.config['mogilefs.domain'], [pylons.config['mogilefs.tracker']])
-        data = store.get_file_data(filename)
-
+        data = data_store[filename]
+        
         if not data:
             abort(404)
 
@@ -557,3 +556,71 @@ class GalleryController(BaseController):
             abort(403)
         else:
             return False
+
+    def _process_form_data_files(self, submission, form_data):    
+        # Image Processing...
+        submission.mimetype = mimetype.get_mime_type(form_data['fullfile'])
+        fullview_blob = None
+        halfview_blob = None
+        thumbnail_blob = None
+        thumbnail_mimetype = None
+        
+        # ... for thumbnail
+        if form_data['thumbfile']:
+            proposed_mimetype = mimetype.get_mime_type(form_data['thumbfile'])
+            if submission.get_mime_type(proposed_mimetype) == 'image':
+                thumbnail_mimetype = proposed_mimetype
+                with ImageClass() as t:
+                    t.set_data(form_data['thumbfile']['content'])
+                    thumbnail = t.get_resized(int(pylons.config['gallery.thumbnail_size']))
+                    if thumbnail: 
+                        thumbnail_blob = thumbnail.get_data()
+                    else:
+                        thumbnail_blob = form_data['thumbfile']['content']
+        
+        # ... for main submission
+        if submission.get_submission_type() == 'image':
+            with ImageClass() as t:
+                t.set_data(form_data['fullfile']['content'])
+                
+                toobig = t.get_resized(int(pylons.config['gallery.fullfile_size']))
+                if toobig:
+                    fullview_blob = toobig.get_data()
+                else:
+                    fullview_blob = form_data['fullfile']['content']
+
+                halfview = t.get_resized(int(pylons.config['gallery.halfview_size']))
+                if halfview: halfview_blob = halfview.get_data()
+                
+                if not thumbnail_blob:
+                    thumbnail = t.get_resized(int(pylons.config['gallery.thumbnail_size']))
+                    if thumbnail: thumbnail_blob = thumbnail.get_data()
+                    thumbnail_mimetype = submission.mimetype
+                
+        # Commit main submission to storage.
+        key = '/'.join([c.auth_user.username, mimetype.mangle_filename(form_data['fullfile']['filename'], submission.mimetype)])
+        submission.storage_key = key
+        ct = 0
+        while submission.storage_key in data_store:
+            submission.storage_key = data_store.mangle_key(key)
+            # this is very unlikely, but we still don't want to get into an infinite loop.
+            ct += 1
+            if ct >= 5: abort(500)
+
+        data_store[submission.storage_key] = form_data['fullfile']['content']
+        
+        # Commit Halfview to storage and make DerivedSubmission for it.
+        if halfview_blob:
+            halfview = model.DerivedSubmission('halfview')
+            halfview.mimetype = submission.mimetype
+            halfview.storage_key = '/h/'.join(submission.storage_key.rsplit('/', 1))
+            data_store[halfview.storage_key] = halfview_blob
+            submission.derived_submission.append(halfview)
+        
+        # Commit Thumbnail to storage and make DerivedSubmission for it.
+        if thumbnail_blob:
+            thumbnail = model.DerivedSubmission('thumb')
+            thumbnail.mimetype = thumbnail_mimetype
+            thumbnail.storage_key = '/t/'.join(submission.storage_key.rsplit('/', 1))
+            data_store[thumbnail.storage_key] = thumbnail_blob
+            submission.derived_submission.append(thumbnail)

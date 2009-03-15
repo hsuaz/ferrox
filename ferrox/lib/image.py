@@ -29,12 +29,12 @@ from __future__ import with_statement
 import os
 from tempfile import *
 
-try:
-    import imagemagick
-    use_c_lib = True
-except ImportError:
-    use_c_lib = False
-    print 'Warning: Build the module in contrib to get better performance.'
+#try:
+#    import imagemagick
+#    use_c_lib = True
+#except ImportError:
+use_c_lib = False
+#    print 'Warning: Build the module in contrib to get better performance.'
 
 class ImageClass:
     def __enter__(self):
@@ -160,5 +160,3 @@ if __name__ == '__main__':
         print "Old Dims: %d %d (%f)" % (i.width, i.height, float(i.width)/float(i.height))
         print "New Dims: %d %d (%f)" % (i_new.width, i_new.height, float(i_new.width)/float(i_new.height))
         
-    
-    

@@ -23,10 +23,7 @@ from ferrox.model.db import BaseTable, DateTime, Enum, IP, Session
 from ferrox.model.db.discussions import *
 
 # -- This stuff is tied to class UserAvatar --
-if pylons.config['mogilefs.tracker'] == 'FAKE':
-    from ferrox.lib import fakemogilefs as mogilefs
-else:
-    from ferrox.lib import mogilefs
+from ferrox.lib import fakemogilefs as mogilefs
 
 ### Custom types
 

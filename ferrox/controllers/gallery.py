@@ -541,6 +541,7 @@ class GalleryController(BaseController):
         response.headers['Content-Length'] = len(data)
         return data
 
+    @check_perm('gallery.view')
     def derived_file(self, filename=None):
         """Checks for given derived key. If it doesn't exist, create it.
         If the source file doesn't exist, abort(404)
@@ -559,8 +560,10 @@ class GalleryController(BaseController):
             submission = get_submission(int(k_id))
             if submission.time.toordinal() != k_time: abort(404)
             if k_type not in ('m', 't'): abort(404)
-            if k_type == 't' and k_size != int(pylons.config['gallery.thumbnail_size']): abort(404)
-            if k_type == 'm' and k_size != int(pylons.config['gallery.halfview_size']): abort(404)
+            allowed_sizes = []
+            if k_type == 't': allowed_sizes = [int(x.strip()) for x in pylons.config['submission.thumbnail.allowed_sizes'].split(',')]
+            if k_type == 'm': allowed_sizes = [int(x.strip()) for x in pylons.config['submission.main.allowed_sizes'].split(',')]
+            if k_size not in allowed_sizes: abort(404)
             if k_type == 't' and not submission.thumbnail_storage: k_type = 'm'
 
             with ImageClass() as t:
@@ -614,7 +617,7 @@ class GalleryController(BaseController):
                 thumbnail.mimetype = proposed_mimetype
                 with ImageClass() as t:
                     t.set_data(form_data['thumbfile']['content'])
-                    t_prime = t.get_resized(int(pylons.config['gallery.thumbnail_size']))
+                    t_prime = t.get_resized(int(pylons.config['submission.thumbnail.max_size']))
                     if t_prime: 
                         thumbnail.blob = t_prime.get_data()
                     else:
@@ -625,7 +628,7 @@ class GalleryController(BaseController):
             with ImageClass() as t:
                 t.set_data(form_data['fullfile']['content'])
                 
-                toobig = t.get_resized(int(pylons.config['gallery.fullfile_size']))
+                toobig = t.get_resized(int(pylons.config['submission.main.max_size']))
                 if toobig:
                     main.blob = toobig.get_data()
                 else:

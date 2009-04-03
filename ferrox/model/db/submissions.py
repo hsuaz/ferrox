@@ -27,9 +27,7 @@ from ferrox.model.db.messages import *
 
 
 # Database specific types
-submission_type_type = Enum('image', 'video', 'audio', 'text')
 submission_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'unlinked', 'deleted')
-derived_submission_derivetype_type = Enum('thumb', 'halfview')
 user_submission_ownership_status_type = Enum('primary', 'normal')
 user_submission_review_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'deleted')
 user_submission_relationship_type = Enum('artist', 'commissioner', 'gifted', 'isin')
@@ -113,39 +111,33 @@ class Submission(BaseTable):
             return 'unknown'
     type = property(lambda self: self.get_submission_type())
 
-    def get_derived_key(self, derivetype):
+    def get_derived_key(self, source, size):
         # This function depends on Pylons, but that's the only place 
         # it should be needed.
-        if derivetype == 'thumbnail':
-            # This presents an odd issue...
-            #if self.thumbnail_storage:
-            #    return self.thumbnail_storage.storage_key
-            if self.thumbnail_storage:
-                return "%d/t/%d/%d%s" % (
-                    self.id, 
-                    int(pylons.config['gallery.thumbnail_size']), 
-                    self.time.toordinal(), 
-                    mimetypes.guess_extension(self.thumbnail_storage.mimetype)
-                )
-            if self.type == 'image':
-                return "%d/t/%d/%d%s" % (
-                    self.id, 
-                    int(pylons.config['gallery.thumbnail_size']), 
-                    self.time.toordinal(), 
-                    mimetypes.guess_extension(self.main_storage.mimetype)
-                )
-            else:
-                return pylons.config['gallery.default_thumbnail_key']
-        elif derivetype == 'halfview':
-            if self.type == 'image':
-                return "%d/m/%d/%d%s" % (
-                    self.id,
-                    int(pylons.config['gallery.halfview_size']),
-                    self.time.toordinal(),
-                    mimetypes.guess_extension(self.main_storage.mimetype)
-                )
-            else:
-                return self.get_derived_key('thumbnail')
+        if not source:
+            raise RuntimeError('No source specified.')
+        elif source[0] == 'm':
+            source = 'm'
+        elif source[0] == 't':
+            source = 't'
+        else:
+            raise RuntimeError("Invalid source specified: %s" % source)
+
+        extension = ''
+        if source == 't' and not self.thumbnail_storage:
+            extension = mimetypes.guess_extension(self.main_storage.mimetype)
+        elif source == 't':
+            extension = mimetypes.guess_extension(self.thumbnail_storage.mimetype)
+        else:
+            extension = mimetypes.guess_extension(self.main_storage.mimetype)
+
+        return "%d/%s/%d/%d%s" % (
+                self.id,
+                source,
+                int(size),
+                self.time.toordinal(),
+                extension
+            )
 
 class FavoriteSubmission(BaseTable):
     __tablename__       = 'favorite_submissions'

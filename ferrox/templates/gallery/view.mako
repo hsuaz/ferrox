@@ -9,7 +9,8 @@ ${lib.user_linkbar(c.submission.primary_artist)}
         % if (c.submission.type == 'video'):
         ${h.embed_flash(h.url_for(controller='gallery', action='file', filename=c.submission.main_storage.storage_key, id=None))}
         % elif (c.submission.type == 'image'):
-        ${h.image_tag(h.url_for(controller='gallery', action='file', filename=c.submission.main_storage.storage_key, id=None), c.submission.title)}
+        ${h.image_tag(h.url_for(controller='gallery', action='derived_file', filename=c.submission.get_derived_key('m', int(h.pylons.config['gallery.fullfile_size'])), id=None), c.submission.title)}
+        ${h.HTML.a('Download', href=h.url_for(controller='gallery', action='file', filename=c.submission.main_storage.storage_key, id=None))}
         % elif (c.submission.type == 'audio'):
         ${h.embed_mp3(h.url_for(controller='gallery', action='file', filename=c.submission.main_storage.storage_key, id=None))} (Music Submission)
         % elif (c.submission.type == 'text'):

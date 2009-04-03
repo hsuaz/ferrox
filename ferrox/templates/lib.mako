@@ -206,7 +206,7 @@
     % for submission in submissions:
     --><li id="sub${submission.id}">
         <a href="${h.url_for(controller='gallery', action='view', id=submission.id, username=submission.primary_artist.username)}">
-        <span class="thumbnail">${h.image_tag(h.url_for(controller='gallery', action='derived_file', filename=submission.get_derived_key('thumbnail')), submission.title)}</span>
+        <span class="thumbnail">${h.image_tag(h.url_for(controller='gallery', action='derived_file', filename=submission.get_derived_key('t', int(h.pylons.config['gallery.thumbnail_size']))), submission.title)}</span>
         <span class="title">${submission.title}</span>
         </a>
     </li><!--

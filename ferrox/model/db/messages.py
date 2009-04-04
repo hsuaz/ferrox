@@ -14,7 +14,7 @@ class EditLog(BaseTable):
 
     def __init__(self,user):
         self.last_edited_by = user
-        self.last_edited_at = datetime.now
+        self.last_edited_at = datetime.now()
 
     def update(self,editlog_entry):
         self.last_edited_by = editlog_entry.edited_by
@@ -36,7 +36,6 @@ class EditLogEntry(BaseTable):
         if not previous_text_parsed:
             previous_text_parsed = previous_text
         self.edited_by = user
-        self.edited_at = datetime.now()
         self.reason = reason
         self.previous_title = previous_title
         self.previous_text = previous_text

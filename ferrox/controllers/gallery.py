@@ -329,20 +329,21 @@ class GalleryController(BaseController):
         c.form = FormGenerator()
         return render('/gallery/submit.mako')
 
-    @check_perm('gallery.upload')
-    def edit(self, id=None):
+    @check_perm('gallery.upload', 'gallery.manage')
+    def edit(self, id=None, username=None):
         """Form for editing a submission."""
+        
+        c.submission = get_submission(id,['tags'])
+        c.target_user = model.User.get_by_name(username)
+        self._check_target_user()
 
-        submission = get_submission(id,['tags'])
-        self.is_my_submission(submission, True)
-        c.submission = submission
         c.edit = True
         c.form = FormGenerator()
-        c.form.defaults['title'] = submission.title
-        c.form.defaults['description'] = submission.content
+        c.form.defaults['title'] = c.submission.title
+        c.form.defaults['description'] = c.submission.get_user_submission(c.target_user).content
         #tag_list = tagging.TagList()
         #tag_list.parse_tag_object_array(submission.tags, negative=False)
-        c.form.defaults['tags'] = tagging.make_tag_string(submission.tags)
+        c.form.defaults['tags'] = tagging.make_tag_string(c.submission.tags)
         return render('/gallery/submit.mako')
 
     @check_perm('gallery.upload')
@@ -357,21 +358,22 @@ class GalleryController(BaseController):
         c.fields = {}
         return render('/confirm.mako')
 
-    @check_perm('gallery.upload')
-    def edit_commit(self, id=None):
+    @check_perm('gallery.upload', 'gallery.manage')
+    def edit_commit(self, id=None, username=None):
         """Form handler for editing a submission."""
 
         # -- get image from database, make sure user has permission --
         # Error handling needs submission, so we need to get it no matter what.
-        submission = get_submission(id,[
+        c.submission = get_submission(id,[
             'tags',
             'user_submissions',
             'user_submissions.user',
-            'derived_submission',
-            'editlog',
-            'editlog.entries'
+            'user_submissions.editlog',
+            'user_submissions.editlog.entries'
         ])
-        self.is_my_submission(submission,True)
+        c.target_user = model.User.get_by_name(username)
+        self._check_target_user()
+        user_submission = c.submission.get_user_submission(c.target_user)
 
         # -- validate form input --
         validator = model.form.EditForm()
@@ -380,32 +382,50 @@ class GalleryController(BaseController):
             form_data = validator.to_python(request.params)
         except formencode.Invalid, error:
             c.edit = True
-            c.submission = submission
             c.form = FormGenerator(form_error=error)
             return render('/gallery/submit.mako')
 
 
-        if not submission.editlog:
+        if not user_submission.editlog:
             editlog = model.EditLog(c.auth_user)
             model.Session.add(editlog)
-            submission.editlog = editlog
+            c.submission.editlog = editlog
 
         editlog_entry = model.EditLogEntry(
             user = c.auth_user,
             reason = 'still no reason to the madness',
-            previous_title = submission.title,
-            previous_text = submission.content,
+            previous_title = c.submission.title,
+            previous_text = user_submission.content,
         )
         model.Session.add(editlog_entry)
-        submission.editlog.update(editlog_entry)
+        #user_submission.editlog.append(editlog_entry)
 
         #form_data['description'] = h.html_escape(257402.akkateerel_bondaged_wolf.png?id=Noneform_data['description'])
-        submission.title = h.html_escape(form_data['title'])
-        submission.content = form_data['description']
-        if form_data['fullfile']:
-            submission.set_file(form_data['fullfile'])
-            submission.generate_halfview()
-        submission.generate_thumbnail(form_data['thumbfile'])
+        c.submission.title = h.html_escape(form_data['title'])
+        user_submission.content = form_data['description']
+        
+        if form_data['fullfile'] or form_data['thumbfile']:
+            hs = model.HistoricSubmission(c.auth_user, c.submission)
+            if c.submission.main_storage:
+                hs.main_storage = model.SubmissionStorage()
+                hs.main_storage.storage_key = storage_submission.rename(
+                        c.submission.main_storage.storage_key,
+                        storage_submission.mangle_key(c.submission.main_storage.storage_key)
+                    )
+                hs.main_storage.mimetype = c.submission.main_storage.mimetype
+            if c.submission.thumbnail_storage:
+                hs.thumbnail_storage = model.SubmissionStorage()
+                hs.thumbnail_storage.storage_key = storage_submission.rename(
+                        c.submission.thumbnail_storage.storage_key,
+                        storage_submission.mangle_key(c.submission.thumbnail_storage.storage_key)
+                    )
+                hs.thumbnail_storage.mimetype = c.submission.thumbnail_storage.mimetype
+            c.submission.historic_submissions.append(hs)
+            self._process_form_data_files(c.submission, form_data)
+            
+            # Clear out derived submissions. We have to regenerate them.
+            for i in storage_derived.items_by_prefix("%d/"%c.submission.id):
+                del(storage_derived[i])
 
 
         # Tag shuffle
@@ -416,16 +436,16 @@ class GalleryController(BaseController):
         #for x in submission.tags:
         #    x.cache_me()
 
-        old = list(set([str(x) for x in submission.tags]))
+        old = list(set([str(x) for x in c.submission.tags]))
         new = list(set(tagging.break_apart_tag_string(form_data['tags'])))
         
         to_append = []
-        for x in submission.tags:
+        for x in c.submission.tags:
             if str(x) not in new:
-                submission.tags.remove(x)
+                c.submission.tags.remove(x)
         for x in new:
             if x not in old:
-                submission.tags.append(model.Tag.get_by_text(x, create=True))
+                c.submission.tags.append(model.Tag.get_by_text(x, create=True))
                 
         
         '''
@@ -445,9 +465,9 @@ class GalleryController(BaseController):
         '''
 
         model.Session.commit()
-        submission.commit_mogile()
+        #submission.commit_mogile()
 
-        h.redirect_to(h.url_for(controller='gallery', action='view', id = submission.id, username=submission.primary_artist.username))
+        h.redirect_to(h.url_for(controller='gallery', action='view', id=c.submission.id, username=c.submission.primary_artist.username))
 
 
     @check_perm('gallery.upload')
@@ -604,17 +624,21 @@ class GalleryController(BaseController):
 
     def _process_form_data_files(self, submission, form_data):    
         # Image Processing...
-        main = model.SubmissionStorage()
+        main = None
+        if not submission.main_storage:
+            main = model.SubmissionStorage() 
+        else:
+            main = submission.main_storage
         thumbnail = None
 
-        main.mimetype = mimetype.get_mime_type(form_data['fullfile'])
-        main.blob = None
-        
         # ... for thumbnail
         if form_data['thumbfile']:
             proposed_mimetype = mimetype.get_mime_type(form_data['thumbfile'])
             if submission.get_submission_type(proposed_mimetype) == 'image':
-                thumbnail = model.SubmissionStorage()
+                if not submission.thumbnail_storage:
+                    thumbnail = model.SubmissionStorage()
+                else:
+                    thumbnail = submission.thumbnail_storage
                 thumbnail.mimetype = proposed_mimetype
                 with ImageClass() as t:
                     t.set_data(form_data['thumbfile']['content'])
@@ -625,27 +649,27 @@ class GalleryController(BaseController):
                         thumbnail.blob = form_data['thumbfile']['content']
         
         # ... for main submission
-        if submission.get_submission_type(main.mimetype) == 'image':
-            with ImageClass() as t:
-                t.set_data(form_data['fullfile']['content'])
-                
-                toobig = t.get_resized(int(pylons.config['submission.main.max_size']))
-                if toobig:
-                    main.blob = toobig.get_data()
-                else:
-                    main.blob = form_data['fullfile']['content']
-        else:
-            main_blob = form_data['fullfile']['content']
+        if form_data['fullfile']:
+            main.mimetype = mimetype.get_mime_type(form_data['fullfile'])
+            main.blob = None
+            if submission.get_submission_type(main.mimetype) == 'image':
+                with ImageClass() as t:
+                    t.set_data(form_data['fullfile']['content'])
+                    
+                    toobig = t.get_resized(int(pylons.config['submission.main.max_size']))
+                    if toobig:
+                        main.blob = toobig.get_data()
+                    else:
+                        main.blob = form_data['fullfile']['content']
+            else:
+                main_blob = form_data['fullfile']['content']
                 
         # Commit main submission to storage.
         key = '/'.join([c.auth_user.username, mimetype.mangle_filename(form_data['fullfile']['filename'], main.mimetype)])
         main.storage_key = key
         ct = 0
-        while main.storage_key in storage_submission:
+        if main.storage_key in storage_submission:
             main.storage_key = storage_submission.mangle_key(key)
-            # this is very unlikely, but we still don't want to get into an infinite loop.
-            ct += 1
-            if ct >= 5: abort(500)
 
         storage_submission[main.storage_key] = main.blob
         del(main.blob)
@@ -657,4 +681,15 @@ class GalleryController(BaseController):
             storage_submission[thumbnail.storage_key] = thumbnail.blob
             del(thumbnail.blob)
             submission.thumbnail_storage = thumbnail
+
+    def _check_target_user(self):
+        if c.target_user not in c.submission.artists:
+            abort(404)
+        if c.auth_user != c.target_user:
+            if c.auth_user.can('gallery.manage'):
+                return True
+            else:
+                abort(403)
+        return True
+
 

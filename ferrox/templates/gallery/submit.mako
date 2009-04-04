@@ -2,11 +2,16 @@
 <%inherit file="base.mako" />
 
 <div class="basic-box">
-    <h2>Submit Art</h2>
 
     % if c.edit:
+    <h2>Editing submission ${c.submission.title}
+        % if c.auth_user != c.target_user:
+            on behalf of ${lib.user_link(c.target_user)}
+        % endif
+    </h2>
     ${c.form.start(h.url_for(controller='gallery', action='edit_commit', id=c.submission.id, username=c.submission.primary_artist.username), method='post', multipart=True)}
     % else:
+    <h2>Submit Art</h2>
     ${c.form.start(h.url_for(controller='gallery', action='submit_upload', username=c.route['username']), method='post', multipart=True)}
     % endif
 

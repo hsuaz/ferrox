@@ -62,12 +62,6 @@ class Submission(BaseTable):
         self.user_submissions.append(user_submission)
 
 
-    def get_derived_by_type(self, type):
-        for ds in self.derived_submission:
-            if ds.derivetype == type:
-                return ds
-        return None
-
     def get_users_by_relationship(self, relationship):
         users = []
         for user_submission in self.user_submissions:
@@ -180,21 +174,14 @@ class HistoricSubmission(BaseTable):
     __tablename__       = 'historic_submissions'
     id                  = Column(types.Integer, primary_key=True)
     submission_id       = Column(types.Integer, ForeignKey('submissions.id'), nullable=False)
-    storage_key         = Column(types.String(150), nullable=False)
-    mimetype            = Column(types.String(35), nullable=False)
     edited_at           = Column(DateTime, nullable=False, default=datetime.now)
     edited_by_id        = Column(types.Integer, ForeignKey('users.id'))
-
-    def __init__(self, user):
+    main_storage_id     = Column(types.Integer, ForeignKey('submissions_storage.id'))
+    thumbnail_storage_id= Column(types.Integer, ForeignKey('submissions_storage.id'))
+ 
+    def __init__(self, user, submission):
         self.edited_by = user
-
-    def _get_previous_title(self):
-        return "Historic Submission: %s" % self.storage_key
-    previous_title = property(_get_previous_title)
-
-    def _get_previous_text_parsed(self):
-        return "[%s]"%h.link_to('View Historic Submission',h.url_for(controller='gallery', action='file', filename=self.storage_key))
-    previous_text_parsed = property(_get_previous_text_parsed)
+        self.submission = submission
 
 class UserSubmission(BaseTable):
     __tablename__       = 'user_submissions'
@@ -276,7 +263,16 @@ class SubmissionTag(BaseTable):
         self.tag = tag
 
 HistoricSubmission.edited_by    = relation(User)
-HistoricSubmission.submission   = relation(Submission, backref='historic_submission')
+HistoricSubmission.submission   = relation(Submission, backref='historic_submissions')
+
+HistoricSubmission.main_storage = relation(SubmissionStorage, 
+    primaryjoin=HistoricSubmission.main_storage_id == SubmissionStorage.id,
+    lazy=False
+    )
+HistoricSubmission.thumbnail_storage= relation(SubmissionStorage,
+    primaryjoin=HistoricSubmission.thumbnail_storage_id == SubmissionStorage.id,
+    lazy=False
+    )
 
 Submission.tags                 = relation(Tag, backref='submissions', secondary=SubmissionTag.__table__)
 Submission.discussion           = relation(Discussion, backref='submission')

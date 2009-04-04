@@ -25,31 +25,19 @@ from decorator import decorator
 from datetime import datetime
 from time import time
 
-def check_perm(permission):
-    '''Decorator for checking permission on user before running a controller method'''
+def check_perm(*permissions):
+    '''Decorator for checking permission on user before running a controller method
+    
+    Note: Only one permission needs to be matched. If you want to check for all 
+    permissions, stack the decorators.'''
     @decorator
     def check(func, *args, **kwargs):
-        if not c.auth_user.can(permission):
-            return abort(403)
-        else:
-            return func(*args, **kwargs)
+        for permission in permissions:
+            if c.auth_user.can(permission):
+                return func(*args, **kwargs)
+        return abort(403)
     return check
 
-def check_perms(permissions):
-    '''Decorator for checking multiple permissions on user before running a controller method.
-       Note: ONLY ONE of the permissions in the list has to be true. If you want to assert
-       ALL permissions, use multiple @check_perm or @check_perms decorators.'''
-    @decorator
-    def check(func, *args, **kwargs):
-        if not (c.auth_user):
-            return render('/denied.mako')
-        else:
-            for permission in permissions:
-                if c.auth_user.can(permission):
-                    return func(*args, **kwargs)
-            return render('/denied.mako')
-    return check
-    
 def authed_admin():
     @decorator
     def check(func, *args, **kwargs):

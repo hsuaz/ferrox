@@ -33,13 +33,30 @@ class Storage:
         self.delete(key)
         return new_key
 
-    def mangle_key(self, key):
+    def mangle_key(self, key, count=5):
         """ Takes the given key, returns a (probably) non-existent key. """
+        if count == 0: raise RuntimeError('Couldn\'t get a unique key.')
+        old_key = key
         prefix = int(time.time() * 1000000.)
         if '/' in key:
             folder, file = key.rsplit('/', 1)
-            return "%s/%x.%s" % (folder, prefix, file)
-        return "%x.%s" % (prefix, key)
+            key = "%s/%x.%s" % (folder, prefix, file)
+        else:
+            key = "%x.%s" % (prefix, key)
+        if key in self: return self.mangle_key(old_key, count - 1)
+        return key
+
+    def unmangle_key(self, key):
+        """ Reverses mangle_key.
+
+        Don't use this on an unmangled key."""
+        if '/' in key:
+            folder, file = key.rsplit('/', 1)
+            tossaway, file = key.split('.', 1)
+            return "%s/%s" % (folder, file)
+        else:
+            tossaway, file = key.split('.', 1)
+            return file
 
 
 class FileStorage(Storage):
@@ -95,6 +112,25 @@ class FileStorage(Storage):
         if old_filename == new_filename: return True
         os.renames(old_filename, new_filename)
         return True
+
+    def items_by_prefix(self, prefix):
+        path = ''
+        if '/' in prefix: 
+            path, prefix = prefix.rsplit('/', 1)
+            path += '/'
+
+        files = []
+        mangled_path = self._folder_mangle(path)
+        # check root directory
+        for name in os.listdir(mangled_path):
+            if name.startswith(prefix):
+                full_name = os.path.join(mangled_path, name)
+                if os.path.isfile(full_name):
+                    files.append(path + name)
+                elif os.path.isdir(full_name):
+                    files += self.items_by_prefix(path + name + '/')
+        return files
+    
         
 class MogileStorage(Storage):
     def __init__(self, url):

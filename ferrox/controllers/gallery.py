@@ -556,7 +556,8 @@ class GalleryController(BaseController):
             k_id, k_type, k_size, k_time = filename.split('/', 3)
             k_time = int(k_time.split('.')[0])
             k_size = int(k_size)
-
+            k_type = k_type[0:1]
+            
             submission = get_submission(int(k_id))
             if submission.time.toordinal() != k_time: abort(404)
             if k_type not in ('m', 't'): abort(404)

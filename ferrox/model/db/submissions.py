@@ -111,33 +111,54 @@ class Submission(BaseTable):
             return 'unknown'
     type = property(lambda self: self.get_submission_type())
 
-    def get_derived_key(self, source, size):
-        # This function depends on Pylons, but that's the only place 
-        # it should be needed.
-        if not source:
-            raise RuntimeError('No source specified.')
-        elif source[0] == 'm':
-            source = 'm'
-        elif source[0] == 't':
-            source = 't'
-        else:
-            raise RuntimeError("Invalid source specified: %s" % source)
+    def get_derived_key(self, type):
+        source, mimetype = '', ''
+        size = 0
 
-        extension = ''
-        if source == 't' and not self.thumbnail_storage:
-            extension = mimetypes.guess_extension(self.main_storage.mimetype)
-        elif source == 't':
-            extension = mimetypes.guess_extension(self.thumbnail_storage.mimetype)
+        if type == 'thumbnail':
+            size = pylons.config['gallery.thumbnail_size']
+            if self.thumbnail_storage:
+                source = 'thumbnail'
+            elif self.type == 'image':
+                source = 'main'
+            else:
+                return pylons.config['gallery.default_thumbnail']
+        elif type == 'halfview':
+            size = pylons.config['gallery.halfview_size']
+            if self.type == 'image':
+                source = 'main'
+            elif self.thumbnail_storage:
+                source = 'thumbnail'
+            else:
+                return pylons.config['gallery.default_halfview']
+        elif type == 'fullview':
+            size = pylons.config['gallery.fullview_size']
+            if self.type == 'image':
+                source = 'main'
+            else:
+                raise RuntimeError('"fullview" is not valid for submission not of type "image"')
         else:
-            extension = mimetypes.guess_extension(self.main_storage.mimetype)
+            raise RuntimeError("Unknown derived type: \"%s\"" % type)
+
+        if source == 'thumbnail':
+            mimetype = self.thumbnail_storage.mimetype
+        elif source == 'main':
+            mimetype = self.main_storage.mimetype
+        else:
+            raise NotImplementedError("Unknown source: \"%s\"" % source)
+
+        size = int(size)
 
         return "%d/%s/%d/%d%s" % (
                 self.id,
                 source,
-                int(size),
-                self.time.toordinal(),
-                extension
+                size,
+                int(self.time.toordinal()),
+                mimetypes.guess_extension(mimetype)
             )
+
+            
+            
 
 class FavoriteSubmission(BaseTable):
     __tablename__       = 'favorite_submissions'

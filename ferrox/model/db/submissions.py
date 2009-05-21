@@ -36,12 +36,12 @@ user_submission_relationship_type = Enum('artist', 'commissioner', 'gifted', 'is
 class Submission(BaseTable):
     __tablename__       = 'submissions'
     id                  = Column(types.Integer, primary_key=True)
-    discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
+    discussion_id       = Column(types.Integer, ForeignKey('discussions.id',onupdate="RESTRICT",ondelete="SET NULL"))
     time                = Column(DateTime, nullable=False, default=datetime.now)
     title               = Column(types.Unicode(length=160), nullable=False, default='(no subject)')
     status              = Column(submission_status_type, index=True, nullable=False)
-    main_storage_id     = Column(types.Integer, ForeignKey('submissions_storage.id'))
-    thumbnail_storage_id= Column(types.Integer, ForeignKey('submissions_storage.id'))
+    main_storage_id     = Column(types.Integer, ForeignKey('submissions_storage.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    thumbnail_storage_id= Column(types.Integer, ForeignKey('submissions_storage.id',onupdate="RESTRICT",ondelete="SET NULL"))
 
     def __init__(self, title, description, uploader, avatar=None):
         self.status = 'normal'
@@ -151,13 +151,13 @@ class Submission(BaseTable):
                 mimetypes.guess_extension(mimetype)
             )
 
-            
-            
+
+
 
 class FavoriteSubmission(BaseTable):
     __tablename__       = 'favorite_submissions'
-    user_id             = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
-    submission_id       = Column(types.Integer, ForeignKey('submissions.id'), primary_key=True)
+    user_id             = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="CASCADE"), primary_key=True)
+    submission_id       = Column(types.Integer, ForeignKey('submissions.id',onupdate="RESTRICT",ondelete="CASCADE"), primary_key=True)
 
 class SubmissionStorage(BaseTable):
     __tablename__       = 'submissions_storage'
@@ -173,12 +173,12 @@ class DefaultThumbnail(object):
 class HistoricSubmission(BaseTable):
     __tablename__       = 'historic_submissions'
     id                  = Column(types.Integer, primary_key=True)
-    submission_id       = Column(types.Integer, ForeignKey('submissions.id'), nullable=False)
+    submission_id       = Column(types.Integer, ForeignKey('submissions.id',onupdate="RESTRICT",ondelete="CASCADE"), nullable=False)
     edited_at           = Column(DateTime, nullable=False, default=datetime.now)
-    edited_by_id        = Column(types.Integer, ForeignKey('users.id'))
-    main_storage_id     = Column(types.Integer, ForeignKey('submissions_storage.id'))
-    thumbnail_storage_id= Column(types.Integer, ForeignKey('submissions_storage.id'))
- 
+    edited_by_id        = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    main_storage_id     = Column(types.Integer, ForeignKey('submissions_storage.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    thumbnail_storage_id= Column(types.Integer, ForeignKey('submissions_storage.id',onupdate="RESTRICT",ondelete="SET NULL"))
+
     def __init__(self, user, submission):
         self.edited_by = user
         self.submission = submission
@@ -186,15 +186,15 @@ class HistoricSubmission(BaseTable):
 class UserSubmission(BaseTable):
     __tablename__       = 'user_submissions'
     id                  = Column(types.Integer, primary_key=True)
-    submission_id       = Column(types.Integer, ForeignKey('submissions.id'))
+    submission_id       = Column(types.Integer, ForeignKey('submissions.id',onupdate="RESTRICT",ondelete="CASCADE"))
     relationship        = Column(user_submission_relationship_type, nullable=False)
     ownership_status    = Column(user_submission_ownership_status_type, nullable=False)
     review_status       = Column(user_submission_review_status_type, nullable=False)
 
     # Message columns
-    user_id             = Column(types.Integer, ForeignKey('users.id'))
-    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
-    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    user_id             = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="CASCADE"))
+    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id',onupdate="RESTRICT",ondelete="SET NULL"))
     time                = Column(DateTime, index=True, nullable=False, default=datetime.now)
     content             = Column(types.UnicodeText, nullable=False)
     avatar              = relation(UserAvatar)
@@ -256,8 +256,8 @@ class Tag(BaseTable):
 
 class SubmissionTag(BaseTable):
     __tablename__       = 'submission_tags'
-    submission_id       = Column(types.Integer, ForeignKey('submissions.id'), primary_key=True, autoincrement=False)
-    tag_id              = Column(types.Integer, ForeignKey('tags.id'), primary_key=True, autoincrement=False)
+    submission_id       = Column(types.Integer, ForeignKey('submissions.id',onupdate="RESTRICT",ondelete="CASCADE"), primary_key=True, autoincrement=False)
+    tag_id              = Column(types.Integer, ForeignKey('tags.id',onupdate="RESTRICT",ondelete="CASCADE"), primary_key=True, autoincrement=False)
 
     def __init__(self, tag):
         self.tag = tag
@@ -265,7 +265,7 @@ class SubmissionTag(BaseTable):
 HistoricSubmission.edited_by    = relation(User)
 HistoricSubmission.submission   = relation(Submission, backref='historic_submissions')
 
-HistoricSubmission.main_storage = relation(SubmissionStorage, 
+HistoricSubmission.main_storage = relation(SubmissionStorage,
     primaryjoin=HistoricSubmission.main_storage_id == SubmissionStorage.id,
     lazy=False
     )
@@ -278,7 +278,7 @@ Submission.tags                 = relation(Tag, backref='submissions', secondary
 Submission.discussion           = relation(Discussion, backref='submission')
 Submission.favorited_by         = relation(User, secondary=FavoriteSubmission.__table__, backref='favorite_submissions')
 
-Submission.main_storage         = relation(SubmissionStorage, 
+Submission.main_storage         = relation(SubmissionStorage,
     primaryjoin=Submission.main_storage_id == SubmissionStorage.id,
     lazy=False
     )

@@ -24,9 +24,9 @@ class EditLog(BaseTable):
 class EditLogEntry(BaseTable):
     __tablename__       = 'editlog_entries'
     id                  = Column(types.Integer, primary_key=True)
-    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id',onupdate="RESTRICT",ondelete="SET NULL"))
     edited_at           = Column(DateTime, nullable=False, default=datetime.now)
-    edited_by_id        = Column(types.Integer, ForeignKey('users.id'))
+    edited_by_id        = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="SET NULL"))
     reason              = Column(types.String(length=250))
     previous_title      = Column(types.UnicodeText, nullable=False)
     previous_text       = Column(types.UnicodeText, nullable=False)
@@ -44,14 +44,14 @@ class EditLogEntry(BaseTable):
 class Comment(BaseTable):
     __tablename__       = 'comments'
     id                  = Column(types.Integer, primary_key=True)
-    discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
+    discussion_id       = Column(types.Integer, ForeignKey('discussions.id',onupdate="RESTRICT",ondelete="CASCADE"))
     left                = Column(types.Integer, nullable=False, default=0)
     right               = Column(types.Integer, nullable=False, default=0)
 
     # Message columns
-    user_id             = Column(types.Integer, ForeignKey('users.id'))
-    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
-    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    user_id             = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id',onupdate="RESTRICT",ondelete="SET NULL"))
     time                = Column(DateTime, index=True, nullable=False, default=datetime.now)
     title               = Column(types.Unicode(length=160), nullable=False, default='(no subject)')
     content             = Column(types.UnicodeText, nullable=False)
@@ -120,14 +120,14 @@ class Comment(BaseTable):
 class News(BaseTable):
     __tablename__       = 'news'
     id                  = Column(types.Integer, primary_key=True)
-    discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
+    discussion_id       = Column(types.Integer, ForeignKey('discussions.id',onupdate="RESTRICT",ondelete="SET NULL"))
     is_anonymous        = Column(types.Boolean, nullable=False, default=False)
     is_deleted          = Column(types.Boolean, nullable=False, default=False)
 
     # Message columns
-    user_id             = Column(types.Integer, ForeignKey('users.id'))
-    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
-    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    user_id             = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id',onupdate="RESTRICT",ondelete="SET NULL"))
     time                = Column(DateTime, index=True, nullable=False, default=datetime.now)
     title               = Column(types.Unicode(length=160), nullable=False, default='(no subject)')
     content             = Column(types.UnicodeText, nullable=False)
@@ -142,13 +142,13 @@ class News(BaseTable):
 class JournalEntry(BaseTable):
     __tablename__       = 'journal_entries'
     id                  = Column(types.Integer, primary_key=True)
-    discussion_id       = Column(types.Integer, ForeignKey('discussions.id'))
+    discussion_id       = Column(types.Integer, ForeignKey('discussions.id',onupdate="RESTRICT",ondelete="SET NULL"))
     status              = Column(Enum('normal', 'under_review', 'removed_by_admin', 'deleted'), index=True, default='normal')
 
     # Message columns
-    user_id             = Column(types.Integer, ForeignKey('users.id'))
-    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
-    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    user_id             = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="CASCADE"))
+    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id',onupdate="RESTRICT",ondelete="SET NULL"))
     time                = Column(DateTime, index=True, nullable=False, default=datetime.now)
     title               = Column(types.Unicode(length=160), nullable=False, default='(no subject)')
     content             = Column(types.UnicodeText, nullable=False)
@@ -162,7 +162,7 @@ class JournalEntry(BaseTable):
 
     def __str__(self):
         return "Journal entry titled %s" % self.title
-    
+
     def update_content (self, content):
         self.content = h.html_escape(content)
         self.content_parsed = bbcode.parser_long.parse(content)
@@ -172,15 +172,15 @@ class JournalEntry(BaseTable):
 class Note(BaseTable):
     __tablename__       = 'notes'
     id                  = Column(types.Integer, primary_key=True)
-    to_user_id          = Column(types.Integer, ForeignKey('users.id'))
-    original_note_id    = Column(types.Integer, ForeignKey('notes.id'))
+    to_user_id          = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    original_note_id    = Column(types.Integer, ForeignKey('notes.id',onupdate="RESTRICT",ondelete="SET NULL"))
     status              = Column(Enum('unread', 'read'), nullable=False, default='unread')
 
     # Message columns
     # NOTE: user_id/user became from_user_id/sender
-    from_user_id        = Column(types.Integer, ForeignKey('users.id'))
-    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id'))
-    editlog_id          = Column(types.Integer, ForeignKey('editlog.id'))
+    from_user_id        = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    avatar_id           = Column(types.Integer, ForeignKey('user_avatars.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    editlog_id          = Column(types.Integer, ForeignKey('editlog.id',onupdate="RESTRICT",ondelete="SET NULL"))
     time                = Column(DateTime, index=True, nullable=False, default=datetime.now)
     title               = Column(types.Unicode(length=160), nullable=False, default='(no subject)')
     content             = Column(types.UnicodeText, nullable=False)

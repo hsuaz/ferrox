@@ -36,7 +36,7 @@ class Role(BaseTable):
     id              = Column(types.Integer, primary_key=True)
     name            = Column(types.String(length=32), nullable=False)
     sigil           = Column(types.String(length=1), nullable=False)
-    description     = Column(types.String(length=256), nullable=False)
+    description     = Column(types.String(length=255), nullable=False)
 
     @classmethod
     def get_by_name(cls, name):
@@ -54,7 +54,7 @@ class Permission(BaseTable):
     __tablename__   = 'permissions'
     id              = Column(types.Integer, primary_key=True)
     name            = Column(types.String(length=32), nullable=False)
-    description     = Column(types.String(length=256), nullable=False)
+    description     = Column(types.String(length=255), nullable=False)
 
     def __init__(self, name, description):
         self.name = name
@@ -96,13 +96,13 @@ class GuestUser(object):
 class User(BaseTable):
     __tablename__   = 'users'
     id              = Column(types.Integer, primary_key=True)
-    username        = Column(types.Unicode(32), nullable=False, unique=True)
-    email           = Column(types.String(256), nullable=False)
-    password        = Column(types.String(256), nullable=False)
+    username        = Column(types.String(32), nullable=False, unique=True)
+    email           = Column(types.String(255), nullable=False)
+    password        = Column(types.String(255), nullable=False)
     display_name    = Column(types.Unicode(32), nullable=False, unique=True)
-    role_id         = Column(types.Integer, ForeignKey('roles.id'), default=1)
+    role_id         = Column(types.Integer, ForeignKey('roles.id',onupdate="RESTRICT",ondelete="SET NULL"), default=1)
     # Used for shouts
-    discussion_id   = Column(types.Integer, ForeignKey('discussions.id'), nullable=False)
+    discussion_id   = Column(types.Integer, ForeignKey('discussions.id',onupdate="RESTRICT",ondelete="CASCADE"), nullable=False)
 
     @classmethod
     def get_by_name(cls, username, eagerloads=[]):
@@ -256,8 +256,8 @@ class User(BaseTable):
 
 class UserRelationship(BaseTable):
     __tablename__       = 'user_relationships'
-    from_user_id        = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
-    to_user_id          = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
+    from_user_id        = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="CASCADE"), primary_key=True)
+    to_user_id          = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="CASCADE"), primary_key=True)
     relationship        = Column(user_relationship_type, primary_key=True)
 
     def __init__(self):
@@ -266,7 +266,7 @@ class UserRelationship(BaseTable):
 class IPLogEntry(BaseTable):
     __tablename__   = 'ip_log'
     id              = Column(types.Integer, primary_key=True)
-    user_id         = Column(types.Integer, ForeignKey('users.id'), nullable=False)
+    user_id         = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="CASCADE"), nullable=False)
     ip              = Column(IP, nullable=False)
     start_time      = Column(DateTime, nullable=False, default=datetime.now)
     end_time        = Column(DateTime, nullable=False, default=datetime.now)
@@ -279,9 +279,9 @@ class IPLogEntry(BaseTable):
 
 class UserPreference(BaseTable):
     __tablename__   = 'user_preferences'
-    user_id         = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
+    user_id         = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="CASCADE"), primary_key=True)
     key             = Column(types.String(length=32), primary_key=True)
-    value           = Column(types.String(length=256), nullable=False)
+    value           = Column(types.String(length=255), nullable=False)
 
     def __init__(self, user, key, value):
         self.user = user
@@ -298,24 +298,24 @@ class UserMetadataField(BaseTable):
 
 class UserMetadata(BaseTable):
     __tablename__   = 'user_metadata'
-    user_id         = Column(types.Integer, ForeignKey('users.id'), primary_key=True)
-    field_id        = Column(types.Integer, ForeignKey('user_metadata_fields.id'), primary_key=True)
+    user_id         = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="CASCADE"), primary_key=True)
+    field_id        = Column(types.Integer, ForeignKey('user_metadata_fields.id',onupdate="RESTRICT",ondelete="CASCADE"), primary_key=True)
     value           = Column(types.Unicode(length=255), nullable=False)
-    
+
 class UserAvatar(BaseTable):
     __tablename__       = 'user_avatars'
     id                  = Column(types.Integer, primary_key=True, autoincrement=True)
-    user_id             = Column(types.Integer, ForeignKey('users.id'))
+    user_id             = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="SET NULL"))
     default             = Column(types.Boolean)
     mogile_key          = Column(types.String(length=200))
     title               = Column(types.Unicode(length=200))
-    
+
     def __init__(self):
         pass
-        
+
     def write_to_mogile(self, file_object, user=None):
         # Note: Must do this before commit.
-        
+
         if not user:
             user = self.user
         max_size = int(pylons.config.get('avatar.max_size', 120))
@@ -327,25 +327,25 @@ class UserAvatar(BaseTable):
                 file_object['content'] = toobig.get_data()
 
         self.mogile_key = "avatar_%s_%x_%s"%(user.username, crc32(file_object['content']), file_object['filename'][-50:])
-        
+
         store = mogilefs.Client(pylons.config['mogilefs.domain'], [pylons.config['mogilefs.tracker']])
         blobstream = cStringIO.StringIO(file_object['content'])
         store.send_file(self.mogile_key, blobstream)
         blobstream.close()
-        
+
     def delete_from_mogile(self):
         # Note: Must do this before removing object from database.
-        
+
         store = mogilefs.Client(pylons.config['mogilefs.domain'], [pylons.config['mogilefs.tracker']])
         store.delete(self.mogile_key)
 
 class UserBan(BaseTable):
     __tablename__       = 'user_bans'
     id                  = Column(types.Integer, primary_key=True, autoincrement=True)
-    user_id             = Column(types.Integer, ForeignKey('users.id'))
-    admin_user_id       = Column(types.Integer, ForeignKey('users.id'))
+    user_id             = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="CASCADE"), nullable=False)
+    admin_user_id       = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="SET NULL"))
     expires             = Column(DateTime) # NULL = Never
-    revert_to_id        = Column(types.Integer, ForeignKey('roles.id'))
+    revert_to_id        = Column(types.Integer, ForeignKey('roles.id',onupdate="RESTRICT",ondelete="SET NULL"))
     reason              = Column(types.UnicodeText, nullable=False)
     admin_message       = Column(types.UnicodeText, nullable=False)
     expired             = Column(types.Boolean, default=False)

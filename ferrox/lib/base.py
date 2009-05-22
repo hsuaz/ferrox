@@ -20,6 +20,7 @@ from ferrox.lib.config import Config
 from ferrox.lib.querylog import QueryLog
 import ferrox.model as model
 import ferrox.model.form as form
+import ferrox.lib.inet as inet
 
 from decorator import decorator
 from datetime import datetime
@@ -27,8 +28,8 @@ from time import time
 
 def check_perm(*permissions):
     '''Decorator for checking permission on user before running a controller method
-    
-    Note: Only one permission needs to be matched. If you want to check for all 
+
+    Note: Only one permission needs to be matched. If you want to check for all
     permissions, stack the decorators.'''
     @decorator
     def check(func, *args, **kwargs):
@@ -81,14 +82,17 @@ class BaseController(WSGIController):
 
         if c.auth_user:
             ip = request.environ['REMOTE_ADDR']
+            ip = inet.pton(ip)
             if c.auth_user.can('admin.auth'):
                 session['admin_ip'] = ip
+
+            cip = inet.ntop(ip)
 
             # Log IPs
             ip_log_q = model.Session.query(model.IPLogEntry)
             last_ip_record = ip_log_q.filter_by(user_id = user_id) \
                 .order_by(model.IPLogEntry.end_time.desc()).first()
-            if last_ip_record and last_ip_record.ip == ip:
+            if last_ip_record and last_ip_record.ip == cip:
                 last_ip_record.end_time = datetime.now()
             else:
                 model.Session.add(model.IPLogEntry(user_id, ip))

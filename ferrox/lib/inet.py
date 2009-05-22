@@ -10,7 +10,7 @@ def pton(value):
         '^(:|(0*[a-f0-9]{,4}:)+)(:|(0*[a-f0-9]{,4})?(:0*[a-f0-9]{,4})+)$'
     ]
 
-    for i in range(0,3):
+    for i in range(0,len(types)):
         match = re.match(types[i],value,re.IGNORECASE)
         if (match): break
 
@@ -27,27 +27,31 @@ def pton(value):
     else:
         match = match.group(0)
 
-        #tirando dois pontos duplos no inicio ou fim para gerar um array
+        # Original: tirando dois pontos duplos no inicio ou fim para gerar um array
+        # Loosely translated: Removing colon from beginning or end to generate an array
         if match[0] == ':':
             match = match[1:];
-        elif match[-1] == ':':
+        if match[-1] == ':':
             match = match[:-1]
 
         match = match.split(':');
 
-        l = len (match);
+        l = len(match);
         if l > 8: raise Exception('Invalid IP('+value+').')
         octs = l
 
         for i in range(0,l):
             p = match[i]
             lp = len(p);
-            if lp == 0: #p vazio, preencha com os octetos restantes
+            if lp == 0: #p vazio, preencha com os octetos restantes 
+                # (p empty, fill remaining octets)
                 for j in range(octs-1,8):    out += "\0\0"
                 octs = 8
-            elif lp < 4: #p menor que 4, preencha com zeros
+            elif lp < 4: #p menor que 4, preencha com zeros 
+                # (p less than 4, fill with zeros) 
                 for j in range(lp,4): p = '0' + p
-            elif lp > 4: #p menor que 4, remova os zeros extras
+            elif lp > 4: #p menor que 4, remova os zeros extras 
+                # (p greater than 4, remove extra zeros)
                 p = p[-4:]
 
             if p:
@@ -56,7 +60,8 @@ def pton(value):
                     c = int(p[i],16);
                     out += chr(c);
 
-        #falhar so nao houverem exatamente 8 octetos
+        #falhar so nao houverem exatamente 8 octetos 
+        # (make sure there are exactly eight octets)
         if octs != 8: raise Exception('Invalid IP('+value+').')
 
         return out

@@ -27,7 +27,7 @@ def make_map():
     map.connect('/register', controller='index', action='register')
     map.connect('/register_check', controller='index', action='register_check', **require_post)
     map.connect('/verify', controller='index', action='verify')
-    map.connect('/users/:username', controller='user', action='view')
+    map.connect('/~:username', controller='user', action='view')
     map.connect('/~:username/ajax_tooltip', controller='user', action='ajax_tooltip')
     map.connect('/~:username/profile', controller='user', action='profile')
     map.connect('/~:username/stats', controller='user', action='stats')

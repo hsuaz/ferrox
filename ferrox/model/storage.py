@@ -107,11 +107,12 @@ class FileStorage(Storage):
 
     def rename(self, key, new_key):
         if key not in self: raise KeyError(key)
+        if new_key in self: new_key = self.mangle_key(new_key)
         old_filename = self._folder_mangle(key)
         new_filename = self._folder_mangle(new_key)
-        if old_filename == new_filename: return True
+        if old_filename == new_filename: return new_key
         os.renames(old_filename, new_filename)
-        return True
+        return new_key
 
     def items_by_prefix(self, prefix):
         path = ''

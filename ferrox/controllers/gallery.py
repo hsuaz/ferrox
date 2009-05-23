@@ -610,6 +610,18 @@ class GalleryController(BaseController):
         response.headers['Content-Length'] = len(data)
         return data
 
+    @check_perm('gallery.manage')
+    def log(self):
+        """
+        """
+        c.submission = get_submission(id,[
+            'user_submissions',
+            'user_submissions.user',
+            'user_submissions.editlog',
+            'user_submissions.editlog.entries',
+            'historic_submissions',
+        ])
+        return 'not implemented'
 
     def is_my_submission(self, submission, should_abort=False):
         """Returns false (or aborts, if should_abort=True) if the provided

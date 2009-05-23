@@ -32,6 +32,16 @@ ${lib.user_linkbar(c.submission.primary_artist)}
                 ${h.HTML.a('Add to favorites', href=h.url_for(controller='gallery', action='favorite', id=c.submission.id, username=c.submission.primary_artist.username))}
             % endif
         % endif
+        % if c.auth_user in c.submission.artists:
+            ${h.HTML.a('Delete', href=h.url_for(controller='gallery', action='delete', id=c.submission.id, username=c.auth_user.username))}
+            ${h.HTML.a('Edit', href=h.url_for(controller='gallery', action='edit', id=c.submission.id, username=c.auth_user.username))}
+        % elif c.auth_user.can('gallery.manage'):
+            ${h.HTML.a('Delete', href=h.url_for(controller='gallery', action='delete', id=c.submission.id, username=c.submission.primary_artist.username))}
+            ${h.HTML.a('Edit', href=h.url_for(controller='gallery', action='edit', id=c.submission.id, username=c.submission.primary_artist.username))}
+        % endif
+        % if c.auth_user.can('gallery.manage'):
+            ${h.HTML.a('Log', href=h.url_for(controller='gallery', action='log', id=c.submission.id, username=c.submission.primary_artist.username))}
+        % endif
         </div>
         <div class="tags">
         % for tag in c.submission.tags:

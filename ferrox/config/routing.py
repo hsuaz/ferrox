@@ -83,7 +83,7 @@ def make_map():
     map.connect('/users/:username/gallery/:id/edit_commit', controller='gallery', action='edit_commit', **require_post)
     map.connect('/users/:username/gallery/:id/delete', controller='gallery', action='delete')
     map.connect('/users/:username/gallery/:id/delete_commit', controller='gallery', action='delete_commit', **require_post)
-    map.connect('/users/:username/gallery/:id/editlog', controller='editlog', action='submission')
+    map.connect('/users/:username/gallery/:id/log', controller='gallery', action='log')
     map.connect('/users/:username/gallery/:id/favorite', controller='gallery', action='favorite')
 
     map.connect('/gallery', controller='gallery', action='index')

@@ -108,6 +108,8 @@ class JournalForm(formencode.Schema):
     avatar_id = validators.Int()
 
 class DeleteForm(formencode.Schema):
+    public_reason = formencode.validators.PlainText(not_empty=True)
+    private_reason = formencode.validators.PlainText(not_empty=False, if_empty=u'')
     confirm = formencode.validators.PlainText(not_empty=False, if_missing=None)
     cancel = formencode.validators.PlainText(not_empty=False, if_missing=None)
 
@@ -178,6 +180,4 @@ class BanForm(formencode.Schema):
     role_id = PrimaryKeyValidator(table=model.Role)
     reason = formencode.validators.String(not_empty=True)
     notes = formencode.validators.String(not_empty=False, if_missing="")
-
-
 

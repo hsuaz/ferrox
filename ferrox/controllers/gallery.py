@@ -67,7 +67,7 @@ def find_submissions(joined_tables=None,
                         .join(model.UserSubmission.__table__)
 
     # XXX admins can see more than this
-    where_clauses.append(model.UserSubmission.review_status == 'normal')
+    where_clauses.append(model.UserSubmission.deletion_id == None)
 
     ### Tag filtering
     # Construct a list of required and excluded tags
@@ -180,7 +180,7 @@ class GalleryController(BaseController):
         ### SQL
         # Some defaults..
         # XXX admins can see more than this
-        where_clauses.append(model.UserSubmission.review_status == 'normal')
+        where_clauses.append(model.UserSubmission.deletion_id == None)
 
         ### Tag filtering
         # Construct a list of required and excluded tags
@@ -347,16 +347,18 @@ class GalleryController(BaseController):
         return render('/gallery/submit.mako')
 
     @check_perm('gallery.upload')
-    def delete(self, id=None):
+    def delete(self, id=None, username=None):
         """Form for deleting a submission."""
 
-        submission = get_submission(id)
-        self.is_my_submission(submission, True)
+        c.submission = get_submission(id)
+        c.form = FormGenerator()
+        c.target_user = model.User.get_by_name(username)
+        self._check_target_user()
         c.text = "Are you sure you want to delete the submission \"%s\"?" % \
-                 submission.title
-        c.url = h.url_for(controller='gallery', action="delete_commit", id=id)
+                 c.submission.title
+        c.url = h.url_for(controller='gallery', action="delete_commit", id=id, username=username)
         c.fields = {}
-        return render('/confirm.mako')
+        return render('/gallery/delete.mako')
 
     @check_perm('gallery.upload', 'gallery.manage')
     def edit_commit(self, id=None, username=None):
@@ -471,31 +473,34 @@ class GalleryController(BaseController):
 
 
     @check_perm('gallery.upload')
-    def delete_commit(self, id=None):
+    def delete_commit(self, id=None, username=None):
         """Form handler for deleting a submission."""
 
         # -- validate form input --
         validator = model.form.DeleteForm()
-        delete_form_data = None
+        form_data = None
         try:
-            delete_form_data = validator.to_python(request.params)
+            form_data = validator.to_python(request.params)
         except formencode.Invalid, error:
             return render('/error.mako')
 
-        submission = get_submission(id)
-        self.is_my_submission(submission,True)
-        redirect_username=submission.primary_artist.username
+        c.submission = get_submission(id)
+        c.target_user = model.User.get_by_name(username)
+        self._check_target_user()
+        c.user_submission = c.submission.get_user_submission(c.target_user)
 
-        if delete_form_data['confirm'] != None:
+        if form_data['confirm'] != None:
             # -- update submission in database --
-            submission.status = 'deleted'
-            for user_submission in submission.user_submissions:
-                user_submission.review_status = 'deleted'
+            deletion = model.Deletion()
+            deletion.public_reason = form_data['public_reason']
+            deletion.private_reason = form_data['private_reason']
+            c.user_submission.deletion = deletion
+            c.submission.deletion = deletion
             model.Session.commit()
 
-            h.redirect_to(h.url_for(controller='gallery', action='index', username=redirect_username, id=None))
+            h.redirect_to(h.url_for(controller='gallery', action='index', username=c.target_user.username))
         else:
-            h.redirect_to(h.url_for(controller='gallery', action='view', id=submission.id, username=redirect_username))
+            h.redirect_to(h.url_for(controller='gallery', action='view', id=c.submission.id, username=c.target_user.username))
 
     @check_perm('gallery.upload')
     def submit_upload(self):

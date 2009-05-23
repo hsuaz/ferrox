@@ -9,7 +9,7 @@
             on behalf of ${lib.user_link(c.target_user)}
         % endif
     </h2>
-    ${c.form.start(h.url_for(controller='gallery', action='edit_commit', id=c.submission.id, username=c.submission.primary_artist.username), method='post', multipart=True)}
+    ${c.form.start(h.url_for(controller='gallery', action='edit_commit', id=c.submission.id, username=c.target_user.username), method='post', multipart=True)}
     % else:
     <h2>Submit Art</h2>
     ${c.form.start(h.url_for(controller='gallery', action='submit_upload', username=c.route['username']), method='post', multipart=True)}

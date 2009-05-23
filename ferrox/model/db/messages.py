@@ -213,6 +213,12 @@ class Note(BaseTable):
         """
         return re.sub('^(Re: |Fwd: )+', '', self.title)
 
+class Deletion(BaseTable):
+    __tablename__       = 'deletions'
+    id                  = Column(types.Integer, primary_key=True)
+    user_id             = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    public_reason       = Column(types.UnicodeText, nullable=False)
+    private_reason      = Column(types.UnicodeText, nullable=False)
 ### Relations
 
 Discussion.comments     = relation(Comment, backref='discussion', order_by=Comment.left)
@@ -227,3 +233,4 @@ JournalEntry.discussion = relation(Discussion, backref='journal_entry')
 News.discussion         = relation(Discussion, backref='news')
 
 Note.recipient          = relation(User, primaryjoin=Note.to_user_id==User.id)
+

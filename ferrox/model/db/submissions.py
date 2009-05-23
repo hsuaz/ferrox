@@ -29,7 +29,6 @@ from ferrox.model.db.messages import *
 # Database specific types
 submission_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'unlinked', 'deleted')
 user_submission_ownership_status_type = Enum('primary', 'normal')
-user_submission_review_status_type = Enum('normal', 'under_review', 'removed_by_admin', 'deleted')
 user_submission_relationship_type = Enum('artist', 'commissioner', 'gifted', 'isin')
 
 
@@ -42,6 +41,7 @@ class Submission(BaseTable):
     status              = Column(submission_status_type, index=True, nullable=False)
     main_storage_id     = Column(types.Integer, ForeignKey('submissions_storage.id',onupdate="RESTRICT",ondelete="SET NULL"))
     thumbnail_storage_id= Column(types.Integer, ForeignKey('submissions_storage.id',onupdate="RESTRICT",ondelete="SET NULL"))
+    deletion_id         = Column(types.Integer, ForeignKey('deletions.id',onupdate="RESTRICT",ondelete="SET NULL"))
 
     def __init__(self, title, description, uploader, avatar=None):
         self.status = 'normal'
@@ -54,7 +54,6 @@ class Submission(BaseTable):
             user=uploader,
             relationship='artist',
             ownership_status='primary',
-            review_status='normal',
             content=description,
         )
         if avatar and avatar.user == uploader:
@@ -189,7 +188,6 @@ class UserSubmission(BaseTable):
     submission_id       = Column(types.Integer, ForeignKey('submissions.id',onupdate="RESTRICT",ondelete="CASCADE"))
     relationship        = Column(user_submission_relationship_type, nullable=False)
     ownership_status    = Column(user_submission_ownership_status_type, nullable=False)
-    review_status       = Column(user_submission_review_status_type, nullable=False)
 
     # Message columns
     user_id             = Column(types.Integer, ForeignKey('users.id',onupdate="RESTRICT",ondelete="CASCADE"))
@@ -197,6 +195,7 @@ class UserSubmission(BaseTable):
     editlog_id          = Column(types.Integer, ForeignKey('editlog.id',onupdate="RESTRICT",ondelete="SET NULL"))
     time                = Column(DateTime, index=True, nullable=False, default=datetime.now)
     content             = Column(types.UnicodeText, nullable=False)
+    deletion_id         = Column(types.Integer, ForeignKey('deletions.id',onupdate="RESTRICT",ondelete="SET NULL"))
     avatar              = relation(UserAvatar)
     editlog             = relation(EditLog)
 
@@ -298,9 +297,9 @@ Submission.primary_artist       = relation(User, secondary=UserSubmission.__tabl
     secondaryjoin=(UserSubmission.user_id == User.id),
     uselist=False,
     )
+Submission.deletion             = relation(Deletion, uselist=False)
 
 UserSubmission.avatar           = relation(UserAvatar, uselist=False, lazy=False)
 UserSubmission.submission       = relation(Submission, backref='user_submissions')
 UserSubmission.user             = relation(User, backref='user_submissions')
-
-
+UserSubmission.deletion         = relation(Deletion, uselist=False)

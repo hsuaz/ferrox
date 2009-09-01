@@ -33,7 +33,7 @@
     % endif
     % if c.page_owner != 'search':
         ${c.form.start(h.implicit_url_for(tags=None, commit=None), method='post')}
-        Return ${c.form.text_field('perpage', size=5)} results per page.<br>
+        Return ${c.form.text_field('perpage', size=5)} results per page.<br/>
         Filter: ${c.form.text_field('tags', class_='tag-filter')}${c.form.submit('Filter')}
         ${c.form.end()}
     % endif

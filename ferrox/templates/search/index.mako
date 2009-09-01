@@ -1,7 +1,7 @@
 <%inherit file="/base.mako" />
 
 <div class="basic-box">
-    <h2>Post Journal</h2>
+    <h2>Search</h2>
 
     ${c.form.start(h.url_for(controller='search', action='do'), method='post')}
     <dl class="standard-form">

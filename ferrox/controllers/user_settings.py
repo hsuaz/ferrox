@@ -121,7 +121,8 @@ class UserSettingsController(BaseController):
         fetch_relationships()
         c.form = FormGenerator()
 
-        if 'other_user' in request.params:
+        if 'other_user' in request.params \
+                and request.params['other_user'] != c.user.username:
             c.other_user = model.User.get_by_name(
                 request.params['other_user']
                 )
@@ -130,6 +131,10 @@ class UserSettingsController(BaseController):
             if c.other_user in c.relationship_order:
                 c.relationship_order.remove(c.other_user)
             c.relationship_order.insert(0, c.other_user)
+            # If we're editing someone specifically, they might not have their
+            # key in the relationships dictionary yet.
+            if not c.other_user in c.relationships.keys():
+                c.relationships[c.other_user] = []
 
             # If they asked for a relationship, make sure it defaults to on
             if 'relationship' in request.params:
@@ -155,7 +160,7 @@ class UserSettingsController(BaseController):
         # Requested relationships first
         for rel_username in request.params.getall('users'):
             rel_user = model.User.get_by_name(rel_username)
-            if not rel_user:
+            if not rel_user or rel_user.id == c.user.id:
                 # Shouldn't happen; someone screwing around, so don't care
                 continue
             

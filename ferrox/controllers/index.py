@@ -1,8 +1,10 @@
 from pylons.decorators.secure import *
+from pylons import request
 
 from ferrox.controllers.gallery import find_submissions
 from ferrox.lib.base import *
 from ferrox.lib.formgen import FormGenerator
+from ferrox.lib.emailutil import SendVerificationEmail
 
 import formencode
 import hashlib
@@ -53,10 +55,12 @@ class IndexController(BaseController):
         hasher.update(user.username)
         hasher.update(str(user.id))
         hash = hasher.hexdigest()
-        c.verify_link = h.link_to('Verify', url=h.url_for(controller='index',
-                                                          action='verify',
-                                                          username=username,
-                                                          code=hash))
+        verify_href = h.url_for(controller='index',
+                                action='verify',
+                                username=username,
+                                code=hash)
+        c.verify_link = h.HTML.a("Verify", href=verify_href)
+        SendVerificationEmail(email, "http://" + request.environ['HTTP_HOST'] + verify_href)
         return render('/register_success.mako')
 
     @check_perm('index.register')

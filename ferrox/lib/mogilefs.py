@@ -78,7 +78,7 @@ permitted by applicable law.
 
 
 
-import md5
+import hashlib as md5
 import cStringIO
 import re
 import time

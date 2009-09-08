@@ -7,7 +7,6 @@ from ferrox.lib.formgen import FormGenerator
 
 import formencode
 import logging
-import md5
 import mimetypes
 import os
 import sqlalchemy.exceptions

@@ -10,7 +10,6 @@ from ferrox.lib.image import ImageClass
 
 import formencode
 import logging
-import md5
 import os
 import re
 import mimetypes

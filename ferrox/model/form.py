@@ -37,7 +37,8 @@ class Recaptcha(validators.FormValidator):
                           'remoteip': field_dict['remote_addr'],
                           'challenge': field_dict['recaptcha_challenge_field'],
                           'response': field_dict['recaptcha_response_field']}
-        recaptcha_response = urllib.urlopen('http://api-verify.recaptcha.net/verify', urllib.urlencode(recaptcha_args))
+        recaptcha_url = 'http://api-verify.recaptcha.net/verify?' + urllib.urlencode(recaptcha_args)
+        recaptcha_response = urllib.urlopen(recaptcha_url)
         response_lines =  recaptcha_response.readlines()
         error = {'recaptcha': formencode.Invalid(self.fail_message, field_dict, state)}
         if response_lines[0] != 'true\n':
@@ -69,13 +70,9 @@ class RegisterForm(formencode.Schema):
     email_confirm = validators.String()
     password = validators.String(not_empty = True)
     password_confirm = validators.String()
-    remote_addr = validators.String(not_empty = True)
-    recaptcha_challenge_field = validators.String(not_empty=True)
-    recaptcha_response_field = validators.String(not_empty=True)
     TOS_accept = validators.OneOf(['1'])
     chained_validators = [validators.FieldsMatch('email', 'email_confirm'),
-                          validators.FieldsMatch('password', 'password_confirm'),
-                          Recaptcha()]
+                          validators.FieldsMatch('password', 'password_confirm'),]
 
 class LoginForm(formencode.Schema):
     username = validators.PlainText(not_empty=True)
